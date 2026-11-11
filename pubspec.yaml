@@ -13,10 +13,13 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
+  google_fonts: ^6.1.0
+  flutter_dotenv: ^5.2.1
   http: ^1.6.0
   path: ^1.9.0
+  shared_preferences: ^2.3.5
+  flutter_secure_storage: ^9.2.4
   sweph: ^3.2.1
-  google_generative_ai: ^0.4.6
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +29,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - .env

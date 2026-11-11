@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:avara_astrology_trial/avara_colors.dart';
+import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/services/ai_astrology_service.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:flutter/material.dart';
@@ -195,7 +195,7 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080B1A), // deep space dark
+      backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -209,8 +209,8 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF0C1029),
-      foregroundColor: Colors.white,
+      backgroundColor: AppColors.background,
+      foregroundColor: AppColors.deepNavy,
       elevation: 0,
       titleSpacing: 0,
       title: Row(
@@ -243,7 +243,7 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
         preferredSize: const Size.fromHeight(1),
         child: Divider(
           height: 1,
-          color: AvaraColors.navy.withValues(alpha: 0.5),
+          color: AppColors.deepNavy.withValues(alpha: 0.5),
         ),
       ),
     );
@@ -319,12 +319,12 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                 border: isUser
                     ? null
                     : Border.all(
-                        color: AvaraColors.blue.withValues(alpha: 0.3),
+                        color: AppColors.blue.withValues(alpha: 0.3),
                         width: 1,
                       ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isUser ? AvaraColors.blue : AvaraColors.navy)
+                    color: (isUser ? AppColors.blue : AppColors.deepNavy)
                         .withValues(alpha: 0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
@@ -344,7 +344,7 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: AvaraColors.blue.withValues(alpha: 0.8),
+                          color: AppColors.blue.withValues(alpha: 0.8),
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -378,9 +378,9 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 14,
-              backgroundColor: AvaraColors.blue.withValues(alpha: 0.25),
+              backgroundColor: AppColors.blue.withValues(alpha: 0.25),
               child:
-                  const Icon(Icons.person, size: 16, color: AvaraColors.blue),
+                  const Icon(Icons.person, size: 16, color: AppColors.blue),
             ),
           ],
         ],
@@ -405,10 +405,10 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: AvaraColors.navy.withValues(alpha: 0.35),
+                    color: AppColors.deepNavy.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AvaraColors.blue.withValues(alpha: 0.4),
+                      color: AppColors.blue.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Text(
@@ -457,10 +457,10 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
 
   Widget _buildInputRow() {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF0C1029),
+      decoration: BoxDecoration(
+        color: AppColors.white,
         border: Border(
-          top: BorderSide(color: Color(0xFF1E2A52), width: 1),
+          top: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
@@ -472,10 +472,10 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF141B3B),
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: AvaraColors.blue.withValues(alpha: 0.35),
+                    color: AppColors.border,
                   ),
                 ),
                 child: TextField(
@@ -485,11 +485,14 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                   maxLines: 4,
                   minLines: 1,
                   textInputAction: TextInputAction.newline,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(
+                    color: AppColors.deepNavy,
+                    fontSize: 14,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Ask about your chart…',
                     hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: Colors.grey[400],
                       fontSize: 14,
                     ),
                     border: InputBorder.none,
@@ -662,7 +665,7 @@ class _TypingIndicatorBubbleState extends State<_TypingIndicatorBubble>
                 bottomLeft: Radius.circular(4),
               ),
               border: Border.all(
-                color: AvaraColors.blue.withValues(alpha: 0.3),
+                color: AppColors.blue.withValues(alpha: 0.3),
               ),
             ),
             child: AnimatedBuilder(
@@ -679,7 +682,7 @@ class _TypingIndicatorBubbleState extends State<_TypingIndicatorBubble>
                       height: 7,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AvaraColors.blue.withValues(
+                        color: AppColors.blue.withValues(
                           alpha: (0.4 + offset * 0.6).clamp(0.0, 1.0),
                         ),
                       ),
@@ -726,7 +729,7 @@ class _SendButton extends StatelessWidget {
               ? []
               : [
                   BoxShadow(
-                    color: AvaraColors.blue.withValues(alpha: 0.45),
+                    color: AppColors.blue.withValues(alpha: 0.45),
                     blurRadius: 12,
                     offset: const Offset(0, 3),
                   ),
@@ -739,7 +742,7 @@ class _SendButton extends StatelessWidget {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AvaraColors.blue,
+                    color: AppColors.blue,
                   ),
                 )
               : const Icon(Icons.send_rounded, color: Colors.white, size: 20),

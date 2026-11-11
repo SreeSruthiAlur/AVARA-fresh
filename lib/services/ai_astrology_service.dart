@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 // ---------------------------------------------------------------------------
@@ -29,10 +30,15 @@ typedef ChartGeneratorCallback = Future<Map<String, dynamic>> Function({
 
 /// AVARA's Gemini-powered Vedic Astrology conversational engine.
 ///
+/// Talks to the Gemini 3.8 Flash REST API directly over HTTP (no SDK) to keep
+/// latency low and avoid the upstream package's role-handling bug. The public
+/// API ([sendMessage], [preloadChart], [clearHistory], [chartJson]) is
+/// unchanged so callers need no edits.
+///
 /// ### Two usage modes
 /// | Mode | How to start | When to use |
 /// |------|-------------|-------------|
-/// | **Chat-first** | Just call [sendMessage] | Standalone launch; AVARA asks for birth details when needed and fires the `calculate_chart` tool automatically |
+/// | **Chat-first** | Just call [sendMessage] | Standalone launch; AVARA asks for birth details when needed and fires the `calculate_birth_chart` tool automatically |
 /// | **Chart-first** | Call [preloadChart] then [sendMessage] | After the Birth Profile screen; the pre-computed kundali is injected into the first turn silently |
 class AIAstrologyService {
   // -------------------------------------------------------------------------
@@ -40,54 +46,59 @@ class AIAstrologyService {
   // -------------------------------------------------------------------------
 
   static const String _kSystemInstruction =
-      'You are AVARA, an expert Vedic Astrology AI. Greet the user naturally. '
-      'Answer general astrology questions directly. '
-      'If a user asks a personal question that requires their chart, politely ask '
-      'for their Date, Time, and City of birth in a single message. '
-      'Once they provide these, you MUST call the calculate_birth_chart function. '
-      'Do not hallucinate chart details.';
+      'You are AVARA, an expert Vedic Astrology AI. Answer general astrology '
+      'questions conversationally using your pre-trained knowledge. If a user '
+      'asks a personal question requiring their specific chart, you MUST '
+      'politely ask for their Date (YYYY-MM-DD), Time (HH:MM), and City of '
+      'birth. Once provided, call the calculate_birth_chart function to get '
+      'their exact planetary coordinates, and use that JSON data to provide a '
+      'personalized astrological reading.';
 
   static const String _kToolName = 'calculate_birth_chart';
 
-  static final Tool _kChartTool = Tool(
-    functionDeclarations: [
-      FunctionDeclaration(
-        _kToolName,
-        'Calculates the Vedic Janma Kundali (birth chart) from date, time, '
-        'and city of birth. Call this as soon as the user provides their '
+  /// OpenAPI-style schema for the `calculate_birth_chart` function, sent to
+  /// the v1beta REST `tools[].function_declarations` array. The v1beta REST
+  /// API expects uppercase `Schema` type enums (`OBJECT`, `STRING`).
+  static const Map<String, Object?> _kToolDeclaration = {
+    'name': _kToolName,
+    'description': 'Calculates the Vedic Janma Kundali (birth chart) from date, '
+        'time, and city of birth. Call this as soon as the user provides their '
         'birth details — do NOT ask for additional confirmation.',
-        Schema(
-          SchemaType.object,
-          properties: {
-            'date': Schema(
-              SchemaType.string,
-              description: 'Birth date in YYYY-MM-DD format.',
-            ),
-            'time': Schema(
-              SchemaType.string,
-              description:
-                  'Birth time in HH:MM 24-hour local time. IST (UTC+5:30) '
-                  'is assumed unless the user specifies otherwise.',
-            ),
-            'city': Schema(
-              SchemaType.string,
-              description:
-                  'City of birth, used for geocoding latitude/longitude.',
-            ),
-          },
-          requiredProperties: ['date', 'time', 'city'],
-        ),
-      ),
-    ],
-  );
+    'parameters': {
+      'type': 'OBJECT',
+      'properties': {
+        'date': {
+          'type': 'STRING',
+          'description': 'Birth date in YYYY-MM-DD format.',
+        },
+        'time': {
+          'type': 'STRING',
+          'description': 'Birth time in HH:MM 24-hour local time. IST '
+              '(UTC+5:30) is assumed unless the user specifies otherwise.',
+        },
+        'city': {
+          'type': 'STRING',
+          'description': 'City of birth, used for geocoding latitude/longitude.',
+        },
+      },
+      'required': ['date', 'time', 'city'],
+    },
+  };
+
+  /// Per-POST network budget. On expiry the call surfaces a friendly retry
+  /// message to the UI instead of throwing.
+  static const Duration _kTimeout = Duration(seconds: 15);
 
   // -------------------------------------------------------------------------
   // Fields
   // -------------------------------------------------------------------------
 
-  final GenerativeModel _model;
-  late ChatSession _chat;
+  final String _apiKey;
   final ChartGeneratorCallback? _chartGenerator;
+
+  /// The running chat history sent to Gemini on every turn: a list of
+  /// `{role, parts}` maps where role is `user`, `model`, or `function`.
+  final List<Map<String, dynamic>> _contents = [];
 
   /// The most recently computed kundali, populated after [preloadChart] or
   /// after the model fires the [_kToolName] function call.
@@ -106,20 +117,23 @@ class AIAstrologyService {
   /// Creates an [AIAstrologyService].
   ///
   /// - [apiKey]         : Google AI Studio API key (required).
-  /// - [modelName]      : Gemini model variant. Defaults to `gemini-1.5-flash`.
   /// - [chartGenerator] : Platform callback that runs the sweph math engine.
-  ///                      Must be provided for the `calculate_chart` tool to work.
+  ///                      Must be provided for the `calculate_birth_chart` tool
+  ///                      to actually compute a chart.
   AIAstrologyService({
     required String apiKey,
-    String modelName = 'gemini-3.8-flash',
-    this._chartGenerator, // type inferred from field ChartGeneratorCallback?
-  }) : _model = GenerativeModel(
-          model: modelName,
-          apiKey: apiKey,
-          systemInstruction: Content.system(_kSystemInstruction),
-          tools: [_kChartTool],
-        ) {
-    _chat = _model.startChat();
+    this._chartGenerator,
+  })  : // Strip surrounding whitespace and any stray quote characters that
+        // can sneak in from .env files or copy-paste.
+        _apiKey = apiKey.trim().replaceAll('"', '').replaceAll("'", '') {
+    // ignore: avoid_print
+    print('DEBUG API KEY: $_apiKey');
+    if (_apiKey.isEmpty) {
+      // ignore: avoid_print
+      print('DEBUG API KEY: is EMPTY — dotenv did not load the value. '
+          'Ensure .env is in the Flutter project root and the app was '
+          'fully rebuilt (not just hot-restarted) after editing the file.');
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -139,15 +153,22 @@ class AIAstrologyService {
 
   /// Sends [userPrompt] to AVARA and returns the text response.
   ///
-  /// Manages the full Gemini function-calling loop internally:
-  /// 1. User message is sent (with chart context prepended on first turn if
-  ///    [preloadChart] was called).
-  /// 2. If the model fires `calculate_chart`, [_executeCalculateChart] runs
-  ///    the geocoding + sweph pipeline and feeds the result back.
-  /// 3. Steps 1-2 repeat until the model returns a plain text response.
+  /// Manages the full Gemini function-calling loop internally over the REST
+  /// `generateContent` endpoint:
+  /// 1. User message is appended to the `contents` history (with chart context
+  ///    prepended on the first turn if [preloadChart] was called).
+  /// 2. A POST is sent. If the model returns a `functionCall` for
+  ///    `calculate_birth_chart`, [_executeCalculateChart] runs the geocoding +
+  ///    sweph pipeline, the result is appended as a `functionResponse`, and a
+  ///    second POST is fired to get the final reading.
+  /// 3. This repeats until the model returns plain text (bounded by a small
+  ///    hop cap to avoid runaway loops).
   ///
-  /// Throws [AIAstrologyException] on API errors, empty responses, or tool
-  /// execution failures.
+  /// Each HTTP POST is bounded by [_kTimeout]; on timeout this safely returns
+  /// a retry message instead of throwing.
+  ///
+  /// Throws [AIAstrologyException] on non-timeout API errors, empty responses,
+  /// or tool execution failures.
   Future<String> sendMessage(String userPrompt) async {
     try {
       // Inject pre-loaded chart context silently on the first turn.
@@ -161,38 +182,64 @@ class AIAstrologyService {
         prompt = userPrompt;
       }
 
-      var response = await _chat.sendMessage(Content.text(prompt));
+      _contents.add({
+        'role': 'user',
+        'parts': [
+          {'text': prompt},
+        ],
+      });
 
-      // Agentic tool-call loop — Gemini may chain multiple calls.
-      while (response.functionCalls.isNotEmpty) {
-        final call = response.functionCalls.first;
-        if (call.name == _kToolName) {
-          final toolResult = await _executeCalculateChart(call.args);
-          // NOTE: Content.functionResponse() in google_generative_ai 0.4.7
-          // hard-codes role 'function', which the Gemini 3.x API rejects with
-          // "Role 'function' is not supported". Send the FunctionResponse part
-          // under the valid 'user' role instead, wrapping the tool output
-          // under 'result' as the function-response payload.
-          response = await _chat.sendMessage(
-            Content('user', [
-              FunctionResponse(call.name, {'result': toolResult}),
-            ]),
-          );
-        } else {
-          // Unknown tool — break to avoid an infinite loop.
-          break;
+      // Agentic tool-call loop — Gemini may chain calls (double-hop, etc.).
+      const maxHops = 6;
+      for (var hop = 0; hop < maxHops; hop++) {
+        final data = await _generateContent();
+        final parts = _extractParts(data);
+
+        // Record the model's turn so the history stays in sync.
+        _contents.add({
+          'role': 'model',
+          'parts': parts,
+        });
+
+        final functionCall = _findFunctionCall(parts);
+        if (functionCall == null) {
+          final text = _extractText(parts);
+          if (text == null || text.isEmpty) {
+            throw AIAstrologyException(
+              'AVARA returned an empty response. Please try again.',
+            );
+          }
+          return text;
         }
+
+        final name = functionCall['name']?.toString();
+        if (name != _kToolName) {
+          throw AIAstrologyException('Model called an unknown function: $name');
+        }
+
+        // Intercept the tool call → run the local sweph math engine → feed
+        // the result back as a functionResponse and POST again.
+        final args = (functionCall['args'] as Map?)?.cast<String, Object?>() ??
+            <String, Object?>{};
+        final toolResult = await _executeCalculateChart(args);
+        _contents.add({
+          'role': 'function',
+          'parts': [
+            {
+              'functionResponse': {
+                'name': name,
+                'response': {'result': toolResult},
+              },
+            },
+          ],
+        });
       }
 
-      final text = response.text;
-      if (text == null || text.isEmpty) {
-        throw AIAstrologyException(
-          'AVARA returned an empty response. Please try again.',
-        );
-      }
-      return text;
-    } on GenerativeAIException catch (e) {
-      throw AIAstrologyException('Gemini API error: ${e.message}', cause: e);
+      throw AIAstrologyException(
+        'AVARA is taking too long to respond. Please try again.',
+      );
+    } on TimeoutException {
+      return 'Network timeout. Please try your question again.';
     } on AIAstrologyException {
       rethrow;
     } catch (e) {
@@ -203,16 +250,117 @@ class AIAstrologyService {
   /// Clears the chat history and any stored chart state, starting a fresh
   /// conversation session.
   void clearHistory() {
-    _chat = _model.startChat();
+    _contents.clear();
     _chartJson = null;
     _chartInjected = false;
+  }
+
+  // -------------------------------------------------------------------------
+  // REST transport
+  // -------------------------------------------------------------------------
+
+  /// POSTs the current `_contents` (+ system instruction + tools) to the
+  /// Gemini v1beta `generateContent` endpoint and returns the decoded JSON.
+  ///
+  /// Bounded by [_kTimeout]; throws [AIAstrologyException] on non-2xx.
+  Future<Map<String, dynamic>> _generateContent() async {
+    // Read and sanitize the key directly from .env at call time.
+    // Only Content-Type is sent — no Authorization header, which would cause
+    // a 400 "Multiple Credentials" error when the key is already in the URL.
+    final rawKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+    final cleanKey = rawKey.replaceAll('"', '').replaceAll("'", '').trim();
+    if (cleanKey.isEmpty) {
+      throw AIAstrologyException(
+        'Gemini API key is not configured. '
+        'Open .env and set GEMINI_API_KEY to your Google AI Studio key. '
+        'Rebuild the app after saving.',
+      );
+    }
+
+    // v1beta is required for this JSON payload structure.
+    final url = Uri.parse(
+      'https://generativelanguage.googleapis.com/v1beta/models/'
+      'gemini-3.8-flash:generateContent?key=$cleanKey',
+    );
+
+    final body = jsonEncode({
+      'system_instruction': {
+        'parts': [
+          {'text': _kSystemInstruction},
+        ],
+      },
+      'contents': _contents,
+      'tools': [
+        {
+          'function_declarations': [_kToolDeclaration],
+        },
+      ],
+    });
+
+    final response = await http
+        .post(url, headers: {'Content-Type': 'application/json'}, body: body)
+        .timeout(_kTimeout);
+
+    final Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw AIAstrologyException(
+        'Gemini API error (HTTP ${response.statusCode}): ${response.body}',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      final err = data['error'];
+      final errMsg = err is Map ? err['message']?.toString() : response.body;
+      throw AIAstrologyException('Gemini API error: $errMsg');
+    }
+    return data;
+  }
+
+  /// Extracts the `candidates[0].content.parts` list from a response.
+  List<dynamic> _extractParts(Map<String, dynamic> data) {
+    final candidates = data['candidates'];
+    if (candidates is! List || candidates.isEmpty) {
+      throw AIAstrologyException('AVARA returned no candidates.');
+    }
+    final content = candidates[0]['content'];
+    final parts = content is Map ? content['parts'] : null;
+    if (parts is! List || parts.isEmpty) {
+      throw AIAstrologyException(
+        'AVARA returned an empty response. Please try again.',
+      );
+    }
+    return parts;
+  }
+
+  /// Returns the first `functionCall` part, if any.
+  Map<String, dynamic>? _findFunctionCall(List<dynamic> parts) {
+    for (final part in parts) {
+      if (part is Map && part['functionCall'] is Map) {
+        return (part['functionCall'] as Map).cast<String, dynamic>();
+      }
+    }
+    return null;
+  }
+
+  /// Concatenates all `text` parts into a single string (null if none).
+  String? _extractText(List<dynamic> parts) {
+    final buf = StringBuffer();
+    for (final part in parts) {
+      if (part is Map && part['text'] is String) {
+        buf.write(part['text'] as String);
+      }
+    }
+    final s = buf.toString();
+    return s.isEmpty ? null : s;
   }
 
   // -------------------------------------------------------------------------
   // Tool execution
   // -------------------------------------------------------------------------
 
-  /// Executes the `calculate_chart` tool call end-to-end:
+  /// Executes the `calculate_birth_chart` tool call end-to-end:
   /// 1. Parses [args] (`date`, `time`, `city`).
   /// 2. Converts local IST birth time → UTC.
   /// 3. Geocodes [city] via the Nominatim API.
@@ -259,8 +407,7 @@ class AIAstrologyService {
       }
       final utcDate =
           DateTime.utc(year, month, day).add(Duration(days: dayDelta));
-      final hourDecimal =
-          utcMinutes ~/ 60 + (utcMinutes % 60) / 60.0;
+      final hourDecimal = utcMinutes ~/ 60 + (utcMinutes % 60) / 60.0;
 
       // 3. Geocode the city via Nominatim (OpenStreetMap)
       final encoded = Uri.encodeComponent(city);
@@ -273,29 +420,26 @@ class AIAstrologyService {
       });
       if (geoResponse.statusCode != 200) {
         return {
-          'error':
-              'Geocoding service unavailable (HTTP ${geoResponse.statusCode}).'
-              ' Please try again.',
+          'error': 'Geocoding service unavailable (HTTP '
+              '${geoResponse.statusCode}). Please try again.',
         };
       }
       final geoResults = (jsonDecode(geoResponse.body) as List);
       if (geoResults.isEmpty) {
         return {
-          'error':
-              'Could not find coordinates for "$city". '
+          'error': 'Could not find coordinates for "$city". '
               'Please try a more specific city name.',
         };
       }
       final lat = double.parse(geoResults[0]['lat'].toString());
       final lon = double.parse(geoResults[0]['lon'].toString());
-      final resolvedCity =
-          geoResults[0]['display_name']?.toString() ?? city;
+      final resolvedCity = geoResults[0]['display_name']?.toString() ?? city;
 
       // 4. Run sweph via the injected platform callback
       if (_chartGenerator == null) {
         return {
-          'error':
-              'The chart calculation engine is not available in this context.',
+          'error': 'The chart calculation engine is not available in this '
+              'context.',
         };
       }
       final chart = await _chartGenerator(

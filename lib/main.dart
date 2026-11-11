@@ -1,8 +1,19 @@
-import 'package:avara_astrology_trial/avara_colors.dart';
-import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
+import 'package:avara_astrology_trial/screens/auth_gate.dart';
+import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+/// Entry point.
+///
+/// [dotenv.load] runs before [runApp] so all `.env` values are available
+/// synchronously everywhere in the widget tree.
+///
+/// Authentication routing is handled by [AuthGate], which calls
+/// [AuthService.restoreSession] once on startup and routes to either
+/// [MainNavigationScaffold] (authenticated) or [LoginScreen] (guest).
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env', mergeWith: {});
   runApp(const AvaraApp());
 }
 
@@ -12,43 +23,13 @@ class AvaraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AVARA Astrology',
+      title: 'AVARA',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: AvaraColors.background,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AvaraColors.blue,
-          primary: AvaraColors.navy,
-          secondary: AvaraColors.blue,
-          surface: Colors.white,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AvaraColors.navy,
-          foregroundColor: Colors.white,
-          centerTitle: false,
-          elevation: 0,
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AvaraColors.blue,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
-          ),
-        ),
-      ),
-      home: AstrologyChatScreen(
-        // Inject your key: flutter run --dart-define=GEMINI_API_KEY=<your_key>
-        apiKey: const String.fromEnvironment(
-          'GEMINI_API_KEY',
-          defaultValue: 'AQ.Ab8RN6IGQlpvDKA2G4Vq1DFH33LoNikM1hjYhNOocYOWMwKEUQ',
-        ),
-      ),
+      theme: AppTheme.lightTheme,
+      // AuthGate checks for a stored JWT; routes to MainNavigationScaffold
+      // or LoginScreen accordingly. It also acts as the splash screen while
+      // the async session-restore is in flight.
+      home: const AuthGate(),
     );
   }
 }

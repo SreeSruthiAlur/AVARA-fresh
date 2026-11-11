@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:avara_astrology_trial/avara_colors.dart';
+import 'package:avara_astrology_trial/services/avara_api_client.dart';
+import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:flutter/material.dart';
@@ -216,6 +217,10 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
         _kundali = result;
         _resolvedPlace = displayName;
       });
+
+      // Persist birth details to the backend silently — errors are swallowed
+      // so they never interrupt the user's astrology flow.
+      _persistBirthDetails(displayName);
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
@@ -223,6 +228,49 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Background persist — does not block or surface errors to the user
+  // ---------------------------------------------------------------------------
+
+  /// Saves the confirmed birth details to the user profile on the backend.
+  ///
+  /// Called only after a successful kundali generation so the data is
+  /// guaranteed to be valid. Network or auth errors are silently caught so
+  /// they never interrupt the astrology flow.
+  Future<void> _persistBirthDetails(String resolvedPlace) async {
+    if (_selectedDate == null || _selectedTime == null) return;
+
+    final birthDateIso =
+        '${_selectedDate!.year}-'
+        '${_selectedDate!.month.toString().padLeft(2, '0')}-'
+        '${_selectedDate!.day.toString().padLeft(2, '0')}';
+    final birthTime = _formatTime(_selectedTime!); // HH:MM local time
+
+    try {
+      await AvaraApiClient.instance.patch('/profile/me', body: {
+        'birth_date': birthDateIso,
+        'birth_time': birthTime,
+        'birth_place': resolvedPlace,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Birth profile saved'),
+            backgroundColor: AppColors.green,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (_) {
+      // Intentionally swallowed — backend availability must never block the
+      // local astrology calculation that already succeeded.
     }
   }
 
@@ -293,7 +341,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AvaraColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Birth Profile & Astrology Evidence'),
       ),
@@ -335,23 +383,23 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
   InputDecoration _fieldDecoration(String label, [IconData? icon]) {
     final base = InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: AvaraColors.navy),
+      labelStyle: const TextStyle(color: AppColors.deepNavy),
       isDense: true,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AvaraColors.cardBorder),
+        borderSide: const BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AvaraColors.blue, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.blue, width: 1.5),
       ),
     );
     if (icon == null) return base;
     return base.copyWith(
       suffixIcon: Padding(
         padding: const EdgeInsets.only(left: 4),
-        child: Icon(icon, color: AvaraColors.blue, size: 20),
+        child: Icon(icon, color: AppColors.blue, size: 20),
       ),
       suffixIconConstraints: const BoxConstraints(minWidth: 28),
     );
@@ -363,7 +411,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AvaraColors.cardBorder),
+        side: const BorderSide(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -373,7 +421,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
             const Text(
               'Birth Details',
               style: TextStyle(
-                color: AvaraColors.navy,
+                color: AppColors.deepNavy,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -391,7 +439,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
                       : _formatDate(_selectedDate!),
                   style: TextStyle(
                     color:
-                        _selectedDate == null ? Colors.grey : AvaraColors.navy,
+                        _selectedDate == null ? Colors.grey : AppColors.deepNavy,
                     fontSize: 15,
                   ),
                 ),
@@ -411,7 +459,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
                       : _formatTime(_selectedTime!),
                   style: TextStyle(
                     color:
-                        _selectedTime == null ? Colors.grey : AvaraColors.navy,
+                        _selectedTime == null ? Colors.grey : AppColors.deepNavy,
                     fontSize: 15,
                   ),
                 ),
@@ -525,7 +573,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AvaraColors.cardBorder),
+        side: const BorderSide(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -535,7 +583,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
             const Text(
               'Rasi & Nakshatra',
               style: TextStyle(
-                color: AvaraColors.navy,
+                color: AppColors.deepNavy,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -592,7 +640,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
             child: Text(
               value,
               style: TextStyle(
-                color: AvaraColors.navy,
+                color: AppColors.deepNavy,
                 fontSize: prominent ? 16 : 14,
                 fontWeight: prominent ? FontWeight.bold : FontWeight.w600,
               ),
@@ -616,7 +664,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AvaraColors.cardBorder),
+        side: const BorderSide(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -626,7 +674,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
             const Text(
               'Janma Kundali — South Indian Chart',
               style: TextStyle(
-                color: AvaraColors.navy,
+                color: AppColors.deepNavy,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -676,8 +724,8 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
     if (rasiIndex == -1) {
       return DecoratedBox(
         decoration: BoxDecoration(
-          color: AvaraColors.background,
-          border: Border.all(color: AvaraColors.cardBorder, width: 0.5),
+          color: AppColors.background,
+          border: Border.all(color: AppColors.border, width: 0.5),
         ),
       );
     }
@@ -689,19 +737,19 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
     final Color borderColor;
     final double borderWidth;
     if (isMoonRasi) {
-      borderColor = AvaraColors.blue;
+      borderColor = AppColors.blue;
       borderWidth = 2.0;
     } else if (isLagnaRasi) {
-      borderColor = AvaraColors.navy;
+      borderColor = AppColors.deepNavy;
       borderWidth = 2.0;
     } else {
-      borderColor = AvaraColors.cardBorder;
+      borderColor = AppColors.border;
       borderWidth = 0.5;
     }
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AvaraColors.cardSurface,
+        color: AppColors.lightBlue,
         border: Border.all(color: borderColor, width: borderWidth),
       ),
       child: Padding(
@@ -719,7 +767,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: AvaraColors.navy,
+                      color: AppColors.deepNavy,
                     ),
                   ),
                 ),
@@ -752,7 +800,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
     final isLagna = abbr == 'As';
     final isRetro = abbr.endsWith('R');
     final bg = isLagna ? const Color(0x24100960) : const Color(0x1F2E71DB);
-    final fg = isLagna ? AvaraColors.navy : AvaraColors.blue;
+    final fg = isLagna ? AppColors.deepNavy : AppColors.blue;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
       decoration: BoxDecoration(
@@ -812,7 +860,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
             style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: AvaraColors.blue,
+              color: AppColors.blue,
             ),
           ),
         ),
@@ -843,7 +891,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: AvaraColors.navy,
+          backgroundColor: AppColors.deepNavy,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -875,7 +923,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AvaraColors.cardBorder),
+        side: const BorderSide(color: AppColors.border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -884,7 +932,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
           title: const Text(
             'Raw Evidence (JSON Payload)',
             style: TextStyle(
-              color: AvaraColors.navy,
+              color: AppColors.deepNavy,
               fontWeight: FontWeight.bold,
             ),
           ),

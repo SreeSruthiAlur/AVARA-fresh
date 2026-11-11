@@ -157,7 +157,7 @@ Future<void> main() async {
   print(kundali['south_indian_chart'] as String);
 
   // 7. Print Rasi & Nakshatra Summary
-  print('\n' + '═' * 60);
+  print('\n${'═' * 60}');
   print('                RASI & NAKSHATRA');
   print('═' * 60);
   print('Moon Rasi:     ${moon['rasi_name_telugu']} (${moon['rasi_name_sanskrit']})');
@@ -168,7 +168,7 @@ Future<void> main() async {
   print('Lagna Nakshatra: ${lagnaObj['nakshatra_name_telugu']} (${lagnaObj['nakshatra_name_sanskrit']}) - Pada ${lagnaObj['pada']}');
 
   // 8. Code snippet output
-  print('\n' + '═' * 60);
+  print('\n${'═' * 60}');
   print('                RASI & NAKSHATRA (CODE SNIPPET)');
   print('═' * 60);
   print('```');

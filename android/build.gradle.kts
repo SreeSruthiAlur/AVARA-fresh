@@ -14,7 +14,15 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    
+    // The override must be registered here, BEFORE the evaluation command below
+    afterEvaluate {
+        extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.apply {
+            compileSdkVersion(34)
+        }
+    }
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
