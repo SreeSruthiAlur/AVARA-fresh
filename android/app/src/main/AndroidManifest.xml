@@ -3,6 +3,9 @@
     <!-- Required for all HTTP/HTTPS calls (backend API, Nominatim geocoding, Gemini) -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- SECURITY DIRECTIVE: android:usesCleartextTraffic="true" is retained for offline local testing
+         and presentation routing to http://127.0.0.1:8000 / http://10.0.2.2:8000.
+         Remove android:usesCleartextTraffic="true" for external production APK builds to enforce strict HTTPS. -->
     <application
         android:label="avara_astrology_trial"
         android:name="${applicationName}"

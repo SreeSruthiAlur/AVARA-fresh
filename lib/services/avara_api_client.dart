@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:avara_astrology_trial/main.dart' show rootScaffoldMessengerKey;
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -64,6 +66,49 @@ class AvaraApiClient {
   /// The single shared instance.
   static final AvaraApiClient instance = AvaraApiClient._();
 
+  /// Maximum duration to wait for cloud server responses (prevents cold-start hanging).
+  static const Duration requestTimeout = Duration(seconds: 10);
+
+  /// Safe, user-friendly network failure message.
+  static const String kNetworkErrorMessage =
+      'Unable to connect to AVARA servers. Please check your internet connection and try again.';
+
+  /// Optional listener invoked whenever a network connectivity failure occurs.
+  static void Function(String message)? onNetworkError;
+
+  /// Triggers a non-intrusive floating SnackBar on the root ScaffoldMessenger
+  /// without requiring an active BuildContext.
+  static void notifyNetworkError([String? customMessage]) {
+    final msg = customMessage ?? kNetworkErrorMessage;
+    onNetworkError?.call(msg);
+    try {
+      final messenger = rootScaffoldMessengerKey.currentState;
+      if (messenger != null) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    msg,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFD32F2F),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (_) {}
+  }
+
   // ---- internals -----------------------------------------------------------
 
   final _storage = const FlutterSecureStorage(
@@ -71,20 +116,43 @@ class AvaraApiClient {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
-  String get _baseUrl =>
-      dotenv.get('AVARA_API_BASE_URL', fallback: 'http://127.0.0.1:8000/api/v1');
+  /// Base URL resolved dynamically from environment configuration.
+  /// Set `AVARA_API_BASE_URL` in `.env` to the secure production HTTPS endpoint
+  /// (e.g. `https://api.avara.app/api/v1`) when distributing release APKs.
+  String get _baseUrl {
+    String url = 'http://127.0.0.1:8000/api/v1';
+    try {
+      if (dotenv.isInitialized) {
+        url = dotenv.get('AVARA_API_BASE_URL', fallback: url);
+      }
+    } catch (_) {}
+    return url;
+  }
 
   // ---- token management ----------------------------------------------------
 
   /// Persists [token] in secure storage so it survives app restarts.
-  Future<void> persistToken(String token) =>
-      _storage.write(key: _kTokenKey, value: token);
+  Future<void> persistToken(String token) async {
+    try {
+      await _storage.write(key: _kTokenKey, value: token);
+    } catch (_) {}
+  }
 
   /// Removes the stored JWT (call on logout).
-  Future<void> clearToken() => _storage.delete(key: _kTokenKey);
+  Future<void> clearToken() async {
+    try {
+      await _storage.delete(key: _kTokenKey);
+    } catch (_) {}
+  }
 
   /// Returns the stored JWT, or `null` if the user is not signed in.
-  Future<String?> readToken() => _storage.read(key: _kTokenKey);
+  Future<String?> readToken() async {
+    try {
+      return await _storage.read(key: _kTokenKey);
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Returns `true` when a JWT token is currently stored.
   Future<bool> get isAuthenticated async =>
@@ -135,111 +203,113 @@ class AvaraApiClient {
     throw AvaraApiException(statusCode: response.statusCode, message: message);
   }
 
+  // ---- Safe execution & Network Error handling -----------------------------
+
+  /// Wraps HTTP requests in a 10s timeout and catches all network/server failures
+  /// (SocketException, TimeoutException, ClientException, HandshakeException, etc.).
+  /// Triggers a safe UI notification (SnackBar) and throws [AvaraApiException] with
+  /// a graceful error message instead of crashing the UI with raw unhandled exceptions.
+  Future<dynamic> _safeExecute(
+    String method,
+    String path,
+    Future<http.Response> Function() requestFn,
+  ) async {
+    try {
+      final response = await requestFn().timeout(requestTimeout);
+      return _handle(response);
+    } on SocketException catch (e) {
+      print('NETWORK ERROR [$method $path]: SocketException (server unreachable / offline) — ${e.message}');
+      notifyNetworkError();
+      throw const AvaraApiException(
+        statusCode: 0,
+        message: kNetworkErrorMessage,
+      );
+    } on TimeoutException catch (e) {
+      print('NETWORK ERROR [$method $path]: TimeoutException (exceeded ${requestTimeout.inSeconds}s) — $e');
+      notifyNetworkError();
+      throw const AvaraApiException(
+        statusCode: 408,
+        message: kNetworkErrorMessage,
+      );
+    } on http.ClientException catch (e) {
+      print('NETWORK ERROR [$method $path]: ClientException — $e');
+      notifyNetworkError();
+      throw const AvaraApiException(
+        statusCode: 0,
+        message: kNetworkErrorMessage,
+      );
+    } on HandshakeException catch (e) {
+      print('NETWORK ERROR [$method $path]: HandshakeException (TLS/SSL error) — $e');
+      notifyNetworkError();
+      throw const AvaraApiException(
+        statusCode: 0,
+        message: kNetworkErrorMessage,
+      );
+    } on AvaraApiException {
+      rethrow;
+    } catch (e) {
+      print('UNEXPECTED NETWORK ERROR [$method $path]: $e');
+      notifyNetworkError();
+      throw const AvaraApiException(
+        statusCode: 0,
+        message: kNetworkErrorMessage,
+      );
+    }
+  }
+
   // ---- HTTP verbs ----------------------------------------------------------
 
-  /// `GET /[path]`
+  /// `GET /[path]` with 10s timeout and bulletproof network error handling.
   Future<dynamic> get(
     String path, {
     Map<String, String>? queryParams,
   }) async {
     final uri = Uri.parse('$_baseUrl$path')
         .replace(queryParameters: queryParams?.isNotEmpty == true ? queryParams : null);
-    try {
-      final response = await http.get(uri, headers: await _headers());
-      return _handle(response);
-    } on SocketException catch (e) {
-      print('NETWORK ERROR [GET $path]: SocketException — ${e.message} (address: ${e.address}, port: ${e.port})');
-      rethrow;
-    } on TimeoutException catch (e) {
-      print('NETWORK ERROR [GET $path]: TimeoutException — $e');
-      rethrow;
-    } on http.ClientException catch (e) {
-      print('NETWORK ERROR [GET $path]: ClientException — $e');
-      rethrow;
-    }
+    final headers = await _headers();
+    return _safeExecute('GET', path, () => http.get(uri, headers: headers));
   }
 
-  /// `POST /[path]` with an optional JSON [body].
+  /// `POST /[path]` with an optional JSON [body], 10s timeout, and bulletproof error handling.
   Future<dynamic> post(String path, {Map<String, dynamic>? body}) async {
     final uri = Uri.parse('$_baseUrl$path');
-    try {
-      final response = await http.post(
-        uri,
-        headers: await _headers(),
-        body: body != null ? jsonEncode(body) : null,
-      );
-      return _handle(response);
-    } on SocketException catch (e) {
-      print('NETWORK ERROR [POST $path]: SocketException — ${e.message} (address: ${e.address}, port: ${e.port})');
-      rethrow;
-    } on TimeoutException catch (e) {
-      print('NETWORK ERROR [POST $path]: TimeoutException — $e');
-      rethrow;
-    } on http.ClientException catch (e) {
-      print('NETWORK ERROR [POST $path]: ClientException — $e');
-      rethrow;
-    }
+    final headers = await _headers();
+    final encodedBody = body != null ? jsonEncode(body) : null;
+    return _safeExecute(
+      'POST',
+      path,
+      () => http.post(uri, headers: headers, body: encodedBody),
+    );
   }
 
-  /// `PUT /[path]` with an optional JSON [body].
+  /// `PUT /[path]` with an optional JSON [body], 10s timeout, and bulletproof error handling.
   Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
     final uri = Uri.parse('$_baseUrl$path');
-    try {
-      final response = await http.put(
-        uri,
-        headers: await _headers(),
-        body: body != null ? jsonEncode(body) : null,
-      );
-      return _handle(response);
-    } on SocketException catch (e) {
-      print('NETWORK ERROR [PUT $path]: SocketException — ${e.message} (address: ${e.address}, port: ${e.port})');
-      rethrow;
-    } on TimeoutException catch (e) {
-      print('NETWORK ERROR [PUT $path]: TimeoutException — $e');
-      rethrow;
-    } on http.ClientException catch (e) {
-      print('NETWORK ERROR [PUT $path]: ClientException — $e');
-      rethrow;
-    }
+    final headers = await _headers();
+    final encodedBody = body != null ? jsonEncode(body) : null;
+    return _safeExecute(
+      'PUT',
+      path,
+      () => http.put(uri, headers: headers, body: encodedBody),
+    );
   }
 
-  /// `PATCH /[path]` with an optional JSON [body].
+  /// `PATCH /[path]` with an optional JSON [body], 10s timeout, and bulletproof error handling.
   Future<dynamic> patch(String path, {Map<String, dynamic>? body}) async {
     final uri = Uri.parse('$_baseUrl$path');
-    try {
-      final response = await http.patch(
-        uri,
-        headers: await _headers(),
-        body: body != null ? jsonEncode(body) : null,
-      );
-      return _handle(response);
-    } on SocketException catch (e) {
-      print('NETWORK ERROR [PATCH $path]: SocketException — ${e.message} (address: ${e.address}, port: ${e.port})');
-      rethrow;
-    } on TimeoutException catch (e) {
-      print('NETWORK ERROR [PATCH $path]: TimeoutException — $e');
-      rethrow;
-    } on http.ClientException catch (e) {
-      print('NETWORK ERROR [PATCH $path]: ClientException — $e');
-      rethrow;
-    }
+    final headers = await _headers();
+    final encodedBody = body != null ? jsonEncode(body) : null;
+    return _safeExecute(
+      'PATCH',
+      path,
+      () => http.patch(uri, headers: headers, body: encodedBody),
+    );
   }
 
-  /// `DELETE /[path]`.
+  /// `DELETE /[path]` with 10s timeout and bulletproof network error handling.
   Future<dynamic> delete(String path) async {
     final uri = Uri.parse('$_baseUrl$path');
-    try {
-      final response = await http.delete(uri, headers: await _headers());
-      return _handle(response);
-    } on SocketException catch (e) {
-      print('NETWORK ERROR [DELETE $path]: SocketException — ${e.message} (address: ${e.address}, port: ${e.port})');
-      rethrow;
-    } on TimeoutException catch (e) {
-      print('NETWORK ERROR [DELETE $path]: TimeoutException — $e');
-      rethrow;
-    } on http.ClientException catch (e) {
-      print('NETWORK ERROR [DELETE $path]: ClientException — $e');
-      rethrow;
-    }
+    final headers = await _headers();
+    return _safeExecute('DELETE', path, () => http.delete(uri, headers: headers));
   }
 }

@@ -3,6 +3,11 @@ import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+/// Global scaffold messenger key allowing services (like [AvaraApiClient])
+/// to show safe floating SnackBars without requiring BuildContext.
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 /// Entry point.
 ///
 /// [dotenv.load] runs before [runApp] so all `.env` values are available
@@ -26,6 +31,7 @@ class AvaraApp extends StatelessWidget {
       title: 'AVARA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       // AuthGate checks for a stored JWT; routes to MainNavigationScaffold
       // or LoginScreen accordingly. It also acts as the splash screen while
       // the async session-restore is in flight.

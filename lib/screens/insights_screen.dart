@@ -623,7 +623,7 @@ class _ReflectionCategory {
   });
 
   final String title;
-  final String promptKey; // used in the Gemini prompt
+  final String promptKey; // used in the Groq prompt
   final IconData iconData;
   final Color iconColor;
   final Color iconBg;
@@ -673,7 +673,7 @@ class _ReflectionsTabState extends State<_ReflectionsTab> {
   }
 
   // ---------------------------------------------------------------------------
-  // Data aggregation + Gemini call
+  // Data aggregation + Groq call
   // ---------------------------------------------------------------------------
 
   Future<void> _generateInsights() async {
@@ -717,44 +717,44 @@ Rules: Be specific, encouraging, and grounded in the numbers. No fluffy generic 
 Output format (strict JSON, no markdown): {"wellness":"...","habits":"...","spending":"..."}
 ''';
 
-      // 3. Call Gemini directly via the REST endpoint.
-      // Re-sanitize the key at call time to strip any formatting artifacts.
-      // Only Content-Type header is sent — no Authorization header, which
-      // would trigger a 400 "Multiple Credentials" error.
-      final rawKey = dotenv.env['GEMINI_API_KEY'] ?? '';
-      final cleanKey = rawKey.replaceAll('"', '').replaceAll("'", '').trim();
-      if (cleanKey.isEmpty) {
-        throw Exception('GEMINI_API_KEY not set in .env');
+      // 3. Call Groq directly via the OpenAI-compatible REST endpoint.
+      final rawKey = dotenv.env['GROQ_API_KEY'] ?? '';
+      final apiKey = rawKey.replaceAll('"', '').replaceAll("'", '').trim();
+      if (apiKey.isEmpty) {
+        throw Exception('GROQ_API_KEY not set in .env');
       }
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/'
-        'gemini-3.8-flash:generateContent?key=$cleanKey',
-      );
+      final url = Uri.parse('https://api.groq.com/openai/v1/chat/completions');
       final response = await http
           .post(
             url,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Authorization': 'Bearer $apiKey',
+              'Content-Type': 'application/json',
+            },
             body: jsonEncode({
-              'contents': [
+              'model': 'openai/gpt-oss-20b',
+              'messages': [
                 {
                   'role': 'user',
-                  'parts': [{'text': prompt}],
-                }
+                  'content': prompt,
+                },
               ],
             }),
           )
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode != 200) {
-        final err = jsonDecode(response.body);
-        final msg = err['error']?['message']?.toString() ?? response.body;
-        throw Exception('Gemini error: $msg');
+        Map<String, dynamic>? errJson;
+        try {
+          errJson = jsonDecode(response.body) as Map<String, dynamic>?;
+        } catch (_) {}
+        final msg = errJson?['error']?['message']?.toString() ?? response.body;
+        throw Exception('Groq error: $msg');
       }
 
       // 4. Parse the text → JSON.
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      final rawText = decoded['candidates']?[0]?['content']?['parts']?[0]
-              ?['text']
+      final jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
+      final rawText = jsonResponse['choices']?[0]?['message']?['content']
               ?.toString() ??
           '';
       // Strip any accidental markdown fences.
@@ -765,7 +765,7 @@ Output format (strict JSON, no markdown): {"wellness":"...","habits":"...","spen
         parsed = jsonDecode(cleaned) as Map<String, dynamic>;
       } catch (_) {
         throw Exception(
-            'Gemini returned unexpected format. Raw:\n$rawText');
+            'Groq returned unexpected format. Raw:\n$rawText');
       }
 
       setState(() {

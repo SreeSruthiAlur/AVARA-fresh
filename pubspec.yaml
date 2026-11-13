@@ -20,6 +20,7 @@ dependencies:
   shared_preferences: ^2.3.5
   flutter_secure_storage: ^9.2.4
   sweph: ^3.2.1
+  flutter_markdown: ^0.7.7+1
 
 dev_dependencies:
   flutter_test:

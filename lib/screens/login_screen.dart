@@ -65,7 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateHome(AuthUser user) {
-    final apiKey = dotenv.get('GEMINI_API_KEY', fallback: '');
+    final apiKey = dotenv.get('GROQ_API_KEY',
+        fallback: dotenv.get('GEMINI_API_KEY', fallback: ''));
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
         builder: (_) => MainNavigationScaffold(

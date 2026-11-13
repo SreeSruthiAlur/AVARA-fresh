@@ -51,7 +51,8 @@ class _AuthGateState extends State<AuthGate> {
         // --- Authenticated ---------------------------------------------------
         final user = snapshot.data;
         if (user != null) {
-          final apiKey = dotenv.get('GEMINI_API_KEY', fallback: '');
+          final apiKey = dotenv.get('GROQ_API_KEY',
+              fallback: dotenv.get('GEMINI_API_KEY', fallback: ''));
           return MainNavigationScaffold(
             apiKey: apiKey,
             userName:

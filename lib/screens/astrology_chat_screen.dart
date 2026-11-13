@@ -3,9 +3,12 @@ import 'dart:typed_data';
 
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/services/ai_astrology_service.dart';
+import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
+import 'package:avara_astrology_trial/widgets/square_kundli_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:sweph/sweph.dart' show AssetLoader;
 
 // ---------------------------------------------------------------------------
@@ -89,6 +92,8 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
     // answer personal questions immediately without asking for birth details.
     if (widget.chartJson != null) {
       _service.preloadChart(widget.chartJson!);
+    } else {
+      _loadStoredProfileIfAvailable();
     }
 
     // Dynamic greeting based on whether a chart is already available.
@@ -96,10 +101,17 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
         ? 'Namaste 🙏  I am AVARA, your Jyotisha Intelligence engine.\n\n'
           'Your Janma Kundali has been loaded. Ask me anything — '
           'planetary positions, Nakshatra qualities, Dasha periods, or life guidance.'
-        : 'Namaste 🙏  I am AVARA, your Vedic Astrology guide.\n\n'
-          'Ask me any astrology question directly. For a personalised reading, '
-          'just share your Date, Time, and City of birth.';
+        : 'Namaste 🙏 I am AVARA, your Vedic Astrology guide. How can I guide you today?';
     _messages.add(_ChatMessage(text: greeting, sender: _MessageSender.ai));
+  }
+
+  Future<void> _loadStoredProfileIfAvailable() async {
+    final stored = await BirthProfileManager.instance.loadBirthDetails();
+    if (stored != null && mounted) {
+      if (BirthProfileManager.instance.cachedChart != null) {
+        _service.preloadChart(BirthProfileManager.instance.cachedChart!);
+      }
+    }
   }
 
   @override
@@ -278,6 +290,12 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
 
   Widget _buildMessageBubble(_ChatMessage message) {
     final isUser = message.sender == _MessageSender.user;
+    final containsSquareKundli =
+        !isUser && message.text.contains('[RENDER_SQUARE_KUNDLI]');
+    final cleanText = containsSquareKundli
+        ? message.text.replaceAll('[RENDER_SQUARE_KUNDLI]', '').trim()
+        : message.text;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -292,7 +310,9 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
           Flexible(
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.78,
+                maxWidth: containsSquareKundli
+                    ? math.min(MediaQuery.of(context).size.width * 0.90, 360.0)
+                    : MediaQuery.of(context).size.width * 0.78,
               ),
               decoration: BoxDecoration(
                 gradient: isUser
@@ -349,16 +369,106 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                         ),
                       ),
                     ),
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      color: isUser
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.92),
-                      fontSize: 14,
-                      height: 1.5,
+                  if (isUser)
+                    Text(
+                      message.text,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        MarkdownBody(
+                          data: cleanText,
+                          selectable: true,
+                          styleSheet: MarkdownStyleSheet(
+                            p: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.92),
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
+                            h1: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              height: 1.4,
+                            ),
+                            h2: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              height: 1.4,
+                            ),
+                            h3: const TextStyle(
+                              color: Color(0xFFFFD700), // Gold accent
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              height: 1.3,
+                            ),
+                            strong: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            em: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              fontStyle: FontStyle.italic,
+                            ),
+                            listBullet: const TextStyle(
+                              color: AppColors.blue,
+                              fontSize: 14,
+                            ),
+                            blockquote: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontStyle: FontStyle.italic,
+                            ),
+                            blockquoteDecoration: BoxDecoration(
+                              border: Border(
+                                left: BorderSide(
+                                  color: AppColors.blue.withValues(alpha: 0.6),
+                                  width: 3,
+                                ),
+                              ),
+                            ),
+                            code: const TextStyle(
+                              color: Color(0xFFFFD700),
+                              backgroundColor: Color(0x33000000),
+                              fontFamily: 'monospace',
+                              fontSize: 13,
+                            ),
+                            tableHead: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                            tableBody: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                            tableBorder: TableBorder.all(
+                              color: Colors.white30,
+                              width: 1,
+                            ),
+                            tableCellsPadding:
+                                const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            tableHeadAlign: TextAlign.left,
+                            pPadding: const EdgeInsets.only(bottom: 6),
+                            listBulletPadding: const EdgeInsets.only(right: 6),
+                          ),
+                        ),
+                        if (containsSquareKundli) ...[
+                          const SizedBox(height: 8),
+                          SquareKundliWidget(
+                            chartJson: _service.chartJson ??
+                                BirthProfileManager.instance.cachedChart ??
+                                widget.chartJson,
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
                   const SizedBox(height: 4),
                   Align(
                     alignment: Alignment.bottomRight,

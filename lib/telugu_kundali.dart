@@ -207,6 +207,7 @@ class TeluguKundaliCalculator {
       'rasi_index': ascendantRasiIndex,
       'rasi_name_telugu': _teluguRasiNames[ascendantRasiIndex],
       'rasi_name_sanskrit': _sanskritRasiNames[ascendantRasiIndex],
+      'rasi_name_english': _englishRasiNames[ascendantRasiIndex],
       'nakshatra_index': _getNakshatraIndex(siderealAsc),
       'nakshatra_name_telugu': _teluguNakshatraNames[_getNakshatraIndex(siderealAsc)],
       'nakshatra_name_sanskrit': _sanskritNakshatraNames[_getNakshatraIndex(siderealAsc)],
@@ -214,6 +215,103 @@ class TeluguKundaliCalculator {
       'pada': _getPada(siderealAsc),
       'degrees_in_nakshatra': _getDegreesInNakshatra(siderealAsc),
       'is_retrograde': false,
+      'house': 1,
+    };
+
+    // Calculate House number (Bhava) and English Rasi for each planet
+    for (final entry in planets.entries) {
+      final p = entry.value;
+      final rIndex = p['rasi_index'] as int;
+      p['house'] = ((rIndex - ascendantRasiIndex + 12) % 12) + 1;
+      p['rasi_name_english'] = _englishRasiNames[rIndex];
+    }
+
+    // Compute the 12 Houses (Bhavas) in whole sign system from Lagna
+    final houses = <int, Map<String, dynamic>>{};
+    for (int h = 1; h <= 12; h++) {
+      final houseRasiIndex = (ascendantRasiIndex + h - 1) % 12;
+      final occupants = <String>[];
+      for (final pEntry in planets.entries) {
+        if (pEntry.value['rasi_index'] == houseRasiIndex) {
+          occupants.add(pEntry.key);
+        }
+      }
+      houses[h] = {
+        'house_number': h,
+        'rasi_index': houseRasiIndex,
+        'rasi_name_telugu': _teluguRasiNames[houseRasiIndex],
+        'rasi_name_sanskrit': _sanskritRasiNames[houseRasiIndex],
+        'rasi_name_english': _englishRasiNames[houseRasiIndex],
+        'lord': _rasiLords[houseRasiIndex],
+        'occupants': occupants,
+        'significance': _houseSignificances[h - 1],
+      };
+    }
+
+    // Compute Vimshottari Mahadasha
+    final moonLon = planets['Moon']!['sidereal_longitude'] as double;
+    final moonNakIndex = _getNakshatraIndex(moonLon);
+    final startingLord = _nakshatraLords[moonNakIndex];
+    final startingLordIdx = _vimshottariPlanets.indexOf(startingLord);
+    final lordTotalYears = _vimshottariYears[startingLordIdx];
+
+    final degreesInNak = _getDegreesInNakshatra(moonLon);
+    const nakshatraSpan = 13.333333333333334;
+    final elapsedFraction = (degreesInNak / nakshatraSpan).clamp(0.0, 1.0);
+    final remainingFraction = (1.0 - elapsedFraction).clamp(0.0, 1.0);
+    final balanceYearsAtBirth = lordTotalYears * remainingFraction;
+
+    final birthDt = DateTime.utc(year, month, day, hourUTC.floor(), ((hourUTC - hourUTC.floor()) * 60).floor());
+    final dashaTimeline = <Map<String, dynamic>>[];
+    Map<String, dynamic>? currentMahadasha;
+    final now = DateTime.now().toUtc();
+
+    for (int i = 0; i < 9; i++) {
+      final idx = (startingLordIdx + i) % 9;
+      final planetName = _vimshottariPlanets[idx];
+      final durationYears = _vimshottariYears[idx];
+
+      final DateTime start;
+      final DateTime end;
+      if (i == 0) {
+        start = birthDt;
+        end = birthDt.add(Duration(days: (balanceYearsAtBirth * 365.25).round()));
+      } else {
+        final prevEnd = DateTime.parse(dashaTimeline[i - 1]['end_date'] as String);
+        start = prevEnd;
+        end = prevEnd.add(Duration(days: (durationYears * 365.25).round()));
+      }
+
+      final entry = {
+        'planet': planetName,
+        'duration_years': durationYears,
+        'start_date': '${start.year}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}',
+        'end_date': '${end.year}-${end.month.toString().padLeft(2, '0')}-${end.day.toString().padLeft(2, '0')}',
+      };
+      dashaTimeline.add(entry);
+
+      if (now.isAfter(start) && now.isBefore(end)) {
+        currentMahadasha = entry;
+      }
+    }
+
+    if (currentMahadasha == null && dashaTimeline.isNotEmpty) {
+      for (final d in dashaTimeline) {
+        final s = DateTime.parse(d['start_date'] as String);
+        final e = DateTime.parse(d['end_date'] as String);
+        if (now.isAfter(s) && now.isBefore(e)) {
+          currentMahadasha = d;
+          break;
+        }
+      }
+      currentMahadasha ??= dashaTimeline.first;
+    }
+
+    final vimshottariDasha = {
+      'starting_lord': startingLord,
+      'balance_years_at_birth': balanceYearsAtBirth,
+      'current_mahadasha': currentMahadasha,
+      'timeline': dashaTimeline,
     };
 
     final rasiToPlanets = _groupPlanetsByRasi(planets, lagna);
@@ -226,6 +324,8 @@ class TeluguKundaliCalculator {
       'ayanamsa_name': _ayanamsaName,
       'planets': planets,
       'lagna': lagna,
+      'houses': houses,
+      'vimshottari_dasha': vimshottariDasha,
       'rasi_to_planets': rasiToPlanets,
       'south_indian_chart': generateSouthIndianChart(rasiToPlanets),
     };
@@ -416,5 +516,38 @@ class TeluguKundaliCalculator {
     'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury', 'Ketu',
     'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury', 'Ketu', 'Venus',
     'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury',
+  ];
+
+  static const List<String> _englishRasiNames = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+  ];
+
+  static const List<String> _rasiLords = [
+    'Mars', 'Venus', 'Mercury', 'Moon', 'Sun', 'Mercury',
+    'Venus', 'Mars', 'Jupiter', 'Saturn', 'Saturn', 'Jupiter',
+  ];
+
+  static const List<String> _houseSignificances = [
+    'House 1 (Lagna): Physical self, personality, vitality, life direction',
+    'House 2 (Dhana): Wealth, speech, family, material resources, food habits',
+    'House 3 (Sahaja): Courage, siblings, short travel, communication, willpower',
+    'House 4 (Sukha): Mother, home, inner peace, vehicles, land, emotional stability',
+    'House 5 (Putra): Intelligence, children, creativity, past-life merits (Purva Punya)',
+    'House 6 (Ari): Health obstacles, debts, daily work, service, competitive strength',
+    'House 7 (Kalatra): Marriage, spouse, partnerships, significant relationships',
+    'House 8 (Ayur): Longevity, sudden changes, transformation, occult, shared resources',
+    'House 9 (Bhagya): Fortune, dharma, higher wisdom, father, spiritual guidance',
+    'House 10 (Karma): Career, profession, social status, fame, public actions',
+    'House 11 (Labha): Gains, income, aspirations, friendships, elder siblings',
+    'House 12 (Vyaya): Expenses, foreign travel, spiritual liberation (Moksha), sleep',
+  ];
+
+  static const List<String> _vimshottariPlanets = [
+    'Ketu', 'Venus', 'Sun', 'Moon', 'Mars', 'Rahu', 'Jupiter', 'Saturn', 'Mercury',
+  ];
+
+  static const List<int> _vimshottariYears = [
+    7, 20, 6, 10, 7, 18, 16, 19, 17,
   ];
 }
