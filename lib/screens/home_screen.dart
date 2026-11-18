@@ -4,8 +4,11 @@ import 'package:avara_astrology_trial/screens/habits_screen.dart';
 import 'package:avara_astrology_trial/screens/health_screen.dart';
 import 'package:avara_astrology_trial/screens/insights_screen.dart';
 import 'package:avara_astrology_trial/screens/profile_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
 /// A single entry in the Home "Explore AVARA" grid.
@@ -184,6 +187,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // -- Greeting ---------------------------------------------------------------
 
   Widget _buildGreeting(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+    final currentLang = AppLanguageService.instance.currentLanguage;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -204,22 +210,79 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
+
+        // Quick Language Switcher Badge
+        GestureDetector(
+          onTap: () => LanguageSelectorSheet.show(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.language_rounded,
+                    size: 16, color: AppColors.blue),
+                const SizedBox(width: 4),
+                Text(
+                  currentLang.shortLabel,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.deepNavy,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // Quick Voice Assistant Button
+        GestureDetector(
+          onTap: () => GlobalVoiceAssistantModal.show(context),
+          child: Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.lightBlue.withValues(alpha: 0.8),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
+            ),
+            child: const Icon(Icons.mic_rounded,
+                size: 20, color: AppColors.blue),
+          ),
+        ),
+        const SizedBox(width: 8),
+
         _TappableAvatar(name: widget.userName),
       ],
     );
   }
 
   String _greetingPrefix() {
+    final tr = AppLanguageService.instance.tr;
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return tr('greeting_morning');
+    if (hour < 17) return tr('greeting_afternoon');
+    return tr('greeting_evening');
   }
 
   // -- Moment card ------------------------------------------------------------
 
   Widget _buildMomentCard(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return AvaraSurfaceCard(
       backgroundColor: AppColors.lavender,
       child: Row(
@@ -229,11 +292,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.momentTitle,
+                Text(tr('moment_title'),
                     style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 6),
                 Text(
-                  widget.momentSubtitle,
+                  tr('moment_subtitle'),
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
@@ -260,24 +323,89 @@ class _HomeScreenState extends State<HomeScreen> {
   // -- Explore ----------------------------------------------------------------
 
   Widget _buildExploreHeader(BuildContext context) {
-    return Text('Explore AVARA',
+    final tr = AppLanguageService.instance.tr;
+    return Text(tr('explore_avara'),
         style: Theme.of(context).textTheme.titleLarge);
   }
 
   Widget _buildExploreGrid(BuildContext context, void Function(ExploreModule) onTap) {
+    final tr = AppLanguageService.instance.tr;
+
+    final localizedModules = [
+      ExploreModule(
+        label: tr('mod_astrology_title'),
+        subtitle: tr('mod_astrology_sub'),
+        icon: Icons.nightlight_round,
+        color: AppColors.violet,
+        background: AppColors.lightPink,
+      ),
+      ExploreModule(
+        label: tr('mod_finance_title'),
+        subtitle: tr('mod_finance_sub'),
+        icon: Icons.account_balance_wallet_outlined,
+        color: AppColors.green,
+        background: AppColors.lightGreen,
+      ),
+      ExploreModule(
+        label: tr('mod_habits_title'),
+        subtitle: tr('mod_habits_sub'),
+        icon: Icons.track_changes,
+        color: AppColors.orange,
+        background: AppColors.lightOrange,
+      ),
+      ExploreModule(
+        label: tr('mod_health_title'),
+        subtitle: tr('mod_health_sub'),
+        icon: Icons.favorite,
+        color: AppColors.tealBlue,
+        background: AppColors.lightCyan,
+      ),
+      ExploreModule(
+        label: tr('mod_insights_title'),
+        subtitle: tr('mod_insights_sub'),
+        icon: Icons.auto_graph,
+        color: AppColors.magentaPurple,
+        background: AppColors.lightPink,
+      ),
+    ];
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: widget.exploreModules.length,
+      itemCount: localizedModules.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 1.45, // rectangular cards matching Figma
+        childAspectRatio: 1.45,
       ),
       itemBuilder: (context, index) => _ExploreModuleCard(
-        module: widget.exploreModules[index],
-        onTap: onTap,
+        module: localizedModules[index],
+        onTap: (module) {
+          // Route by index so localized labels route identically
+          switch (index) {
+            case 0:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(builder: (_) => const AstrologyHubScreen()),
+              );
+            case 1:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(builder: (_) => const FinanceScreen()),
+              );
+            case 2:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(builder: (_) => const HabitsScreen()),
+              );
+            case 3:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(builder: (_) => const HealthScreen()),
+              );
+            case 4:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(builder: (_) => const InsightsScreen()),
+              );
+          }
+        },
       ),
     );
   }

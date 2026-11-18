@@ -1,11 +1,14 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/services/ai_astrology_service.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
+import 'package:avara_astrology_trial/theme/app_colors.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/square_kundli_widget.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -80,6 +83,27 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
     'What career path suits my Janma Nakshatra?',
   ];
 
+  List<String> get _currentSuggestions {
+    switch (AppLanguageService.instance.currentLanguage) {
+      case AppLanguage.telugu:
+        return const [
+          'నా చంద్ర రాశి నా భావోద్వేగాల గురించి ఏమి చెబుతోంది?',
+          'నా లగ్నం మరియు నా వ్యక్తిత్వం గురించి వివరించండి.',
+          'నా చార్ట్ లో కేంద్రాలలో ఉన్న గ్రహాలు ఏవి?',
+          'నా జన్మ నక్షత్రానికి ఏ కెరీర్ సరిపోతుంది?',
+        ];
+      case AppLanguage.tanglish:
+        return const [
+          'Naa Moon sign emotions gurinchi em chepthondi?',
+          'Naa Lagna mariyu personality gurinchi cheppu.',
+          'Naa chart lo kendralalo unna grahalu enti?',
+          'Naa Janma Nakshatram ki ae career set avuthundi?',
+        ];
+      case AppLanguage.english:
+        return _suggestions;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -96,12 +120,26 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
       _loadStoredProfileIfAvailable();
     }
 
-    // Dynamic greeting based on whether a chart is already available.
-    final greeting = widget.chartJson != null
-        ? 'Namaste 🙏  I am AVARA, your Jyotisha Intelligence engine.\n\n'
-          'Your Janma Kundali has been loaded. Ask me anything — '
-          'planetary positions, Nakshatra qualities, Dasha periods, or life guidance.'
-        : 'Namaste 🙏 I am AVARA, your Vedic Astrology guide. How can I guide you today?';
+    // Dynamic greeting based on active language and whether chart is available
+    final lang = AppLanguageService.instance.currentLanguage;
+    String greeting;
+    if (lang == AppLanguage.telugu) {
+      greeting = widget.chartJson != null
+          ? 'నమస్కారం 🙏 నేను AVARA, మీ జ్యోతిష ఇంటెలిజెన్స్ ఇంజిన్.\n\n'
+            'మీ జన్మ కుండలి లోడ్ చేయబడింది. గ్రహ స్థానాలు, నక్షత్ర గుణాలు, లేదా దశా కాలాల గురించి అడగండి.'
+          : 'నమస్కారం 🙏 నేను AVARA, మీ వేద జ్యోతిష మార్గదర్శిని. ఈ రోజు మీకు ఏ విధంగా మార్గదర్శనం చేయగలను?';
+    } else if (lang == AppLanguage.tanglish) {
+      greeting = widget.chartJson != null
+          ? 'Namaskaram 🙏 Nenu AVARA, mee Jyotisha Intelligence engine.\n\n'
+            'Mee Janma Kundali load ayyindi. Graha sthanalu, Nakshatra qualities, or life guidance gurinchi emaina adagandi.'
+          : 'Namaskaram 🙏 Nenu AVARA, mee Vedic Astrology guide ni. Ee roju meeku ela guide cheyali?';
+    } else {
+      greeting = widget.chartJson != null
+          ? 'Namaste 🙏  I am AVARA, your Jyotisha Intelligence engine.\n\n'
+            'Your Janma Kundali has been loaded. Ask me anything — '
+            'planetary positions, Nakshatra qualities, Dasha periods, or life guidance.'
+          : 'Namaste 🙏 I am AVARA, your Vedic Astrology guide. How can I guide you today?';
+    }
     _messages.add(_ChatMessage(text: greeting, sender: _MessageSender.ai));
   }
 
@@ -220,6 +258,9 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final currentLang = AppLanguageService.instance.currentLanguage;
+    final tr = AppLanguageService.instance.tr;
+
     return AppBar(
       backgroundColor: AppColors.background,
       foregroundColor: AppColors.deepNavy,
@@ -232,16 +273,16 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'AVARA Jyotisha',
-                style: TextStyle(
+              Text(
+                tr('astrology_chat_title'),
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               Text(
-                'Powered by Gemini • Vedic Astrology',
+                tr('astrology_chat_subtitle'),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.white.withValues(alpha: 0.55),
@@ -251,6 +292,35 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
           ),
         ],
       ),
+      actions: [
+        GestureDetector(
+          onTap: () => LanguageSelectorSheet.show(context),
+          child: Container(
+            margin: const EdgeInsets.only(right: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.translate_rounded, size: 14, color: Colors.white),
+                const SizedBox(width: 4),
+                Text(
+                  currentLang.shortLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Divider(
@@ -504,7 +574,7 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: _suggestions
+        children: _currentSuggestions
             .map(
               (s) => GestureDetector(
                 onTap: () {
@@ -566,8 +636,10 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
   }
 
   Widget _buildInputRow() {
+    final tr = AppLanguageService.instance.tr;
+
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.white,
         border: Border(
           top: BorderSide(color: AppColors.border, width: 1),
@@ -588,28 +660,44 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                     color: AppColors.border,
                   ),
                 ),
-                child: TextField(
-                  controller: _inputController,
-                  focusNode: _inputFocusNode,
-                  enabled: !_isThinking,
-                  maxLines: 4,
-                  minLines: 1,
-                  textInputAction: TextInputAction.newline,
-                  style: const TextStyle(
-                    color: AppColors.deepNavy,
-                    fontSize: 14,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Ask about your chart…',
-                    hintStyle: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 14,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _inputController,
+                        focusNode: _inputFocusNode,
+                        enabled: !_isThinking,
+                        maxLines: 4,
+                        minLines: 1,
+                        textInputAction: TextInputAction.newline,
+                        style: const TextStyle(
+                          color: AppColors.deepNavy,
+                          fontSize: 14,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: tr('astrology_input_hint'),
+                          hintStyle: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 13,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                        ),
+                        onSubmitted: (_) => _sendMessage(),
+                      ),
                     ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                  ),
-                  onSubmitted: (_) => _sendMessage(),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2, right: 4),
+                      child: VoiceInputButton(
+                        controller: _inputController,
+                        size: 20,
+                        activeColor: AppColors.blue,
+                        inactiveColor: AppColors.secondaryText,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

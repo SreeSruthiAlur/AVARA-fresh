@@ -2,12 +2,14 @@ import 'dart:convert';
 
 import 'package:avara_astrology_trial/models/health_model.dart';
 import 'package:avara_astrology_trial/models/insights_model.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/services/health_service.dart';
 import 'package:avara_astrology_trial/services/insights_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -68,9 +70,14 @@ class _InsightsScreenState extends State<InsightsScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('AVARA Insights',
+        title: Text(AppLanguageService.instance.tr('mod_insights_title'),
             style: Theme.of(context).textTheme.titleLarge),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.language_rounded),
+            onPressed: () => LanguageSelectorSheet.show(context),
+            tooltip: AppLanguageService.instance.tr('lang_switch_title'),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _refresh,

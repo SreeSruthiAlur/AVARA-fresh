@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:avara_astrology_trial/services/avara_api_client.dart';
-import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
+import 'package:avara_astrology_trial/theme/app_colors.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -340,10 +343,19 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Birth Profile & Astrology Evidence'),
+        title: Text(tr('astrology_birth_profile_title')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language_rounded),
+            tooltip: tr('lang_switch_title'),
+            onPressed: () => LanguageSelectorSheet.show(context),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -418,9 +430,9 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Birth Details',
-              style: TextStyle(
+            Text(
+              tr('profile_birth_details'),
+              style: const TextStyle(
                 color: AppColors.deepNavy,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -432,7 +444,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
               onTap: _pickDate,
               borderRadius: BorderRadius.circular(8),
               child: InputDecorator(
-                decoration: _fieldDecoration('Date of Birth', Icons.calendar_today),
+                decoration: _fieldDecoration(tr('astrology_dob'), Icons.calendar_today),
                 child: Text(
                   _selectedDate == null
                       ? 'Select date'
@@ -452,7 +464,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
               borderRadius: BorderRadius.circular(8),
               child: InputDecorator(
                 decoration:
-                    _fieldDecoration('Time of Birth (Local)', Icons.access_time),
+                    _fieldDecoration(tr('astrology_tob'), Icons.access_time),
                 child: Text(
                   _selectedTime == null
                       ? 'Select time'
@@ -483,8 +495,24 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
             TextFormField(
               controller: _placeController,
               textInputAction: TextInputAction.done,
-              decoration:
-                  _fieldDecoration('Place of Birth (City, State)', Icons.place),
+              decoration: _fieldDecoration(
+                tr('astrology_pob'),
+                null,
+              ).copyWith(
+                hintText: tr('astrology_pob_hint'),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    VoiceInputButton(
+                      controller: _placeController,
+                      size: 20,
+                      activeColor: AppColors.blue,
+                    ),
+                    const Icon(Icons.place, color: AppColors.blue, size: 20),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             // Ayanamsa (backend supports Lahiri / Raman / KP)
@@ -509,6 +537,8 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
   }
 
   Widget _buildGenerateButton() {
+    final tr = AppLanguageService.instance.tr;
+
     return SizedBox(
       height: 50,
       child: ElevatedButton(
@@ -522,9 +552,9 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
                   strokeWidth: 2.5,
                 ),
               )
-            : const Text(
-                'Generate Evidence Chart',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            : Text(
+                tr('astrology_generate_btn'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
       ),
     );

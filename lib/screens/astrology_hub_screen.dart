@@ -1,7 +1,9 @@
 import 'package:avara_astrology_trial/screens/astrologers_screen.dart';
 import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
 /// AVARA Astrology hub — mirrors "03 — Astrology" Figma.
@@ -18,11 +20,20 @@ class AstrologyHubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('AVARA Astrology',
+        title: Text(tr('astrology_title'),
             style: Theme.of(context).textTheme.titleLarge),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language_rounded),
+            onPressed: () => LanguageSelectorSheet.show(context),
+            tooltip: tr('lang_switch_title'),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
@@ -38,7 +49,7 @@ class AstrologyHubScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'AVARA Astrology',
+                    tr('astrology_hero_title'),
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
@@ -47,7 +58,7 @@ class AstrologyHubScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Ask Questions. Get Perspectives.',
+                    tr('astrology_hero_tagline'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           color: AppColors.violet,
                         ),
@@ -55,7 +66,7 @@ class AstrologyHubScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Find Guidance for your journey',
+                    tr('astrology_hero_sub'),
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
@@ -63,7 +74,7 @@ class AstrologyHubScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  Center(
+                  const Center(
                     child: Icon(Icons.nightlight_round,
                         size: 64, color: AppColors.violet),
                   ),
@@ -76,7 +87,7 @@ class AstrologyHubScreen extends StatelessWidget {
               icon: Icons.auto_awesome,
               iconColor: AppColors.blue,
               iconBg: AppColors.lightBlue,
-              label: 'Ask a Question',
+              label: tr('astrology_tile_ask'),
               onTap: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
                   builder: (_) => AstrologyChatScreen(apiKey: apiKey),
@@ -88,7 +99,7 @@ class AstrologyHubScreen extends StatelessWidget {
               icon: Icons.explore_outlined,
               iconColor: AppColors.violet,
               iconBg: AppColors.lightPink,
-              label: 'Explore Topics',
+              label: tr('astrology_tile_topics'),
               onTap: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
                   builder: (_) => AstrologyChatScreen(apiKey: apiKey),
@@ -100,7 +111,7 @@ class AstrologyHubScreen extends StatelessWidget {
               icon: Icons.person_search_outlined,
               iconColor: AppColors.tealBlue,
               iconBg: AppColors.lightCyan,
-              label: 'Talk to an Astrologer',
+              label: tr('astrology_tile_astrologer'),
               onTap: () => Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
                   builder: (_) => const AstrologersScreen(),
@@ -109,7 +120,7 @@ class AstrologyHubScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Astrology offers traditional interpretations, not guaranteed outcomes.',
+              tr('astrology_disclaimer'),
               style: Theme.of(context)
                   .textTheme
                   .bodySmall

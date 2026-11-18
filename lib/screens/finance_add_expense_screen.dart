@@ -1,9 +1,11 @@
 import 'package:avara_astrology_trial/models/finance_model.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 
 /// Standard expense categories shared by the backend and the UI.
@@ -154,16 +156,18 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Add Expense',
+        title: Text(tr('finance_add_expense_btn'),
             style: Theme.of(context).textTheme.titleLarge),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
               size: 20, color: AppColors.deepNavy),
           onPressed: () => Navigator.of(context).maybePop(),
-          tooltip: 'Back',
+          tooltip: tr('btn_back'),
         ),
       ),
       body: SafeArea(
@@ -205,7 +209,7 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text('Save Expense'),
+                        : Text(tr('btn_save')),
                   ),
                 ),
               ],
@@ -221,15 +225,21 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildAmountField(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return TextFormField(
       controller: _amountController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(
-        labelText: 'Amount (₹)',
+      decoration: InputDecoration(
+        labelText: tr('finance_amount'),
         hintText: '0.00',
         prefixIcon:
-            Icon(Icons.currency_rupee, color: AppColors.secondaryText),
+            const Icon(Icons.currency_rupee, color: AppColors.secondaryText),
+        suffixIcon: VoiceInputButton(
+          controller: _amountController,
+          size: 20,
+        ),
       ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return 'Amount is required';
@@ -294,14 +304,21 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
   }
 
   Widget _buildDescriptionField(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return TextFormField(
       controller: _descriptionController,
       textInputAction: TextInputAction.done,
       maxLines: 2,
-      decoration: const InputDecoration(
-        labelText: 'Description (optional)',
-        hintText: 'e.g. Lunch at Subway',
-        prefixIcon: Icon(Icons.notes_outlined, color: AppColors.secondaryText),
+      decoration: InputDecoration(
+        labelText: tr('finance_description'),
+        hintText: tr('finance_description_hint'),
+        prefixIcon:
+            const Icon(Icons.notes_outlined, color: AppColors.secondaryText),
+        suffixIcon: VoiceInputButton(
+          controller: _descriptionController,
+          size: 20,
+        ),
       ),
     );
   }

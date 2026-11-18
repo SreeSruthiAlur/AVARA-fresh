@@ -1,9 +1,11 @@
 import 'package:avara_astrology_trial/models/finance_model.dart';
 import 'package:avara_astrology_trial/screens/finance_add_expense_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
 /// AVARA Finance dashboard screen.
@@ -93,12 +95,19 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('AVARA Finance',
+        title: Text(tr('finance_title'),
             style: Theme.of(context).textTheme.titleLarge),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.language_rounded),
+            onPressed: () => LanguageSelectorSheet.show(context),
+            tooltip: tr('lang_switch_title'),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _refresh,
@@ -111,8 +120,8 @@ class _FinanceScreenState extends State<FinanceScreen> {
         backgroundColor: AppColors.deepNavy,
         foregroundColor: AppColors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Add Expense',
-            style: TextStyle(fontWeight: FontWeight.w600)),
+        label: Text(tr('finance_add_expense_btn'),
+            style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
       body: FutureBuilder<BudgetSummary>(
         future: _dashboardFuture,
@@ -168,22 +177,24 @@ class _DashboardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
         _SummaryCard(summary: summary),
         if (summary.categoryBreakdown.isNotEmpty) ...[
           const SizedBox(height: 24),
-          _SectionHeader(title: 'Spending Categories'),
+          _SectionHeader(title: tr('finance_spending_cats')),
           const SizedBox(height: 12),
           _CategoryRow(categories: summary.categoryBreakdown),
         ],
         const SizedBox(height: 24),
         _SectionHeader(
-          title: 'Recent Transactions',
+          title: tr('finance_recent_expenses'),
           trailing: summary.totalTransactionsCount > 0
               ? Text(
-                  '${summary.totalTransactionsCount} total',
+                  '${summary.totalTransactionsCount} ${tr('finance_total_label')}',
                   style: Theme.of(context)
                       .textTheme
                       .labelMedium

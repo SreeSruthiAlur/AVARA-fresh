@@ -1,8 +1,10 @@
 import 'package:avara_astrology_trial/screens/login_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
 /// A single entry in the profile menu list.
@@ -154,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           tooltip: 'Back',
         ),
         title: Text(
-          'Profile',
+          AppLanguageService.instance.tr('profile_title'),
           style: Theme.of(context).textTheme.titleLarge,
         ),
       ),
@@ -259,16 +261,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMenuItem(BuildContext context, _ProfileMenuItem item) {
+    final tr = AppLanguageService.instance.tr;
+    final currentLang = AppLanguageService.instance.currentLanguage;
+
     // The "Birth Details" tile displays live data fetched from the backend.
-    final subtitle = item.label == 'Birth Details'
-        ? _birthDetailsSubtitle()
-        : item.subtitle;
+    // The "Preferences" tile displays current display language.
+    String subtitle;
+    if (item.label == 'Birth Details') {
+      subtitle = _birthDetailsSubtitle();
+    } else if (item.label == 'Preferences') {
+      subtitle = 'Visual Language: ${currentLang.displayName}';
+    } else {
+      subtitle = item.subtitle;
+    }
+
+    String label;
+    switch (item.label) {
+      case 'Personal Information':
+        label = tr('profile_personal_info');
+      case 'Birth Details':
+        label = tr('profile_birth_details');
+      case 'Preferences':
+        label = tr('profile_preferences');
+      case 'Consultation History':
+        label = tr('profile_history');
+      case 'My Data':
+        label = tr('profile_my_data');
+      case 'Help & Support':
+        label = tr('profile_help');
+      case 'Privacy & Security':
+        label = tr('profile_privacy');
+      default:
+        label = item.label;
+    }
 
     return ListTile(
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       title: Text(
-        item.label,
+        label,
         style: Theme.of(context)
             .textTheme
             .bodyLarge
@@ -287,7 +318,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         size: 20,
       ),
       onTap: () {
-        // TODO: navigate to each settings sub-screen
+        if (item.label == 'Preferences') {
+          LanguageSelectorSheet.show(context);
+        }
       },
     );
   }
@@ -323,9 +356,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             )
           : const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFD32F2F)),
-      label: const Text(
-        'Log out',
-        style: TextStyle(
+      label: Text(
+        AppLanguageService.instance.tr('btn_logout'),
+        style: const TextStyle(
           color: Color(0xFFD32F2F),
           fontWeight: FontWeight.w600,
           fontSize: 15,

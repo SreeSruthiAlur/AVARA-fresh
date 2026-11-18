@@ -1,9 +1,12 @@
 import 'package:avara_astrology_trial/models/habits_model.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/habits_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 
 /// AVARA Habits & Goals screen — mirrors "08 — AVARA Habits & Goals" Figma.
@@ -245,20 +248,29 @@ class _HabitsScreenState extends State<HabitsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title:
-            Text('AVARA Habits', style: Theme.of(context).textTheme.titleLarge),
+        title: Text(tr('habits_title'),
+            style: Theme.of(context).textTheme.titleLarge),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.language_rounded),
+            onPressed: () => LanguageSelectorSheet.show(context),
+            tooltip: tr('lang_switch_title'),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.deepNavy,
           labelColor: AppColors.deepNavy,
           unselectedLabelColor: AppColors.secondaryText,
-          tabs: const [
-            Tab(text: 'Today'),
-            Tab(text: 'This Week'),
-            Tab(text: 'Goals'),
+          tabs: [
+            Tab(text: tr('habits_tab_today')),
+            Tab(text: tr('habits_tab_week')),
+            Tab(text: tr('habits_tab_goals')),
           ],
         ),
       ),
@@ -316,7 +328,7 @@ class _HabitsScreenState extends State<HabitsScreen>
             child: ElevatedButton.icon(
               onPressed: _showAddHabitSheet,
               icon: const Icon(Icons.add),
-              label: const Text('Add a Habit'),
+              label: Text(tr('habits_add_btn')),
             ),
           ),
         ),
@@ -747,11 +759,15 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
                 controller: _titleController,
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  labelText: 'Habit name',
-                  hintText: 'e.g. Read for 20 minutes',
-                  prefixIcon: Icon(Icons.edit_outlined,
+                decoration: InputDecoration(
+                  labelText: AppLanguageService.instance.tr('habits_name'),
+                  hintText: AppLanguageService.instance.tr('habits_name_hint'),
+                  prefixIcon: const Icon(Icons.edit_outlined,
                       color: AppColors.secondaryText),
+                  suffixIcon: VoiceInputButton(
+                    controller: _titleController,
+                    size: 20,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

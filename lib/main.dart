@@ -1,4 +1,5 @@
 import 'package:avara_astrology_trial/screens/auth_gate.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -19,6 +20,7 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env', mergeWith: {});
+  await AppLanguageService.instance.init();
   runApp(const AvaraApp());
 }
 
@@ -27,15 +29,20 @@ class AvaraApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AVARA',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      scaffoldMessengerKey: rootScaffoldMessengerKey,
-      // AuthGate checks for a stored JWT; routes to MainNavigationScaffold
-      // or LoginScreen accordingly. It also acts as the splash screen while
-      // the async session-restore is in flight.
-      home: const AuthGate(),
+    return ListenableBuilder(
+      listenable: AppLanguageService.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'AVARA',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
+          // AuthGate checks for a stored JWT; routes to MainNavigationScaffold
+          // or LoginScreen accordingly. It also acts as the splash screen while
+          // the async session-restore is in flight.
+          home: const AuthGate(),
+        );
+      },
     );
   }
 }

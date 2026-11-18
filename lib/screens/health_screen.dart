@@ -1,9 +1,11 @@
 import 'package:avara_astrology_trial/models/health_model.dart';
 import 'package:avara_astrology_trial/screens/health_add_entry_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/health_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
 /// AVARA Health & Wellness dashboard screen.
@@ -148,12 +150,19 @@ class _HealthScreenState extends State<HealthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('AVARA Health',
+        title: Text(tr('health_title'),
             style: Theme.of(context).textTheme.titleLarge),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.language_rounded),
+            onPressed: () => LanguageSelectorSheet.show(context),
+            tooltip: tr('lang_switch_title'),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _refresh,
@@ -166,8 +175,8 @@ class _HealthScreenState extends State<HealthScreen> {
         backgroundColor: AppColors.tealBlue,
         foregroundColor: AppColors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Log Today',
-            style: TextStyle(fontWeight: FontWeight.w600)),
+        label: Text(tr('health_add_entry_btn'),
+            style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
       body: FutureBuilder<HealthSummary>(
         future: _summaryFuture,
@@ -227,11 +236,11 @@ class _HealthBody extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Check-in History',
+            Text(AppLanguageService.instance.tr('health_checkin_history'),
                 style: Theme.of(context).textTheme.titleLarge),
             if (summary.totalEntries > 0)
               Text(
-                '${summary.totalEntries} total',
+                '${summary.totalEntries} ${AppLanguageService.instance.tr('finance_total_label')}',
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
@@ -267,16 +276,18 @@ class _MetricGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+
     final tiles = [
       _MetricTile(
-        label: 'Streak',
+        label: tr('health_streak'),
         value: '🔥 ${summary.wellnessStreakDays}',
-        sub: 'days logged',
+        sub: tr('health_days_logged'),
         bg: AppColors.lightOrange,
         accent: AppColors.orange,
       ),
       _MetricTile(
-        label: 'Avg Mood',
+        label: tr('health_avg_mood'),
         value: summary.averageMoodScore != null
             ? '${summary.averageMoodScore!.toStringAsFixed(1)}/5'
             : '—',
@@ -285,7 +296,7 @@ class _MetricGrid extends StatelessWidget {
         accent: AppColors.magentaPurple,
       ),
       _MetricTile(
-        label: 'Avg Sleep',
+        label: tr('health_avg_sleep'),
         value: summary.averageSleepHours != null
             ? '${summary.averageSleepHours!.toStringAsFixed(1)}h'
             : '—',
@@ -294,7 +305,7 @@ class _MetricGrid extends StatelessWidget {
         accent: AppColors.secondaryBlue,
       ),
       _MetricTile(
-        label: 'Activity',
+        label: tr('health_activity_label'),
         value: '${summary.totalActivityMinutes}m',
         sub: 'total minutes',
         bg: AppColors.lightCyan,

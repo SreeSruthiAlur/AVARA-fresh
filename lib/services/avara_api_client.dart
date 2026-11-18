@@ -183,16 +183,25 @@ class AvaraApiClient {
       return jsonDecode(response.body);
     }
 
-    // Attempt to extract the FastAPI `detail` field; fall back to raw body.
+    // Attempt to extract user-friendly error messages from backend response:
+    // 1. Standard FastAPI `detail` field
+    // 2. AVARA custom AppError `error.message` field
+    // 3. Root `message` field
+    // 4. Raw response body fallback
     String message;
     try {
       final body = jsonDecode(response.body);
       if (body is Map && body['detail'] != null) {
         final detail = body['detail'];
-        // FastAPI can return detail as a string or a list of validation errors.
         message = detail is List
             ? detail.map((e) => e['msg'] ?? e.toString()).join('; ')
             : detail.toString();
+      } else if (body is Map &&
+          body['error'] is Map &&
+          (body['error'] as Map)['message'] != null) {
+        message = (body['error'] as Map)['message'].toString();
+      } else if (body is Map && body['message'] != null) {
+        message = body['message'].toString();
       } else {
         message = response.body;
       }

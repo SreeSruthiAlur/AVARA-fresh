@@ -1,9 +1,11 @@
 import 'package:avara_astrology_trial/models/health_model.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/health_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 
 /// Add-wellness-entry form screen.
@@ -247,11 +249,15 @@ class _HealthAddEntryScreenState extends State<HealthAddEntryScreen> {
                       TextFormField(
                         controller: _goalsController,
                         textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Wellness Goal (optional)',
                           hintText: 'e.g. Drink 2L water',
-                          prefixIcon: Icon(Icons.track_changes,
+                          prefixIcon: const Icon(Icons.track_changes,
                               color: AppColors.secondaryText),
+                          suffixIcon: VoiceInputButton(
+                            controller: _goalsController,
+                            size: 20,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -260,11 +266,15 @@ class _HealthAddEntryScreenState extends State<HealthAddEntryScreen> {
                         controller: _notesController,
                         maxLines: 3,
                         textInputAction: TextInputAction.done,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes / Reflection (optional)',
-                          hintText: 'How was your day?',
-                          prefixIcon: Icon(Icons.notes_outlined,
+                        decoration: InputDecoration(
+                          labelText: AppLanguageService.instance.tr('health_notes'),
+                          hintText: AppLanguageService.instance.tr('health_notes_hint'),
+                          prefixIcon: const Icon(Icons.notes_outlined,
                               color: AppColors.secondaryText),
+                          suffixIcon: VoiceInputButton(
+                            controller: _notesController,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -282,7 +292,7 @@ class _HealthAddEntryScreenState extends State<HealthAddEntryScreen> {
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2.5),
                           )
-                        : const Text('Save Check-in'),
+                        : Text(AppLanguageService.instance.tr('btn_save')),
                   ),
                 ),
               ],
