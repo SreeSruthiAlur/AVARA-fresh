@@ -55,11 +55,17 @@ class VoiceService extends ChangeNotifier {
   bool _isListening = false;
   bool get isListening => _isListening;
 
+  double _soundLevel = 0.0;
+  double get soundLevel => _soundLevel;
+
   String _lastWords = '';
   String get lastWords => _lastWords;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
+
+  bool _hasPermissionError = false;
+  bool get hasPermissionError => _hasPermissionError;
 
   /// Global navigation callback fired when voice commands dictate a tab change.
   void Function(int tabIndex)? onNavigateRequest;
@@ -76,24 +82,38 @@ class VoiceService extends ChangeNotifier {
     if (_isInitialized) return true;
 
     try {
+      _hasPermissionError = false;
+      _errorMessage = null;
+
       _isInitialized = await _speech.initialize(
         onError: (val) {
-          _errorMessage = val.errorMsg;
+          debugPrint('🎤 [AVARA Voice Error]: ${val.errorMsg} (permanent: ${val.permanent})');
+          _errorMessage = _humanFriendlyError(val.errorMsg);
+          if (val.errorMsg.toLowerCase().contains('not-allowed') ||
+              val.errorMsg.toLowerCase().contains('denied') ||
+              val.errorMsg.toLowerCase().contains('permission')) {
+            _hasPermissionError = true;
+          }
           _isListening = false;
+          _soundLevel = 0.0;
           notifyListeners();
         },
         onStatus: (status) {
+          debugPrint('🎤 [AVARA Voice Status]: $status');
           if (status == 'listening') {
             _isListening = true;
           } else if (status == 'notListening' || status == 'done') {
             _isListening = false;
+            _soundLevel = 0.0;
           }
           notifyListeners();
         },
+        debugLogging: false,
       );
       notifyListeners();
       return _isInitialized;
     } catch (e) {
+      debugPrint('🎤 [AVARA Voice Init Exception]: $e');
       _errorMessage = 'Speech initialization failed: $e';
       _isInitialized = false;
       notifyListeners();
@@ -108,18 +128,22 @@ class VoiceService extends ChangeNotifier {
   /// Starts listening to the user's voice with the appropriate language locale.
   ///
   /// [onResult] receives partial and final transcripts as words are spoken.
-  /// [autoStop] will stop after speech pauses.
+  /// Automatically handles Web/Chrome hyphens and fallbacks.
   Future<void> startListening({
     required void Function(String text, bool isFinal) onResult,
     String? localeOverride,
   }) async {
     _errorMessage = null;
+    _hasPermissionError = false;
     _lastWords = '';
+    _soundLevel = 0.0;
 
     if (!_isInitialized) {
       final available = await initialize();
       if (!available) {
-        _errorMessage = 'Microphone or Speech Recognition is not available on this device.';
+        _errorMessage =
+            'Microphone or Speech Recognition is not available. Check browser permissions.';
+        _hasPermissionError = true;
         notifyListeners();
         return;
       }
@@ -127,7 +151,9 @@ class VoiceService extends ChangeNotifier {
 
     // Determine locale from AppLanguageService unless overridden
     final appLang = AppLanguageService.instance.currentLanguage;
-    final localeId = localeOverride ?? appLang.speechLocaleId;
+    String rawLocale = localeOverride ?? appLang.speechLocaleId;
+    // Ensure BCP-47 hyphens for web browsers (e.g. en-IN instead of en_IN)
+    final localeId = rawLocale.replaceAll('_', '-');
 
     try {
       _isListening = true;
@@ -139,16 +165,43 @@ class VoiceService extends ChangeNotifier {
           onResult(result.recognizedWords, result.finalResult);
           notifyListeners();
         },
+        onSoundLevelChange: (level) {
+          // Normalize sound level
+          _soundLevel = level;
+          notifyListeners();
+        },
         localeId: localeId,
-        listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 4),
+        listenFor: const Duration(seconds: 45),
+        pauseFor: const Duration(seconds: 5),
+        listenMode: stt.ListenMode.dictation,
         cancelOnError: false,
         partialResults: true,
       );
     } catch (e) {
-      _errorMessage = 'Error while listening: $e';
-      _isListening = false;
-      notifyListeners();
+      debugPrint('🎤 [AVARA Voice Listen Error with locale $localeId]: $e');
+      // If specific locale failed on browser, retry without explicit locale (uses browser default)
+      try {
+        await _speech.listen(
+          onResult: (result) {
+            _lastWords = result.recognizedWords;
+            onResult(result.recognizedWords, result.finalResult);
+            notifyListeners();
+          },
+          onSoundLevelChange: (level) {
+            _soundLevel = level;
+            notifyListeners();
+          },
+          listenFor: const Duration(seconds: 45),
+          pauseFor: const Duration(seconds: 5),
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: false,
+          partialResults: true,
+        );
+      } catch (retryError) {
+        _errorMessage = 'Error while listening: $retryError';
+        _isListening = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -158,12 +211,37 @@ class VoiceService extends ChangeNotifier {
       if (_isListening) {
         await _speech.stop();
         _isListening = false;
+        _soundLevel = 0.0;
         notifyListeners();
       }
     } catch (_) {
       _isListening = false;
+      _soundLevel = 0.0;
       notifyListeners();
     }
+  }
+
+  /// Converts technical speech engine error codes to user-friendly advice.
+  static String _humanFriendlyError(String code) {
+    final lower = code.toLowerCase();
+    if (lower.contains('permission') ||
+        lower.contains('not-allowed') ||
+        lower.contains('denied')) {
+      return 'Microphone permission blocked. Click the 🔒 lock icon in the Chrome URL bar and select "Allow" for Microphone, then try again.';
+    }
+    if (lower.contains('no_speech') || lower.contains('no-speech')) {
+      return 'No speech detected. Please speak closer to your microphone.';
+    }
+    if (lower.contains('network')) {
+      return 'Network error: Chrome speech recognition requires an active internet connection.';
+    }
+    if (lower.contains('busy') || lower.contains('audio-capture')) {
+      return 'Microphone is currently in use or audio capture failed.';
+    }
+    if (lower.contains('not-supported') || lower.contains('language')) {
+      return 'Language model unavailable on this browser. Falling back to default speech.';
+    }
+    return 'Voice status: $code';
   }
 
   /// Directly attaches voice input to a [TextEditingController], appending
@@ -198,6 +276,18 @@ class VoiceService extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // Voice Command Intent Classifier
   // ---------------------------------------------------------------------------
+
+  /// Checks whether a recognized phrase is a navigation or language command.
+  /// If so, executes it and returns the [VoiceCommandResult].
+  /// If not a system command, returns null so caller can treat it as normal text dictation.
+  VoiceCommandResult? tryExecuteCommand(String text) {
+    final result = parseAndExecuteCommand(text);
+    if (result.type != VoiceCommandType.dictateText &&
+        result.type != VoiceCommandType.none) {
+      return result;
+    }
+    return null;
+  }
 
   /// Analyzes a spoken sentence and checks if it matches any system commands:
   /// - Language switching (Telugu, Tanglish, English)

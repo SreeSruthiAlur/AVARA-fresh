@@ -7,10 +7,11 @@ import 'package:avara_astrology_trial/theme/app_colors.dart';
 ///
 /// Can be invoked from the global floating mic orb or header button.
 /// Features:
-/// - Pulsing voice waveform / orb.
-/// - Live transcription.
-/// - Automatically executes language switches, navigation, and dictation.
-/// - Sample command chips in English, Telugu, and Tanglish.
+/// - Real-time soundwave audio visualizer reacting to voice volume.
+/// - Live word-by-word transcription box.
+/// - Automatic execution of language switches (Telugu, Tanglish, English) and navigation.
+/// - Clear permission guidance if browser blocks the microphone.
+/// - Live text command tester and quick sample chips.
 class GlobalVoiceAssistantModal extends StatefulWidget {
   const GlobalVoiceAssistantModal({super.key});
 
@@ -31,9 +32,11 @@ class GlobalVoiceAssistantModal extends StatefulWidget {
 class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
     with SingleTickerProviderStateMixin {
   bool _isListening = false;
-  String _transcript = '';
-  String _statusMessage = 'Tap the microphone and speak your command';
+  String _liveTranscript = '';
+  String _statusMessage = 'Tap the microphone to speak';
+  String? _errorMessage;
   VoiceCommandResult? _lastResult;
+  final TextEditingController _testCommandController = TextEditingController();
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -43,7 +46,7 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 900),
     )..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
           _pulseController.reverse();
@@ -52,17 +55,15 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
         }
       });
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-
-    // Auto-start listening on open
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startListening());
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    _testCommandController.dispose();
     VoiceService.instance.stopListening();
     super.dispose();
   }
@@ -70,24 +71,25 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
   Future<void> _startListening() async {
     final voice = VoiceService.instance;
     setState(() {
+      _errorMessage = null;
+      _liveTranscript = '';
+      _statusMessage = 'Listening... Speak clearly into your microphone';
       _isListening = true;
-      _transcript = '';
-      _statusMessage = 'Listening... Speak now';
       _lastResult = null;
     });
     _pulseController.forward();
 
-    final ok = await voice.initialize();
-    if (!ok) {
-      if (mounted) {
-        setState(() {
-          _isListening = false;
-          _statusMessage =
-              'Microphone access is unavailable. You can tap any sample command below!';
-        });
-        _pulseController.stop();
-        _pulseController.reset();
-      }
+    final available = await voice.initialize();
+    if (!available) {
+      if (!mounted) return;
+      setState(() {
+        _isListening = false;
+        _errorMessage = voice.errorMessage ??
+            'Microphone access was denied. Please allow microphone permissions in Chrome.';
+        _statusMessage = 'Microphone permission needed';
+      });
+      _pulseController.stop();
+      _pulseController.reset();
       return;
     }
 
@@ -95,7 +97,8 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
       onResult: (words, isFinal) {
         if (!mounted) return;
         setState(() {
-          _transcript = words;
+          _liveTranscript = words;
+          _statusMessage = 'Hearing: "$words"';
         });
 
         // Check if command is recognized
@@ -110,15 +113,15 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
           _pulseController.stop();
           _pulseController.reset();
 
-          // Auto-close after a brief success delay
-          Future.delayed(const Duration(milliseconds: 1100), () {
+          // Auto-close after brief confirmation
+          Future.delayed(const Duration(milliseconds: 1400), () {
             if (mounted) Navigator.of(context).pop();
           });
         } else if (isFinal) {
           setState(() {
             _isListening = false;
             _lastResult = result;
-            _statusMessage = result.feedbackMessage ?? 'Recognized: "$words"';
+            _statusMessage = result.feedbackMessage ?? 'Heard: "$words"';
           });
           _pulseController.stop();
           _pulseController.reset();
@@ -132,24 +135,27 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
     if (mounted) {
       setState(() {
         _isListening = false;
-        _statusMessage = 'Listening paused';
+        _statusMessage = _liveTranscript.isNotEmpty
+            ? 'Finished listening'
+            : 'Tap the microphone to speak';
       });
       _pulseController.stop();
       _pulseController.reset();
     }
   }
 
-  void _executeSample(String command) {
+  void _executeCommand(String command) {
+    if (command.trim().isEmpty) return;
     setState(() {
-      _transcript = command;
+      _liveTranscript = command.trim();
     });
-    final result = VoiceService.instance.parseAndExecuteCommand(command);
+    final result = VoiceService.instance.parseAndExecuteCommand(command.trim());
     setState(() {
       _lastResult = result;
       _statusMessage = result.feedbackMessage ?? 'Command executed!';
     });
 
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) Navigator.of(context).pop();
     });
   }
@@ -157,6 +163,7 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
   @override
   Widget build(BuildContext context) {
     final tr = AppLanguageService.instance.tr;
+    final currentLang = AppLanguageService.instance.currentLanguage;
 
     return Container(
       decoration: const BoxDecoration(
@@ -167,167 +174,367 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
         24,
         16,
         24,
-        MediaQuery.of(context).viewInsets.bottom + 32,
+        MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            width: 44,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 18),
 
-          // Title
-          Text(
-            tr('voice_assistant_title'),
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+            // Header title
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.mic_rounded, color: AppColors.blue, size: 26),
+                const SizedBox(width: 8),
+                Text(
+                  tr('voice_assistant_title'),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepNavy,
+                      ),
                 ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _statusMessage,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: _isListening ? AppColors.blue : AppColors.secondaryText,
-              fontWeight: _isListening ? FontWeight.w600 : FontWeight.normal,
+              ],
             ),
-          ),
-          const SizedBox(height: 28),
+            const SizedBox(height: 6),
 
-          // Glowing Mic Orb
-          GestureDetector(
-            onTap: _isListening ? _stopListening : _startListening,
-            child: AnimatedBuilder(
-              animation: _pulseAnimation,
-              builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (_isListening)
+            // Status message
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: _isListening
+                    ? AppColors.blue.withValues(alpha: 0.1)
+                    : (_lastResult != null
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : AppColors.background),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isListening)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 6),
+                      child: SizedBox(
+                        width: 8,
+                        height: 8,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.blue,
+                        ),
+                      ),
+                    ),
+                  Flexible(
+                    child: Text(
+                      _statusMessage,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _isListening
+                            ? AppColors.blue
+                            : (_lastResult != null
+                                ? Colors.green.shade800
+                                : AppColors.secondaryText),
+                        fontWeight: _isListening
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Large Animated Microphone Orb
+            GestureDetector(
+              onTap: _isListening ? _stopListening : _startListening,
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (_isListening) ...[
+                        Container(
+                          width: 96 * _pulseAnimation.value,
+                          height: 96 * _pulseAnimation.value,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.blue.withValues(alpha: 0.18),
+                          ),
+                        ),
+                      ],
                       Container(
-                        width: 88 * _pulseAnimation.value,
-                        height: 88 * _pulseAnimation.value,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.blue.withValues(alpha: 0.15),
-                        ),
-                      ),
-                    Container(
-                      width: 76,
-                      height: 76,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: _isListening
-                              ? [AppColors.blue, AppColors.violet]
-                              : [AppColors.deepNavy, AppColors.blue],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.blue.withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                          gradient: LinearGradient(
+                            colors: _isListening
+                                ? [const Color(0xFFE53935), const Color(0xFFFF5252)]
+                                : [AppColors.deepNavy, AppColors.blue],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                        ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: (_isListening ? Colors.red : AppColors.blue)
+                                  .withValues(alpha: 0.35),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                          color: Colors.white,
+                          size: 38,
+                        ),
                       ),
-                      child: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none_rounded,
-                        color: Colors.white,
-                        size: 34,
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _isListening
+                  ? '🔴 Listening... Tap to stop'
+                  : 'Tap to start speaking',
+              style: TextStyle(
+                fontSize: 12,
+                color: _isListening ? Colors.red.shade700 : AppColors.secondaryText,
+                fontWeight: _isListening ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+
+            // Real-time Sound Wave Meter
+            if (_isListening) ...[
+              const SizedBox(height: 14),
+              AnimatedBuilder(
+                animation: VoiceService.instance,
+                builder: (context, _) {
+                  final level = (VoiceService.instance.soundLevel.abs()).clamp(0.2, 5.0);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (int i = 0; i < 7; i++)
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                          width: 4,
+                          height: (10 + (level * (i % 2 == 0 ? 5 : 8))).clamp(6.0, 36.0),
+                          decoration: BoxDecoration(
+                            color: AppColors.blue,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
+            // Live Transcript Card
+            if (_liveTranscript.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.lightBlue,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _lastResult != null
+                        ? Colors.green.shade400
+                        : AppColors.blue.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      _lastResult != null
+                          ? '✅ Executed Action'
+                          : 'Recognized Speech:',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: _lastResult != null
+                            ? Colors.green.shade800
+                            : AppColors.secondaryText,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '“$_liveTranscript”',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: _lastResult != null
+                            ? Colors.green.shade900
+                            : AppColors.deepNavy,
                       ),
                     ),
                   ],
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Live transcript box
-          if (_transcript.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppColors.lightBlue.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.blue.withValues(alpha: 0.2)),
-              ),
-              child: Text(
-                '“$_transcript”',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.deepNavy,
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+            ],
 
-          // Sample Voice Commands
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Sample Voice Commands (Tap or Speak):',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: AppColors.secondaryText,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _commandChip(
-                icon: Icons.translate,
-                label: 'Change to Telugu',
-                onTap: () => _executeSample('Change to Telugu'),
-              ),
-              _commandChip(
-                icon: Icons.translate,
-                label: 'Tanglish lo marchu',
-                onTap: () => _executeSample('Tanglish lo marchu'),
-              ),
-              _commandChip(
-                icon: Icons.translate,
-                label: 'Switch to English',
-                onTap: () => _executeSample('Switch to English'),
-              ),
-              _commandChip(
-                icon: Icons.account_balance_wallet,
-                label: 'Go to Finance',
-                onTap: () => _executeSample('Go to Finance'),
-              ),
-              _commandChip(
-                icon: Icons.nightlight_round,
-                label: 'Open Astrology',
-                onTap: () => _executeSample('Open Astrology'),
-              ),
-              _commandChip(
-                icon: Icons.favorite,
-                label: 'Open Health',
-                onTap: () => _executeSample('Open Health'),
-              ),
-              _commandChip(
-                icon: Icons.track_changes,
-                label: 'Open Habits',
-                onTap: () => _executeSample('Open Habits'),
+            // Microphone Permission Notice (if error occurred)
+            if (_errorMessage != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFFB74D)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.lock_outline, color: Color(0xFFE65100), size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Chrome Microphone Permission Guide',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Color(0xFFE65100),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      '1. Look at your Chrome URL bar at the top (next to localhost).\n'
+                      '2. Click the 🔒 lock or tune icon.\n'
+                      '3. Set Microphone to "Allow".\n'
+                      '4. Tap "Retry Microphone" below or use the test box.',
+                      style: TextStyle(fontSize: 12, height: 1.4),
+                    ),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: _startListening,
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Retry Microphone'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE65100),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-          ),
-        ],
+
+            // Interactive Command Tester Input
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _testCommandController,
+                      decoration: const InputDecoration(
+                        hintText: 'Type voice command (e.g. Change to Telugu)...',
+                        border: InputBorder.none,
+                        isDense: true,
+                        hintStyle: TextStyle(fontSize: 12),
+                      ),
+                      onSubmitted: _executeCommand,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send_rounded, color: AppColors.blue, size: 20),
+                    tooltip: 'Test Command',
+                    onPressed: () => _executeCommand(_testCommandController.text),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Sample voice commands
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Quick Voice Commands (Tap to run or speak):',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: AppColors.secondaryText,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _commandChip(
+                  icon: Icons.translate,
+                  label: 'Change to Telugu (తెలుగు)',
+                  onTap: () => _executeCommand('Change to Telugu'),
+                ),
+                _commandChip(
+                  icon: Icons.translate,
+                  label: 'Tanglish lo marchu',
+                  onTap: () => _executeCommand('Tanglish lo marchu'),
+                ),
+                _commandChip(
+                  icon: Icons.translate,
+                  label: 'Switch to English',
+                  onTap: () => _executeCommand('Switch to English'),
+                ),
+                _commandChip(
+                  icon: Icons.nightlight_round,
+                  label: 'Open Astrology',
+                  onTap: () => _executeCommand('Open Astrology'),
+                ),
+                _commandChip(
+                  icon: Icons.account_balance_wallet,
+                  label: 'Go to Finance',
+                  onTap: () => _executeCommand('Go to Finance'),
+                ),
+                _commandChip(
+                  icon: Icons.favorite,
+                  label: 'Open Health',
+                  onTap: () => _executeCommand('Open Health'),
+                ),
+                _commandChip(
+                  icon: Icons.track_changes,
+                  label: 'Open Habits',
+                  onTap: () => _executeCommand('Open Habits'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

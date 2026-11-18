@@ -45,15 +45,15 @@ extension AppLanguageExtension on AppLanguage {
     }
   }
 
-  /// Preferred speech recognition locale tag.
+  /// Preferred speech recognition locale tag (BCP-47 format with hyphen for web & mobile).
   String get speechLocaleId {
     switch (this) {
       case AppLanguage.english:
-        return 'en_IN';
+        return 'en-IN';
       case AppLanguage.telugu:
-        return 'te_IN';
+        return 'te-IN';
       case AppLanguage.tanglish:
-        return 'en_IN'; // Latin phonetics for Tanglish
+        return 'en-IN'; // Latin phonetics for Tanglish
     }
   }
 }
