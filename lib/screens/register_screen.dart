@@ -1,8 +1,11 @@
 import 'package:avara_astrology_trial/screens/main_navigation_scaffold.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -116,6 +119,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
           tooltip: 'Back',
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: ActionChip(
+              avatar: const Icon(Icons.language_rounded, size: 16, color: AppColors.blue),
+              label: Text(
+                AppLanguageService.instance.currentLanguage.shortLabel,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              backgroundColor: AppColors.lightBlue,
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              onPressed: () => LanguageSelectorSheet.show(context),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Center(
@@ -171,11 +190,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: TextInputType.name,
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Full Name',
-              hintText: 'Sruthi',
+              hintText: 'Sruthi (or tap mic to speak)',
               prefixIcon:
-                  Icon(Icons.person_outline, color: AppColors.secondaryText),
+                  const Icon(Icons.person_outline, color: AppColors.secondaryText),
+              suffixIcon: VoiceInputButton(
+                controller: _nameController,
+                tooltip: 'Speak your name',
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Name is required';
@@ -190,11 +213,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: TextInputType.text,
             textInputAction: TextInputAction.next,
             autocorrect: false,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Username',
-              hintText: 'sruthi_avara',
+              hintText: 'sruthi_avara (or tap mic to speak)',
               prefixIcon:
-                  Icon(Icons.alternate_email, color: AppColors.secondaryText),
+                  const Icon(Icons.alternate_email, color: AppColors.secondaryText),
+              suffixIcon: VoiceInputButton(
+                controller: _usernameController,
+                tooltip: 'Speak username',
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Username is required';
@@ -209,11 +236,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autocorrect: false,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Email',
-              hintText: 'you@example.com',
+              hintText: 'you@example.com (or tap mic to speak)',
               prefixIcon:
-                  Icon(Icons.email_outlined, color: AppColors.secondaryText),
+                  const Icon(Icons.email_outlined, color: AppColors.secondaryText),
+              suffixIcon: VoiceInputButton(
+                controller: _emailController,
+                tooltip: 'Speak email',
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Email is required';
@@ -232,16 +263,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hintText: 'At least 8 characters',
               prefixIcon: const Icon(Icons.lock_outline,
                   color: AppColors.secondaryText),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: AppColors.secondaryText,
-                ),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  VoiceInputButton(
+                    controller: _passwordController,
+                    tooltip: 'Speak password',
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: AppColors.secondaryText,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                  ),
+                ],
               ),
             ),
             validator: (v) {
@@ -262,17 +302,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hintText: 'Re-enter your password',
               prefixIcon: const Icon(Icons.lock_outline,
                   color: AppColors.secondaryText),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirm
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: AppColors.secondaryText,
-                ),
-                onPressed: () =>
-                    setState(() => _obscureConfirm = !_obscureConfirm),
-                tooltip:
-                    _obscureConfirm ? 'Show password' : 'Hide password',
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  VoiceInputButton(
+                    controller: _confirmPasswordController,
+                    tooltip: 'Speak confirm password',
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: AppColors.secondaryText,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureConfirm = !_obscureConfirm),
+                    tooltip:
+                        _obscureConfirm ? 'Show password' : 'Hide password',
+                  ),
+                ],
               ),
             ),
             validator: (v) {

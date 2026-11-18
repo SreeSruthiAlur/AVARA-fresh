@@ -1,5 +1,6 @@
 import 'package:avara_astrology_trial/screens/auth_gate.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env', mergeWith: {});
   await AppLanguageService.instance.init();
+  await TtsService.instance.init();
   runApp(const AvaraApp());
 }
 

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:avara_astrology_trial/services/ai_astrology_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
@@ -154,6 +155,7 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
 
   @override
   void dispose() {
+    TtsService.instance.stop();
     _inputController.dispose();
     _scrollController.dispose();
     _inputFocusNode.dispose();
@@ -185,6 +187,8 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
         _messages.add(_ChatMessage(text: response, sender: _MessageSender.ai));
         _isThinking = false;
       });
+      // Speak AI response out loud for non-typing voice users
+      TtsService.instance.speak(response);
     } on AIAstrologyException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -539,17 +543,76 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                         ],
                       ],
                     ),
-                  const SizedBox(height: 4),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text(
-                      _formatTime(message.timestamp),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Colors.white.withValues(alpha: 0.4),
+                  const SizedBox(height: 6),
+                  if (!isUser)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        AnimatedBuilder(
+                          animation: TtsService.instance,
+                          builder: (context, _) {
+                            final isSpeakingThis = TtsService.instance.isSpeaking &&
+                                TtsService.instance.currentlySpeakingText == cleanText;
+                            return InkWell(
+                              onTap: () => TtsService.instance.toggleSpeak(cleanText),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: isSpeakingThis
+                                      ? Colors.redAccent.withValues(alpha: 0.25)
+                                      : AppColors.blue.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSpeakingThis ? Colors.redAccent : AppColors.blue,
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isSpeakingThis
+                                          ? Icons.stop_circle_outlined
+                                          : Icons.volume_up_rounded,
+                                      size: 14,
+                                      color: isSpeakingThis ? Colors.redAccent : Colors.white,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isSpeakingThis ? 'Stop' : 'Listen (విను)',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSpeakingThis ? Colors.redAccent : Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Text(
+                          _formatTime(message.timestamp),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Align(
+                      alignment: Alignment.bottomRight,
+                      child: Text(
+                        _formatTime(message.timestamp),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.white.withValues(alpha: 0.4),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -695,6 +758,11 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                         size: 20,
                         activeColor: AppColors.blue,
                         inactiveColor: AppColors.secondaryText,
+                        onSpeechComplete: () {
+                          if (_inputController.text.trim().isNotEmpty) {
+                            _sendMessage();
+                          }
+                        },
                       ),
                     ),
                   ],

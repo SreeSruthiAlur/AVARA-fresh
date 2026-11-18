@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
@@ -610,13 +611,35 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Rasi & Nakshatra',
-              style: TextStyle(
-                color: AppColors.deepNavy,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Rasi & Nakshatra',
+                  style: TextStyle(
+                    color: AppColors.deepNavy,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.volume_up_rounded, size: 16),
+                  label: const Text('Listen (వినండి)', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed: () {
+                    final isTe = AppLanguageService.instance.currentLanguage == AppLanguage.telugu;
+                    final summaryText = isTe
+                        ? 'మీ రాశి ${moon['rasi_name_telugu']}, నక్షత్రం ${moon['nakshatra_name_telugu']}, పాదం ${moon['pada']}. మీ లగ్నం ${lagna['rasi_name_telugu']}.'
+                        : 'Your Moon sign is ${moon['rasi_name_sanskrit']}, Nakshatra is ${moon['nakshatra_name_sanskrit']}, Pada ${moon['pada']}. Your Lagna is ${lagna['rasi_name_sanskrit']}.';
+                    TtsService.instance.speak(summaryText);
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             _summaryRow(

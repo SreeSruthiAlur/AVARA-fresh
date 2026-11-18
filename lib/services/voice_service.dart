@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
 
 /// Categories of voice commands supported by AVARA.
 enum VoiceCommandType {
@@ -293,7 +294,22 @@ class VoiceService extends ChangeNotifier {
   /// - Language switching (Telugu, Tanglish, English)
   /// - Tab navigation (Home, Astrology, Finance, Health, Habits, Insights)
   /// - Fallback to plain text dictation
-  VoiceCommandResult parseAndExecuteCommand(String spokenText) {
+  ///
+  /// When [speakFeedback] is true, the response is spoken out loud via [TtsService].
+  VoiceCommandResult parseAndExecuteCommand(String spokenText, {bool speakFeedback = true}) {
+    final result = _parseCommandInternal(spokenText);
+    if (speakFeedback &&
+        result.feedbackMessage != null &&
+        result.type != VoiceCommandType.dictateText) {
+      TtsService.instance.speak(
+        result.feedbackMessage!,
+        language: result.targetLanguage,
+      );
+    }
+    return result;
+  }
+
+  VoiceCommandResult _parseCommandInternal(String spokenText) {
     final clean = spokenText.trim().toLowerCase();
     if (clean.isEmpty) {
       return const VoiceCommandResult(
@@ -517,6 +533,81 @@ class VoiceService extends ChangeNotifier {
       dictatedText: spokenText,
       feedbackMessage: 'Captured: "$spokenText"',
     );
+  }
+
+  /// Extracts expense details (amount, category, description) from spoken sentence.
+  /// Example: "Coffee 150 rupees" -> amount: 150.0, description: "Coffee", category: "Food & Dining"
+  Map<String, dynamic> extractExpenseFromSpeech(String text) {
+    double? amount;
+    String description = text;
+    String category = 'Other';
+
+    // Extract numbers (digits)
+    final numMatch = RegExp(r'\b(\d+(?:\.\d+)?)\b').firstMatch(text);
+    if (numMatch != null) {
+      amount = double.tryParse(numMatch.group(1)!);
+      description = text.replaceFirst(numMatch.group(1)!, '').trim();
+    }
+
+    // Clean up currency words
+    description = description
+        .replaceAll(
+          RegExp(
+            r'\b(rupees|rs|rupayalu|spent|for|on|ki|lo)\b',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    final lower = text.toLowerCase();
+    if (lower.contains('coffee') ||
+        lower.contains('tea') ||
+        lower.contains('food') ||
+        lower.contains('dinner') ||
+        lower.contains('lunch') ||
+        lower.contains('tiffin') ||
+        lower.contains('restaurant') ||
+        lower.contains('snacks')) {
+      category = 'Food & Dining';
+    } else if (lower.contains('petrol') ||
+        lower.contains('diesel') ||
+        lower.contains('auto') ||
+        lower.contains('cab') ||
+        lower.contains('uber') ||
+        lower.contains('bus') ||
+        lower.contains('travel')) {
+      category = 'Transportation';
+    } else if (lower.contains('shopping') ||
+        lower.contains('cloth') ||
+        lower.contains('dress') ||
+        lower.contains('market') ||
+        lower.contains('grocery') ||
+        lower.contains('groceries')) {
+      category = 'Shopping';
+    } else if (lower.contains('recharge') ||
+        lower.contains('wifi') ||
+        lower.contains('bill') ||
+        lower.contains('rent') ||
+        lower.contains('current')) {
+      category = 'Bills & Utilities';
+    } else if (lower.contains('movie') ||
+        lower.contains('game') ||
+        lower.contains('outing')) {
+      category = 'Entertainment';
+    } else if (lower.contains('medicine') ||
+        lower.contains('doctor') ||
+        lower.contains('hospital') ||
+        lower.contains('tablet')) {
+      category = 'Health & Medical';
+    }
+
+    return {
+      'amount': amount,
+      'category': category,
+      'description': description.isNotEmpty ? description : text,
+    };
   }
 
   static bool _matchesPattern(String input, List<String> patterns) {

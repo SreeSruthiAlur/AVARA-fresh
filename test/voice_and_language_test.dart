@@ -71,20 +71,20 @@ void main() {
   group('AVARA Voice Command Recognition Tests', () {
     test('Voice command switches language to Telugu', () {
       final voice = VoiceService.instance;
-      final result1 = voice.parseAndExecuteCommand('Change to Telugu');
+      final result1 = voice.parseAndExecuteCommand('Change to Telugu', speakFeedback: false);
 
       expect(result1.type, equals(VoiceCommandType.changeLanguage));
       expect(result1.targetLanguage, equals(AppLanguage.telugu));
       expect(AppLanguageService.instance.currentLanguage, equals(AppLanguage.telugu));
 
-      final result2 = voice.parseAndExecuteCommand('telugu lo marchu');
+      final result2 = voice.parseAndExecuteCommand('telugu lo marchu', speakFeedback: false);
       expect(result2.type, equals(VoiceCommandType.changeLanguage));
       expect(result2.targetLanguage, equals(AppLanguage.telugu));
     });
 
     test('Voice command switches language to Tanglish', () {
       final voice = VoiceService.instance;
-      final result = voice.parseAndExecuteCommand('Tanglish lo marchu');
+      final result = voice.parseAndExecuteCommand('Tanglish lo marchu', speakFeedback: false);
 
       expect(result.type, equals(VoiceCommandType.changeLanguage));
       expect(result.targetLanguage, equals(AppLanguage.tanglish));
@@ -93,7 +93,7 @@ void main() {
 
     test('Voice command switches language to English', () {
       final voice = VoiceService.instance;
-      final result = voice.parseAndExecuteCommand('Switch to English');
+      final result = voice.parseAndExecuteCommand('Switch to English', speakFeedback: false);
 
       expect(result.type, equals(VoiceCommandType.changeLanguage));
       expect(result.targetLanguage, equals(AppLanguage.english));
@@ -106,46 +106,58 @@ void main() {
       voice.onNavigateRequest = (idx) => navigatedTab = idx;
 
       // Home
-      voice.parseAndExecuteCommand('Go to home');
+      voice.parseAndExecuteCommand('Go to home', speakFeedback: false);
       expect(navigatedTab, equals(0));
 
       // Astrology
-      voice.parseAndExecuteCommand('Open astrology');
+      voice.parseAndExecuteCommand('Open astrology', speakFeedback: false);
       expect(navigatedTab, equals(1));
-      voice.parseAndExecuteCommand('jathakam');
+      voice.parseAndExecuteCommand('jathakam', speakFeedback: false);
       expect(navigatedTab, equals(1));
 
       // Finance
-      voice.parseAndExecuteCommand('Go to finance');
+      voice.parseAndExecuteCommand('Go to finance', speakFeedback: false);
       expect(navigatedTab, equals(2));
-      voice.parseAndExecuteCommand('kharchulu');
+      voice.parseAndExecuteCommand('kharchulu', speakFeedback: false);
       expect(navigatedTab, equals(2));
 
       // Health
-      voice.parseAndExecuteCommand('Open health');
+      voice.parseAndExecuteCommand('Open health', speakFeedback: false);
       expect(navigatedTab, equals(3));
-      voice.parseAndExecuteCommand('aarogyam');
+      voice.parseAndExecuteCommand('aarogyam', speakFeedback: false);
       expect(navigatedTab, equals(3));
 
       // Habits
-      voice.parseAndExecuteCommand('Open habits');
+      voice.parseAndExecuteCommand('Open habits', speakFeedback: false);
       expect(navigatedTab, equals(4));
-      voice.parseAndExecuteCommand('alavatlu');
+      voice.parseAndExecuteCommand('alavatlu', speakFeedback: false);
       expect(navigatedTab, equals(4));
 
       // Insights
-      voice.parseAndExecuteCommand('Go to insights');
+      voice.parseAndExecuteCommand('Go to insights', speakFeedback: false);
       expect(navigatedTab, equals(5));
-      voice.parseAndExecuteCommand('pragathi');
+      voice.parseAndExecuteCommand('pragathi', speakFeedback: false);
       expect(navigatedTab, equals(5));
     });
 
     test('Non-command speech falls back to text entry dictation', () {
       final voice = VoiceService.instance;
-      final result = voice.parseAndExecuteCommand('Coffee with friends 250');
+      final result = voice.parseAndExecuteCommand('Coffee with friends 250', speakFeedback: false);
 
       expect(result.type, equals(VoiceCommandType.dictateText));
       expect(result.dictatedText, equals('Coffee with friends 250'));
+    });
+
+    test('extractExpenseFromSpeech intelligently extracts amount, category, and description', () {
+      final voice = VoiceService.instance;
+      final r1 = voice.extractExpenseFromSpeech('Coffee 150 rupees');
+      expect(r1['amount'], equals(150.0));
+      expect(r1['category'], equals('Food & Dining'));
+      expect(r1['description'], equals('Coffee'));
+
+      final r2 = voice.extractExpenseFromSpeech('Spent 500 on petrol');
+      expect(r2['amount'], equals(500.0));
+      expect(r2['category'], equals('Transportation'));
     });
   });
 

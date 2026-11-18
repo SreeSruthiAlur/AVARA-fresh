@@ -2,6 +2,8 @@ import 'package:avara_astrology_trial/models/finance_model.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
+import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
@@ -89,6 +91,37 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
       '${_selectedDate.year}-'
       '${_selectedDate.month.toString().padLeft(2, '0')}-'
       '${_selectedDate.day.toString().padLeft(2, '0')}';
+
+  Future<void> _listenFullExpense() async {
+    final voice = VoiceService.instance;
+    await voice.startListening(
+      onResult: (text, isFinal) {
+        if (!mounted || text.trim().isEmpty) return;
+        final parsed = voice.extractExpenseFromSpeech(text);
+        setState(() {
+          if (parsed['amount'] != null) {
+            _amountController.text = parsed['amount'].toString();
+          }
+          if (parsed['description'] != null &&
+              (parsed['description'] as String).isNotEmpty) {
+            _descriptionController.text = parsed['description'].toString();
+          }
+          final cat = parsed['category'] as String?;
+          if (cat != null && kExpenseCategories.contains(cat)) {
+            _selectedCategory = cat;
+          }
+        });
+
+        if (isFinal) {
+          final amt = parsed['amount'];
+          final desc = parsed['description'];
+          if (amt != null) {
+            TtsService.instance.speak('Recorded $amt for $desc');
+          }
+        }
+      },
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // Submit
@@ -178,6 +211,53 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Quick Voice Expense Fill Card (for non-typists)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.lavender,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.record_voice_over_rounded, color: AppColors.blue, size: 26),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Speak Full Expense',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: AppColors.deepNavy,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Say e.g. "Coffee 150" or "Petrol 500"',
+                              style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.mic, size: 16),
+                        label: const Text('Speak'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: _listenFullExpense,
+                      ),
+                    ],
+                  ),
+                ),
                 AvaraSurfaceCard(
                   backgroundColor: AppColors.white,
                   child: Column(

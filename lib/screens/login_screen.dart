@@ -1,20 +1,20 @@
 import 'package:avara_astrology_trial/screens/main_navigation_scaffold.dart';
 import 'package:avara_astrology_trial/screens/register_screen.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
+import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
+import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// AVARA Login screen.
 ///
-/// Validates the form locally, calls [AuthService.login], then navigates to
-/// [MainNavigationScaffold] on success — replacing the entire back-stack so the
-/// user cannot navigate back to the login screen with the system back button.
-///
-/// [AvaraApiException] messages surface as a [SnackBar] so the user gets clear
-/// feedback without a disruptive dialog.
+/// Features voice input attachments on email and password fields,
+/// visual language switcher (English, Telugu, Tanglish), and
+/// a "Continue as Guest" one-tap voice access mode for non-typists.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -64,6 +64,20 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _continueAsGuest() {
+    final apiKey = dotenv.get('GROQ_API_KEY',
+        fallback: dotenv.get('GEMINI_API_KEY', fallback: ''));
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (_) => MainNavigationScaffold(
+          apiKey: apiKey,
+          userName: 'Guest User',
+        ),
+      ),
+      (_) => false,
+    );
+  }
+
   void _navigateHome(AuthUser user) {
     final apiKey = dotenv.get('GROQ_API_KEY',
         fallback: dotenv.get('GEMINI_API_KEY', fallback: ''));
@@ -97,20 +111,43 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        actions: [
+          // Quick Language Switcher Button
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: ActionChip(
+              avatar: const Icon(Icons.language_rounded, size: 16, color: AppColors.blue),
+              label: Text(
+                AppLanguageService.instance.currentLanguage.shortLabel,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              backgroundColor: AppColors.lightBlue,
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              onPressed: () => LanguageSelectorSheet.show(context),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 32),
                   _buildForm(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _buildLoginButton(context),
+                  const SizedBox(height: 12),
+                  _buildGuestButton(context),
                   const SizedBox(height: 20),
                   _buildRegisterLink(context),
                 ],
@@ -126,10 +163,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // AVARA brand mark — initials badge using lavender + deep navy
+        // AVARA brand mark
         Container(
-          width: 60,
-          height: 60,
+          width: 54,
+          height: 54,
           decoration: BoxDecoration(
             color: AppColors.lavender,
             borderRadius: BorderRadius.circular(16),
@@ -138,19 +175,24 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Text(
               'A',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: AppColors.deepNavy,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 24),
-        Text('Welcome back',
-            style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 20),
+        Text(
+          'Welcome back',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.deepNavy,
+              ),
+        ),
         const SizedBox(height: 6),
         Text(
-          'Sign in to your AVARA account',
+          'Sign in with your email or use your voice to enter',
           style: Theme.of(context)
               .textTheme
               .bodyMedium
@@ -165,17 +207,20 @@ class _LoginScreenState extends State<LoginScreen> {
       key: _formKey,
       child: Column(
         children: [
-          // Email
+          // Email Field with Voice Input
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autocorrect: false,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Email',
-              hintText: 'you@example.com',
-              prefixIcon:
-                  Icon(Icons.email_outlined, color: AppColors.secondaryText),
+              hintText: 'you@example.com (or tap mic to speak)',
+              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.secondaryText),
+              suffixIcon: VoiceInputButton(
+                controller: _emailController,
+                tooltip: 'Speak your email',
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Email is required';
@@ -184,7 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
             },
           ),
           const SizedBox(height: 16),
-          // Password
+
+          // Password Field with Voice Input and Visibility Toggle
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
@@ -192,19 +238,27 @@ class _LoginScreenState extends State<LoginScreen> {
             onFieldSubmitted: (_) => _submit(),
             decoration: InputDecoration(
               labelText: 'Password',
-              hintText: 'Your password',
-              prefixIcon: const Icon(Icons.lock_outline,
-                  color: AppColors.secondaryText),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: AppColors.secondaryText,
-                ),
-                onPressed: () =>
-                    setState(() => _obscurePassword = !_obscurePassword),
-                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+              hintText: 'Your password (or tap mic to speak)',
+              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.secondaryText),
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  VoiceInputButton(
+                    controller: _passwordController,
+                    tooltip: 'Speak your password',
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: AppColors.secondaryText,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                  ),
+                ],
               ),
             ),
             validator: (v) {
@@ -233,6 +287,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               )
             : const Text('Login'),
+      ),
+    );
+  }
+
+  Widget _buildGuestButton(BuildContext context) {
+    return SizedBox(
+      height: AppTheme.buttonHeight,
+      child: OutlinedButton.icon(
+        onPressed: _continueAsGuest,
+        icon: const Icon(Icons.record_voice_over_rounded, color: AppColors.blue, size: 20),
+        label: const Text(
+          'Continue without typing (Guest)',
+          style: TextStyle(
+            color: AppColors.deepNavy,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppColors.border),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
     );
   }
