@@ -59,6 +59,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
   @override
   void initState() {
     super.initState();
+    VoiceService.instance.addListener(_onVoiceServiceChanged);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -75,8 +76,29 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     );
   }
 
+  void _onVoiceServiceChanged() {
+    if (!mounted) return;
+    final voice = VoiceService.instance;
+    if (voice.errorMessage != null && _isListening) {
+      setState(() => _isListening = false);
+      _pulseController.stop();
+      _pulseController.reset();
+      _showFloatingStatusOverlay(
+        text: '⚠️ ${voice.errorMessage!}',
+        isListening: false,
+        isError: true,
+      );
+      Future.delayed(const Duration(seconds: 4), _removeOverlay);
+    } else if (!voice.isListening && _isListening) {
+      setState(() => _isListening = false);
+      _pulseController.stop();
+      _pulseController.reset();
+    }
+  }
+
   @override
   void dispose() {
+    VoiceService.instance.removeListener(_onVoiceServiceChanged);
     _removeOverlay();
     _pulseController.dispose();
     super.dispose();
@@ -91,6 +113,7 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
     required String text,
     bool isListening = true,
     bool isSuccess = false,
+    bool isError = false,
   }) {
     _removeOverlay();
 
@@ -105,9 +128,11 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSuccess
-                  ? const Color(0xFF1B5E20)
-                  : (isListening ? AppColors.deepNavy : const Color(0xFF37474F)),
+              color: isError
+                  ? const Color(0xFFC62828)
+                  : (isSuccess
+                      ? const Color(0xFF1B5E20)
+                      : (isListening ? AppColors.deepNavy : const Color(0xFF37474F))),
               borderRadius: BorderRadius.circular(16),
               boxShadow: const [
                 BoxShadow(
@@ -124,6 +149,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
                   const SizedBox(width: 10),
                 ] else if (isSuccess) ...[
                   const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 20),
+                  const SizedBox(width: 10),
+                ] else if (isError) ...[
+                  const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 20),
                   const SizedBox(width: 10),
                 ],
                 Expanded(

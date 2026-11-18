@@ -74,6 +74,11 @@ class VoiceService extends ChangeNotifier {
   /// Global route callback (e.g. for profile).
   void Function(String route)? onRouteRequest;
 
+  /// Callback when user speaks a login or guest access command from the Login screen.
+  void Function()? onLoginAsGuestRequest;
+
+  Timer? _silenceTimer;
+
   // ---------------------------------------------------------------------------
   // Initialization
   // ---------------------------------------------------------------------------
@@ -163,6 +168,19 @@ class VoiceService extends ChangeNotifier {
       await _speech.listen(
         onResult: (result) {
           _lastWords = result.recognizedWords;
+
+          // Debounce timer for web browsers where finalResult is not sent during continuous speech
+          _silenceTimer?.cancel();
+          if (result.recognizedWords.trim().isNotEmpty) {
+            _silenceTimer = Timer(const Duration(milliseconds: 1400), () {
+              if (_isListening && _lastWords.trim().isNotEmpty) {
+                debugPrint('🎤 [AVARA Silence Detection]: Auto-finalizing: "$_lastWords"');
+                onResult(_lastWords, true);
+                stopListening();
+              }
+            });
+          }
+
           onResult(result.recognizedWords, result.finalResult);
           notifyListeners();
         },
@@ -208,6 +226,8 @@ class VoiceService extends ChangeNotifier {
 
   /// Stops current speech recognition listening session.
   Future<void> stopListening() async {
+    _silenceTimer?.cancel();
+    _silenceTimer = null;
     try {
       if (_isListening) {
         await _speech.stop();
@@ -524,6 +544,26 @@ class VoiceService extends ChangeNotifier {
         targetRouteName: 'profile',
         feedbackMessage: 'Opening Profile & Preferences',
       );
+    }
+
+    // Login / Guest / Open App command (for Login Screen accessibility):
+    if (_matchesPattern(clean, [
+      'login',
+      'sign in',
+      'guest',
+      'continue',
+      'open app',
+      'start app',
+      'enter app',
+    ])) {
+      if (onLoginAsGuestRequest != null) {
+        onLoginAsGuestRequest?.call();
+        return VoiceCommandResult(
+          type: VoiceCommandType.navigate,
+          rawTranscript: spokenText,
+          feedbackMessage: 'Entering AVARA App as Guest',
+        );
+      }
     }
 
     // 3. Fallback: Treat as dictated text entry for active fields

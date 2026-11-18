@@ -3,6 +3,7 @@ import 'package:avara_astrology_trial/screens/register_screen.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
+import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
@@ -30,7 +31,16 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    VoiceService.instance.onLoginAsGuestRequest = _continueAsGuest;
+  }
+
+  @override
   void dispose() {
+    if (VoiceService.instance.onLoginAsGuestRequest == _continueAsGuest) {
+      VoiceService.instance.onLoginAsGuestRequest = null;
+    }
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
