@@ -124,6 +124,27 @@ class VoiceService extends ChangeNotifier {
             debugPrint('🎤 [AVARA Voice]: Transient silence detected, continuing.');
             return;
           }
+          if (lower.contains('language') || lower.contains('not-supported')) {
+            debugPrint('🎤 [AVARA Voice]: Specific locale not supported, retrying with default speech.');
+            _speech.listen(
+              onResult: (result) {
+                _lastWords = result.recognizedWords;
+                if (result.finalResult) {
+                  _hasFinalized = true;
+                  _activeOnResult?.call(_lastWords, true);
+                } else {
+                  _activeOnResult?.call(result.recognizedWords, false);
+                }
+                notifyListeners();
+              },
+              listenFor: const Duration(seconds: 60),
+              pauseFor: const Duration(seconds: 6),
+              listenMode: stt.ListenMode.dictation,
+              cancelOnError: false,
+              partialResults: true,
+            );
+            return;
+          }
           _errorMessage = _humanFriendlyError(val.errorMsg);
           if (lower.contains('not-allowed') ||
               lower.contains('denied') ||

@@ -45,6 +45,7 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
   @override
   void initState() {
     super.initState();
+    VoiceService.instance.addListener(_onVoiceServiceChanged);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -66,8 +67,32 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
     });
   }
 
+  void _onVoiceServiceChanged() {
+    if (!mounted) return;
+    final voice = VoiceService.instance;
+    if (voice.errorMessage != null && _isListening) {
+      setState(() {
+        _errorMessage = voice.errorMessage;
+        _statusMessage = '⚠️ ${voice.errorMessage}';
+        _isListening = false;
+      });
+      _pulseController.stop();
+      _pulseController.reset();
+    } else if (!voice.isListening && _isListening && voice.lastWords.isEmpty) {
+      setState(() {
+        _isListening = false;
+        _statusMessage = voice.errorMessage != null
+            ? '⚠️ ${voice.errorMessage}'
+            : 'Finished listening';
+      });
+      _pulseController.stop();
+      _pulseController.reset();
+    }
+  }
+
   @override
   void dispose() {
+    VoiceService.instance.removeListener(_onVoiceServiceChanged);
     _pulseController.dispose();
     _testCommandController.dispose();
     VoiceService.instance.stopListening();
@@ -357,26 +382,29 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
               ),
             ),
 
-            // Real-time Sound Wave Meter
+            // Real-time Sound Wave Meter (Animates dynamically when microphone is active)
             if (_isListening) ...[
               const SizedBox(height: 14),
               AnimatedBuilder(
-                animation: VoiceService.instance,
+                animation: _pulseAnimation,
                 builder: (context, _) {
-                  final level = (VoiceService.instance.soundLevel.abs()).clamp(0.2, 5.0);
+                  final animVal = _pulseAnimation.value;
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       for (int i = 0; i < 7; i++)
-                        Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                          width: 4,
-                          height: (10 + (level * (i % 2 == 0 ? 5 : 8))).clamp(6.0, 36.0),
-                          decoration: BoxDecoration(
-                            color: AppColors.blue,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
+                        Builder(builder: (ctx) {
+                          final h = (8.0 + (animVal * ((i % 3 + 1) * 7.5))).clamp(8.0, 32.0);
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                            width: 4,
+                            height: h,
+                            decoration: BoxDecoration(
+                              color: AppColors.blue,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }),
                     ],
                   );
                 },
