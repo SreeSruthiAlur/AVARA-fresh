@@ -367,14 +367,64 @@ class VoiceService extends ChangeNotifier {
     return null;
   }
 
-  /// Analyzes a spoken sentence and checks if it matches any system commands:
-  /// - Language switching (Telugu, Tanglish, English)
-  /// - Tab navigation (Home, Astrology, Finance, Health, Habits, Insights)
-  /// - Fallback to plain text dictation
-  ///
-  /// When [speakFeedback] is true, the response is spoken out loud via [TtsService].
+  /// Parses spoken text into a [VoiceCommandResult] without executing callbacks.
+  VoiceCommandResult parseCommandOnly(String spokenText) {
+    return _parseCommandInternal(spokenText);
+  }
+
+  /// Dispatches callbacks for a previously parsed [VoiceCommandResult].
+  void dispatchCommandResult(VoiceCommandResult result) {
+    switch (result.type) {
+      case VoiceCommandType.changeLanguage:
+        if (result.targetLanguage != null) {
+          AppLanguageService.instance.setLanguage(result.targetLanguage!);
+        }
+        break;
+      case VoiceCommandType.navigate:
+        if (result.targetTabIndex != null) {
+          onNavigateRequest?.call(result.targetTabIndex!);
+        } else if (result.feedbackMessage?.contains('Guest') ?? false) {
+          onLoginAsGuestRequest?.call();
+        }
+        break;
+      case VoiceCommandType.openScreen:
+        if (result.targetRouteName != null) {
+          if (onOpenScreenRequest != null) {
+            onOpenScreenRequest?.call(result.targetRouteName!);
+          } else if (result.targetRouteName == 'profile') {
+            onRouteRequest?.call('profile');
+          }
+        }
+        break;
+      case VoiceCommandType.askAstrology:
+        if (result.astrologyQuestion != null) {
+          if (onAskAstrologyRequest != null) {
+            onAskAstrologyRequest?.call(result.astrologyQuestion!);
+          } else {
+            onNavigateRequest?.call(1);
+          }
+        }
+        break;
+      case VoiceCommandType.addExpense:
+        if (result.expenseAmount != null) {
+          onAddExpenseRequest?.call(
+            result.expenseAmount!,
+            result.expenseCategory ?? 'Other',
+            result.expenseDescription ?? 'Expense',
+          );
+        }
+        break;
+      case VoiceCommandType.conversational:
+      case VoiceCommandType.dictateText:
+      case VoiceCommandType.none:
+        break;
+    }
+  }
+
+  /// Analyzes a spoken sentence, executes matching callbacks, and speaks feedback aloud.
   VoiceCommandResult parseAndExecuteCommand(String spokenText, {bool speakFeedback = true}) {
     final result = _parseCommandInternal(spokenText);
+    dispatchCommandResult(result);
     if (speakFeedback &&
         result.feedbackMessage != null &&
         result.type != VoiceCommandType.dictateText) {
@@ -469,11 +519,6 @@ class VoiceService extends ChangeNotifier {
       'ask a question',
       'chat screen',
     ])) {
-      if (onOpenScreenRequest != null) {
-        onOpenScreenRequest?.call('chat');
-      } else {
-        onNavigateRequest?.call(1);
-      }
       return VoiceCommandResult(
         type: VoiceCommandType.openScreen,
         rawTranscript: spokenText,
@@ -491,11 +536,6 @@ class VoiceService extends ChangeNotifier {
       'astrologer list',
       'pandit',
     ])) {
-      if (onOpenScreenRequest != null) {
-        onOpenScreenRequest?.call('astrologers');
-      } else {
-        onNavigateRequest?.call(1);
-      }
       return VoiceCommandResult(
         type: VoiceCommandType.openScreen,
         rawTranscript: spokenText,
@@ -515,11 +555,6 @@ class VoiceService extends ChangeNotifier {
       'jathakam chart',
       'birth chart',
     ])) {
-      if (onOpenScreenRequest != null) {
-        onOpenScreenRequest?.call('birth_profile');
-      } else {
-        onNavigateRequest?.call(1);
-      }
       return VoiceCommandResult(
         type: VoiceCommandType.openScreen,
         rawTranscript: spokenText,
@@ -538,11 +573,6 @@ class VoiceService extends ChangeNotifier {
       'add my expense',
       'kharchu add',
     ]) && !clean.contains(RegExp(r'\d+'))) {
-      if (onOpenScreenRequest != null) {
-        onOpenScreenRequest?.call('add_expense');
-      } else {
-        onNavigateRequest?.call(2);
-      }
       return VoiceCommandResult(
         type: VoiceCommandType.openScreen,
         rawTranscript: spokenText,
@@ -560,11 +590,6 @@ class VoiceService extends ChangeNotifier {
       'profile screen',
       'ప్రొఫైల్',
     ])) {
-      if (onOpenScreenRequest != null) {
-        onOpenScreenRequest?.call('profile');
-      } else {
-        onRouteRequest?.call('profile');
-      }
       return VoiceCommandResult(
         type: VoiceCommandType.openScreen,
         rawTranscript: spokenText,
@@ -583,14 +608,12 @@ class VoiceService extends ChangeNotifier {
       'start app',
       'enter app',
     ])) {
-      if (onLoginAsGuestRequest != null) {
-        onLoginAsGuestRequest?.call();
-        return VoiceCommandResult(
-          type: VoiceCommandType.navigate,
-          rawTranscript: spokenText,
-          feedbackMessage: 'Entering AVARA App as Guest',
-        );
-      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.navigate,
+        rawTranscript: spokenText,
+        targetRouteName: 'login_guest',
+        feedbackMessage: 'Entering AVARA App as Guest',
+      );
     }
 
     // Register / Sign up command:
@@ -601,7 +624,6 @@ class VoiceService extends ChangeNotifier {
       'new account',
       'open sign up',
     ])) {
-      onOpenScreenRequest?.call('register');
       return VoiceCommandResult(
         type: VoiceCommandType.openScreen,
         rawTranscript: spokenText,
@@ -625,7 +647,6 @@ class VoiceService extends ChangeNotifier {
       if (amt != null && amt > 0) {
         final cat = parsed['category'] as String? ?? 'Other';
         final desc = parsed['description'] as String? ?? 'Expense';
-        onAddExpenseRequest?.call(amt, cat, desc);
         return VoiceCommandResult(
           type: VoiceCommandType.addExpense,
           rawTranscript: spokenText,
@@ -685,11 +706,6 @@ class VoiceService extends ChangeNotifier {
           )
           .trim();
       final finalQ = question.isNotEmpty ? question : spokenText;
-      if (onAskAstrologyRequest != null) {
-        onAskAstrologyRequest?.call(finalQ);
-      } else {
-        onNavigateRequest?.call(1);
-      }
       return VoiceCommandResult(
         type: VoiceCommandType.askAstrology,
         rawTranscript: spokenText,
@@ -708,7 +724,6 @@ class VoiceService extends ChangeNotifier {
       'హోమ్',
       'home',
     ])) {
-      onNavigateRequest?.call(0);
       return VoiceCommandResult(
         type: VoiceCommandType.navigate,
         rawTranscript: spokenText,
@@ -731,7 +746,6 @@ class VoiceService extends ChangeNotifier {
       'జ్యోతిషం',
       'astrology',
     ])) {
-      onNavigateRequest?.call(1);
       return VoiceCommandResult(
         type: VoiceCommandType.navigate,
         rawTranscript: spokenText,
@@ -753,7 +767,6 @@ class VoiceService extends ChangeNotifier {
       'ఆర్థికం',
       'finance',
     ])) {
-      onNavigateRequest?.call(2);
       return VoiceCommandResult(
         type: VoiceCommandType.navigate,
         rawTranscript: spokenText,
@@ -776,7 +789,6 @@ class VoiceService extends ChangeNotifier {
       'ఆరోగ్యం',
       'health',
     ])) {
-      onNavigateRequest?.call(3);
       return VoiceCommandResult(
         type: VoiceCommandType.navigate,
         rawTranscript: spokenText,
@@ -799,7 +811,6 @@ class VoiceService extends ChangeNotifier {
       'habits',
       'track',
     ])) {
-      onNavigateRequest?.call(4);
       return VoiceCommandResult(
         type: VoiceCommandType.navigate,
         rawTranscript: spokenText,
@@ -819,7 +830,6 @@ class VoiceService extends ChangeNotifier {
       'విశ్లేషణలు',
       'insights',
     ])) {
-      onNavigateRequest?.call(5);
       return VoiceCommandResult(
         type: VoiceCommandType.navigate,
         rawTranscript: spokenText,

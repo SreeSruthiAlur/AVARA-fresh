@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 
@@ -107,7 +108,7 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
         });
 
         // Check if command is recognized
-        final result = voice.parseAndExecuteCommand(words);
+        final result = voice.parseCommandOnly(words);
         if (result.isActionable && result.type != VoiceCommandType.dictateText) {
           voice.stopListening();
           setState(() {
@@ -118,12 +119,25 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
           _pulseController.stop();
           _pulseController.reset();
 
-          // Auto-close after brief confirmation for actions, keep open for conversational help
-          if (result.type != VoiceCommandType.conversational) {
-            Future.delayed(const Duration(milliseconds: 1400), () {
-              if (mounted) Navigator.of(context).pop();
-            });
+          if (result.feedbackMessage != null) {
+            TtsService.instance.speak(
+              result.feedbackMessage!,
+              language: result.targetLanguage,
+            );
           }
+
+          // Conversational queries stay open to read and listen to the answer
+          if (result.type == VoiceCommandType.conversational) {
+            return;
+          }
+
+          // Dismiss modal first, then dispatch action on the root screen
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+              voice.dispatchCommandResult(result);
+            }
+          });
         } else if (isFinal) {
           setState(() {
             _isListening = false;
@@ -156,17 +170,32 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
     setState(() {
       _liveTranscript = command.trim();
     });
-    final result = VoiceService.instance.parseAndExecuteCommand(command.trim());
+    final voice = VoiceService.instance;
+    final result = voice.parseCommandOnly(command.trim());
     setState(() {
       _lastResult = result;
       _statusMessage = result.feedbackMessage ?? 'Command executed!';
     });
 
-    if (result.type != VoiceCommandType.conversational) {
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) Navigator.of(context).pop();
-      });
+    if (result.feedbackMessage != null &&
+        result.type != VoiceCommandType.dictateText) {
+      TtsService.instance.speak(
+        result.feedbackMessage!,
+        language: result.targetLanguage,
+      );
     }
+
+    if (result.type == VoiceCommandType.conversational) {
+      return;
+    }
+
+    // Dismiss modal cleanly first, then dispatch action on root screen
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+        voice.dispatchCommandResult(result);
+      }
+    });
   }
 
   @override
