@@ -1,11 +1,18 @@
+import 'package:avara_astrology_trial/models/finance_model.dart';
+import 'package:avara_astrology_trial/screens/astrologers_screen.dart';
+import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
 import 'package:avara_astrology_trial/screens/astrology_hub_screen.dart';
+import 'package:avara_astrology_trial/screens/birth_profile_screen.dart';
+import 'package:avara_astrology_trial/screens/finance_add_expense_screen.dart';
 import 'package:avara_astrology_trial/screens/finance_screen.dart';
 import 'package:avara_astrology_trial/screens/habits_screen.dart';
 import 'package:avara_astrology_trial/screens/health_screen.dart';
 import 'package:avara_astrology_trial/screens/home_screen.dart';
 import 'package:avara_astrology_trial/screens/insights_screen.dart';
 import 'package:avara_astrology_trial/screens/profile_screen.dart';
+import 'package:avara_astrology_trial/screens/register_screen.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
@@ -38,14 +45,16 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
   @override
   void initState() {
     super.initState();
-    // Connect VoiceService navigation callbacks
+    // Connect VoiceService navigation and action callbacks
     VoiceService.instance.onNavigateRequest = (index) {
       if (mounted && index >= 0 && index < _screens.length) {
         setState(() => _currentIndex = index);
       }
     };
+
     VoiceService.instance.onRouteRequest = (route) {
-      if (route == 'profile' && mounted) {
+      if (!mounted) return;
+      if (route == 'profile') {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => ProfileScreen(userName: widget.userName),
@@ -53,6 +62,98 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
         );
       }
     };
+
+    VoiceService.instance.onOpenScreenRequest = (screen) {
+      if (!mounted) return;
+      switch (screen) {
+        case 'chat':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => AstrologyChatScreen(apiKey: widget.apiKey),
+            ),
+          );
+          break;
+        case 'add_expense':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const FinanceAddExpenseScreen(),
+            ),
+          );
+          break;
+        case 'astrologers':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const AstrologersScreen(),
+            ),
+          );
+          break;
+        case 'birth_profile':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const BirthProfileScreen(),
+            ),
+          );
+          break;
+        case 'profile':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ProfileScreen(userName: widget.userName),
+            ),
+          );
+          break;
+        case 'register':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const RegisterScreen(),
+            ),
+          );
+          break;
+      }
+    };
+
+    VoiceService.instance.onAskAstrologyRequest = (question) {
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => AstrologyChatScreen(
+            apiKey: widget.apiKey,
+            initialQuestion: question,
+          ),
+        ),
+      );
+    };
+
+    VoiceService.instance.onAddExpenseRequest =
+        (amount, category, description) async {
+      try {
+        await FinanceService.instance.addExpense(
+          Expense(
+            amount: amount,
+            category: category,
+            description: description,
+            date: DateTime.now().toIso8601String().substring(0, 10),
+          ),
+        );
+      } catch (_) {
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const FinanceAddExpenseScreen(),
+            ),
+          );
+        }
+      }
+    };
+  }
+
+  @override
+  void dispose() {
+    VoiceService.instance.onNavigateRequest = null;
+    VoiceService.instance.onRouteRequest = null;
+    VoiceService.instance.onOpenScreenRequest = null;
+    VoiceService.instance.onAskAstrologyRequest = null;
+    VoiceService.instance.onAddExpenseRequest = null;
+    super.dispose();
   }
 
   // ── Tab definitions ───────────────────────────────────────────────────────

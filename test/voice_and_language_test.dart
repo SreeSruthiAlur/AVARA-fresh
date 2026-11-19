@@ -148,6 +148,60 @@ void main() {
       expect(result.dictatedText, equals('Coffee with friends 250'));
     });
 
+    test('Astrology voice questions invoke onAskAstrologyRequest', () {
+      final voice = VoiceService.instance;
+      String? askedQuestion;
+      voice.onAskAstrologyRequest = (q) => askedQuestion = q;
+
+      final res1 = voice.parseAndExecuteCommand('What is my horoscope?', speakFeedback: false);
+      expect(res1.type, equals(VoiceCommandType.askAstrology));
+      expect(askedQuestion, contains('horoscope'));
+
+      final res2 = voice.parseAndExecuteCommand('Naa rasi enti', speakFeedback: false);
+      expect(res2.type, equals(VoiceCommandType.askAstrology));
+      expect(askedQuestion, contains('rasi'));
+    });
+
+    test('Direct screen navigation voice commands open target screens', () {
+      final voice = VoiceService.instance;
+      String? openedScreen;
+      voice.onOpenScreenRequest = (s) => openedScreen = s;
+
+      voice.parseAndExecuteCommand('Open astrology chat', speakFeedback: false);
+      expect(openedScreen, equals('chat'));
+
+      voice.parseAndExecuteCommand('talk to astrologer', speakFeedback: false);
+      expect(openedScreen, equals('astrologers'));
+
+      voice.parseAndExecuteCommand('Open kundli', speakFeedback: false);
+      expect(openedScreen, equals('birth_profile'));
+
+      voice.parseAndExecuteCommand('Open profile', speakFeedback: false);
+      expect(openedScreen, equals('profile'));
+    });
+
+    test('Actionable expense speech invokes onAddExpenseRequest', () {
+      final voice = VoiceService.instance;
+      double? loggedAmount;
+      String? loggedDesc;
+      voice.onAddExpenseRequest = (amt, cat, desc) {
+        loggedAmount = amt;
+        loggedDesc = desc;
+      };
+
+      final res = voice.parseAndExecuteCommand('Add expense 150 for coffee', speakFeedback: false);
+      expect(res.type, equals(VoiceCommandType.addExpense));
+      expect(loggedAmount, equals(150.0));
+      expect(loggedDesc, equals('coffee'));
+    });
+
+    test('Conversational queries provide helpful system overview', () {
+      final voice = VoiceService.instance;
+      final res = voice.parseAndExecuteCommand('Who are you?', speakFeedback: false);
+      expect(res.type, equals(VoiceCommandType.conversational));
+      expect(res.feedbackMessage, contains('AVARA'));
+    });
+
     test('extractExpenseFromSpeech intelligently extracts amount, category, and description', () {
       final voice = VoiceService.instance;
       final r1 = voice.extractExpenseFromSpeech('Coffee 150 rupees');

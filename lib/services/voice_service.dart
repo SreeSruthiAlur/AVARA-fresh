@@ -9,6 +9,10 @@ import 'package:avara_astrology_trial/services/tts_service.dart';
 enum VoiceCommandType {
   changeLanguage,
   navigate,
+  openScreen,
+  askAstrology,
+  addExpense,
+  conversational,
   dictateText,
   none,
 }
@@ -23,6 +27,10 @@ class VoiceCommandResult {
     this.targetRouteName,
     this.feedbackMessage,
     this.dictatedText,
+    this.astrologyQuestion,
+    this.expenseAmount,
+    this.expenseCategory,
+    this.expenseDescription,
   });
 
   final VoiceCommandType type;
@@ -32,8 +40,13 @@ class VoiceCommandResult {
   final String? targetRouteName;
   final String? feedbackMessage;
   final String? dictatedText;
+  final String? astrologyQuestion;
+  final double? expenseAmount;
+  final String? expenseCategory;
+  final String? expenseDescription;
 
-  bool get isActionable => type != VoiceCommandType.none;
+  bool get isActionable =>
+      type != VoiceCommandType.none && type != VoiceCommandType.dictateText;
 }
 
 /// Voice Recognition and Intelligent Speech Command Service for AVARA.
@@ -77,7 +90,18 @@ class VoiceService extends ChangeNotifier {
   /// Callback when user speaks a login or guest access command from the Login screen.
   void Function()? onLoginAsGuestRequest;
 
+  /// Callback when user asks an astrology question by voice.
+  void Function(String question)? onAskAstrologyRequest;
+
+  /// Callback when user dictates an expense by voice.
+  void Function(double amount, String category, String description)? onAddExpenseRequest;
+
+  /// Callback when user requests to open a specific screen (e.g. 'chat', 'add_expense', 'astrologers', 'birth_profile', 'profile', 'register').
+  void Function(String screenName)? onOpenScreenRequest;
+
   Timer? _silenceTimer;
+  bool _hasFinalized = false;
+  void Function(String text, bool isFinal)? _activeOnResult;
 
   // ---------------------------------------------------------------------------
   // Initialization
@@ -94,10 +118,16 @@ class VoiceService extends ChangeNotifier {
       _isInitialized = await _speech.initialize(
         onError: (val) {
           debugPrint('🎤 [AVARA Voice Error]: ${val.errorMsg} (permanent: ${val.permanent})');
+          final lower = val.errorMsg.toLowerCase();
+          if (lower.contains('no-speech') || lower.contains('no_speech')) {
+            // Transient silence event in browser — do not treat as fatal error
+            debugPrint('🎤 [AVARA Voice]: Transient silence detected, continuing.');
+            return;
+          }
           _errorMessage = _humanFriendlyError(val.errorMsg);
-          if (val.errorMsg.toLowerCase().contains('not-allowed') ||
-              val.errorMsg.toLowerCase().contains('denied') ||
-              val.errorMsg.toLowerCase().contains('permission')) {
+          if (lower.contains('not-allowed') ||
+              lower.contains('denied') ||
+              lower.contains('permission')) {
             _hasPermissionError = true;
           }
           _isListening = false;
@@ -111,6 +141,13 @@ class VoiceService extends ChangeNotifier {
           } else if (status == 'notListening' || status == 'done') {
             _isListening = false;
             _soundLevel = 0.0;
+            // When browser engine stops receiving speech, finalize recognized words immediately
+            if (!_hasFinalized && _lastWords.trim().isNotEmpty) {
+              _hasFinalized = true;
+              _silenceTimer?.cancel();
+              debugPrint('🎤 [AVARA Web Speech onEnd]: Finalizing pending words: "$_lastWords"');
+              _activeOnResult?.call(_lastWords, true);
+            }
           }
           notifyListeners();
         },
@@ -143,6 +180,8 @@ class VoiceService extends ChangeNotifier {
     _hasPermissionError = false;
     _lastWords = '';
     _soundLevel = 0.0;
+    _hasFinalized = false;
+    _activeOnResult = onResult;
 
     if (!_isInitialized) {
       final available = await initialize();
@@ -169,20 +208,29 @@ class VoiceService extends ChangeNotifier {
         onResult: (result) {
           _lastWords = result.recognizedWords;
 
+          if (result.finalResult) {
+            _silenceTimer?.cancel();
+            _hasFinalized = true;
+            onResult(_lastWords, true);
+            notifyListeners();
+            return;
+          }
+
+          onResult(result.recognizedWords, false);
+          notifyListeners();
+
           // Debounce timer for web browsers where finalResult is not sent during continuous speech
           _silenceTimer?.cancel();
           if (result.recognizedWords.trim().isNotEmpty) {
             _silenceTimer = Timer(const Duration(milliseconds: 1400), () {
-              if (_isListening && _lastWords.trim().isNotEmpty) {
+              if (!_hasFinalized && _lastWords.trim().isNotEmpty) {
+                _hasFinalized = true;
                 debugPrint('🎤 [AVARA Silence Detection]: Auto-finalizing: "$_lastWords"');
                 onResult(_lastWords, true);
                 stopListening();
               }
             });
           }
-
-          onResult(result.recognizedWords, result.finalResult);
-          notifyListeners();
         },
         onSoundLevelChange: (level) {
           // Normalize sound level
@@ -190,8 +238,8 @@ class VoiceService extends ChangeNotifier {
           notifyListeners();
         },
         localeId: localeId,
-        listenFor: const Duration(seconds: 45),
-        pauseFor: const Duration(seconds: 5),
+        listenFor: const Duration(seconds: 60),
+        pauseFor: const Duration(seconds: 6),
         listenMode: stt.ListenMode.dictation,
         cancelOnError: false,
         partialResults: true,
@@ -203,15 +251,20 @@ class VoiceService extends ChangeNotifier {
         await _speech.listen(
           onResult: (result) {
             _lastWords = result.recognizedWords;
-            onResult(result.recognizedWords, result.finalResult);
+            if (result.finalResult) {
+              _hasFinalized = true;
+              onResult(_lastWords, true);
+            } else {
+              onResult(result.recognizedWords, false);
+            }
             notifyListeners();
           },
           onSoundLevelChange: (level) {
             _soundLevel = level;
             notifyListeners();
           },
-          listenFor: const Duration(seconds: 45),
-          pauseFor: const Duration(seconds: 5),
+          listenFor: const Duration(seconds: 60),
+          pauseFor: const Duration(seconds: 6),
           listenMode: stt.ListenMode.dictation,
           cancelOnError: false,
           partialResults: true,
@@ -229,6 +282,10 @@ class VoiceService extends ChangeNotifier {
     _silenceTimer?.cancel();
     _silenceTimer = null;
     try {
+      if (!_hasFinalized && _lastWords.trim().isNotEmpty) {
+        _hasFinalized = true;
+        _activeOnResult?.call(_lastWords, true);
+      }
       if (_isListening) {
         await _speech.stop();
         _isListening = false;
@@ -400,7 +457,248 @@ class VoiceService extends ChangeNotifier {
       );
     }
 
-    // 2. Navigation Commands
+    // 2. Specific Screen Direct Navigation
+    // Astrology Chat Screen:
+    if (_matchesPattern(clean, [
+      'open chat',
+      'open astrology chat',
+      'astrology chat',
+      'chat with astrologer',
+      'chat with ai',
+      'talk to ai',
+      'ask a question',
+      'chat screen',
+    ])) {
+      if (onOpenScreenRequest != null) {
+        onOpenScreenRequest?.call('chat');
+      } else {
+        onNavigateRequest?.call(1);
+      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'chat',
+        feedbackMessage: 'Opening Astrology AI Chat',
+      );
+    }
+
+    // Human Astrologers Directory:
+    if (_matchesPattern(clean, [
+      'talk to astrologer',
+      'consult astrologer',
+      'astrologers',
+      'human astrologer',
+      'astrologer list',
+      'pandit',
+    ])) {
+      if (onOpenScreenRequest != null) {
+        onOpenScreenRequest?.call('astrologers');
+      } else {
+        onNavigateRequest?.call(1);
+      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'astrologers',
+        feedbackMessage: 'Opening Verified Astrologers Directory',
+      );
+    }
+
+    // Birth Profile / Kundli:
+    if (_matchesPattern(clean, [
+      'open kundli',
+      'birth profile',
+      'open birth profile',
+      'my kundli',
+      'my chart',
+      'kundali screen',
+      'jathakam chart',
+      'birth chart',
+    ])) {
+      if (onOpenScreenRequest != null) {
+        onOpenScreenRequest?.call('birth_profile');
+      } else {
+        onNavigateRequest?.call(1);
+      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'birth_profile',
+        feedbackMessage: 'Opening Janma Kundali & Birth Profile',
+      );
+    }
+
+    // Add Expense Screen (explicit command without amount):
+    if (_matchesPattern(clean, [
+      'open add expense',
+      'add expense screen',
+      'new expense',
+      'enter expense',
+      'log expense screen',
+      'add my expense',
+      'kharchu add',
+    ]) && !clean.contains(RegExp(r'\d+'))) {
+      if (onOpenScreenRequest != null) {
+        onOpenScreenRequest?.call('add_expense');
+      } else {
+        onNavigateRequest?.call(2);
+      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'add_expense',
+        feedbackMessage: 'Opening Add Expense Screen',
+      );
+    }
+
+    // Profile & Preferences:
+    if (_matchesPattern(clean, [
+      'open profile',
+      'go to profile',
+      'my profile',
+      'settings',
+      'profile screen',
+      'ప్రొఫైల్',
+    ])) {
+      if (onOpenScreenRequest != null) {
+        onOpenScreenRequest?.call('profile');
+      } else {
+        onRouteRequest?.call('profile');
+      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'profile',
+        feedbackMessage: 'Opening Profile & Preferences',
+      );
+    }
+
+    // Login / Guest / Open App command:
+    if (_matchesPattern(clean, [
+      'login',
+      'sign in',
+      'guest',
+      'continue',
+      'open app',
+      'start app',
+      'enter app',
+    ])) {
+      if (onLoginAsGuestRequest != null) {
+        onLoginAsGuestRequest?.call();
+        return VoiceCommandResult(
+          type: VoiceCommandType.navigate,
+          rawTranscript: spokenText,
+          feedbackMessage: 'Entering AVARA App as Guest',
+        );
+      }
+    }
+
+    // Register / Sign up command:
+    if (_matchesPattern(clean, [
+      'sign up',
+      'register',
+      'create account',
+      'new account',
+      'open sign up',
+    ])) {
+      onOpenScreenRequest?.call('register');
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'register',
+        feedbackMessage: 'Opening Sign Up Screen',
+      );
+    }
+
+    // 3. Add Expense with Amount & Details (Actionable Expense Voice Dictation)
+    final bool hasExpenseTrigger = _matchesPattern(clean, [
+      'add expense',
+      'spent',
+      'log expense',
+      'record expense',
+      'paid',
+      'kharchu chesa',
+    ]);
+    if (hasExpenseTrigger && clean.contains(RegExp(r'\d+'))) {
+      final parsed = extractExpenseFromSpeech(spokenText);
+      final double? amt = parsed['amount'] as double?;
+      if (amt != null && amt > 0) {
+        final cat = parsed['category'] as String? ?? 'Other';
+        final desc = parsed['description'] as String? ?? 'Expense';
+        onAddExpenseRequest?.call(amt, cat, desc);
+        return VoiceCommandResult(
+          type: VoiceCommandType.addExpense,
+          rawTranscript: spokenText,
+          expenseAmount: amt,
+          expenseCategory: cat,
+          expenseDescription: desc,
+          feedbackMessage: 'Added expense of ₹${amt.toInt()} for $desc ($cat)',
+        );
+      }
+    }
+
+    // 4. Astrology AI Questions (Direct Voice Q&A with Vedic AI)
+    final bool isAstrologyQuestion = _matchesPattern(clean, [
+      'what is my horoscope',
+      'tell me my horoscope',
+      'today horoscope',
+      'horoscope',
+      'rasiphalalu',
+      'rasi phalalu',
+      'what is my rasi',
+      'what is my rashi',
+      'naa rasi',
+      'naa raasi',
+      'moon sign',
+      'sun sign',
+      'what is my nakshatra',
+      'naa nakshatram',
+      'janma nakshatra',
+      'what is my lagna',
+      'ascendant',
+      'lagnam',
+      'kundli',
+      'kundali',
+      'jathakam',
+      'jyothish',
+      'jyotisham',
+      'when will i get married',
+      'naa marriage',
+      'pelli epudu',
+      'career',
+      'my job',
+      'udyogam',
+      'mahadasha',
+      'dasha period',
+      '7th house',
+      'tell me my future',
+      'bhavishyath',
+    ]);
+    if (isAstrologyQuestion ||
+        clean.startsWith('ask astrology') ||
+        clean.startsWith('ask astrologer') ||
+        clean.startsWith('panditji')) {
+      final question = spokenText
+          .replaceFirst(
+            RegExp(r'^(ask astrology|ask astrologer|panditji|tell me)\s*', caseSensitive: false),
+            '',
+          )
+          .trim();
+      final finalQ = question.isNotEmpty ? question : spokenText;
+      if (onAskAstrologyRequest != null) {
+        onAskAstrologyRequest?.call(finalQ);
+      } else {
+        onNavigateRequest?.call(1);
+      }
+      return VoiceCommandResult(
+        type: VoiceCommandType.askAstrology,
+        rawTranscript: spokenText,
+        astrologyQuestion: finalQ,
+        feedbackMessage: 'Opening Astrology AI to answer: "$finalQ"',
+      );
+    }
+
+    // 5. Navigation Commands
     // Home tab (0)
     if (_matchesPattern(clean, [
       'go to home',
@@ -473,6 +771,8 @@ class VoiceService extends ChangeNotifier {
       'aarogyam',
       'wellness',
       'mood',
+      'water',
+      'sleep',
       'ఆరోగ్యం',
       'health',
     ])) {
@@ -528,42 +828,26 @@ class VoiceService extends ChangeNotifier {
       );
     }
 
-    // Profile screen
+    // 6. Conversational Guidance & Info
     if (_matchesPattern(clean, [
-      'open profile',
-      'go to profile',
-      'my profile',
-      'profile screen',
-      'settings',
-      'ప్రొఫైల్',
+      'who are you',
+      'what is avara',
+      'help',
+      'what can you do',
+      'commands',
+      'features',
+      'namaskaram',
+      'hello',
     ])) {
-      onRouteRequest?.call('profile');
+      final isTe = AppLanguageService.instance.currentLanguage == AppLanguage.telugu;
+      final msg = isTe
+          ? 'నేను AVARA, మీ వేద జ్యోతిష మరియు లైఫ్‌స్టైల్ AI మార్గదర్శిని. మీరు మాట్లాడి జ్యోతిష ప్రశ్నలు అడగవచ్చు, ఖర్చులు నమోదు చేయవచ్చు మరియు భాషను మార్చవచ్చు.'
+          : 'I am AVARA, your Vedic Astrology and life companion. Speak to ask astrology questions, add expenses, switch languages, or navigate anywhere.';
       return VoiceCommandResult(
-        type: VoiceCommandType.navigate,
+        type: VoiceCommandType.conversational,
         rawTranscript: spokenText,
-        targetRouteName: 'profile',
-        feedbackMessage: 'Opening Profile & Preferences',
+        feedbackMessage: msg,
       );
-    }
-
-    // Login / Guest / Open App command (for Login Screen accessibility):
-    if (_matchesPattern(clean, [
-      'login',
-      'sign in',
-      'guest',
-      'continue',
-      'open app',
-      'start app',
-      'enter app',
-    ])) {
-      if (onLoginAsGuestRequest != null) {
-        onLoginAsGuestRequest?.call();
-        return VoiceCommandResult(
-          type: VoiceCommandType.navigate,
-          rawTranscript: spokenText,
-          feedbackMessage: 'Entering AVARA App as Guest',
-        );
-      }
     }
 
     // 3. Fallback: Treat as dictated text entry for active fields
@@ -589,11 +873,11 @@ class VoiceService extends ChangeNotifier {
       description = text.replaceFirst(numMatch.group(1)!, '').trim();
     }
 
-    // Clean up currency words
+    // Clean up command keywords and currency words
     description = description
         .replaceAll(
           RegExp(
-            r'\b(rupees|rs|rupayalu|spent|for|on|ki|lo)\b',
+            r'\b(add|expense|expenses|record|log|paid|rupees|rs|rupayalu|spent|for|on|ki|lo)\b',
             caseSensitive: false,
           ),
           '',

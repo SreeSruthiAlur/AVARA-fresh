@@ -34,6 +34,23 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     VoiceService.instance.onLoginAsGuestRequest = _continueAsGuest;
+    VoiceService.instance.onOpenScreenRequest = (screen) {
+      if (!mounted) return;
+      if (screen == 'register') {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const RegisterScreen()),
+        );
+      } else {
+        _continueAsGuest();
+      }
+    };
+    VoiceService.instance.onAskAstrologyRequest = (question) {
+      if (!mounted) return;
+      _continueAsGuest();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        VoiceService.instance.onAskAstrologyRequest?.call(question);
+      });
+    };
   }
 
   @override
@@ -41,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (VoiceService.instance.onLoginAsGuestRequest == _continueAsGuest) {
       VoiceService.instance.onLoginAsGuestRequest = null;
     }
+    VoiceService.instance.onOpenScreenRequest = null;
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();

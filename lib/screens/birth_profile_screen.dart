@@ -419,6 +419,7 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
   }
 
   Widget _buildFormCard() {
+    final tr = AppLanguageService.instance.tr;
     return Card(
       color: Colors.white,
       elevation: 0,

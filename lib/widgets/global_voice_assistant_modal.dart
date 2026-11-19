@@ -58,6 +58,11 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.25).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    // Auto-start listening as soon as the modal opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _startListening();
+    });
   }
 
   @override
@@ -113,10 +118,12 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
           _pulseController.stop();
           _pulseController.reset();
 
-          // Auto-close after brief confirmation
-          Future.delayed(const Duration(milliseconds: 1400), () {
-            if (mounted) Navigator.of(context).pop();
-          });
+          // Auto-close after brief confirmation for actions, keep open for conversational help
+          if (result.type != VoiceCommandType.conversational) {
+            Future.delayed(const Duration(milliseconds: 1400), () {
+              if (mounted) Navigator.of(context).pop();
+            });
+          }
         } else if (isFinal) {
           setState(() {
             _isListening = false;
@@ -155,9 +162,11 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
       _statusMessage = result.feedbackMessage ?? 'Command executed!';
     });
 
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) Navigator.of(context).pop();
-    });
+    if (result.type != VoiceCommandType.conversational) {
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) Navigator.of(context).pop();
+      });
+    }
   }
 
   @override
@@ -497,6 +506,26 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
               runSpacing: 8,
               children: [
                 _commandChip(
+                  icon: Icons.auto_awesome,
+                  label: 'What is my horoscope?',
+                  onTap: () => _executeCommand('What is my horoscope'),
+                ),
+                _commandChip(
+                  icon: Icons.nightlight_round,
+                  label: 'What is my Rasi?',
+                  onTap: () => _executeCommand('What is my rasi'),
+                ),
+                _commandChip(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: 'Open Astrology Chat',
+                  onTap: () => _executeCommand('Open Astrology Chat'),
+                ),
+                _commandChip(
+                  icon: Icons.coffee_rounded,
+                  label: 'Add expense 150 coffee',
+                  onTap: () => _executeCommand('Add expense 150 for coffee'),
+                ),
+                _commandChip(
                   icon: Icons.translate,
                   label: 'Change to Telugu (తెలుగు)',
                   onTap: () => _executeCommand('Change to Telugu'),
@@ -512,11 +541,6 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
                   onTap: () => _executeCommand('Switch to English'),
                 ),
                 _commandChip(
-                  icon: Icons.nightlight_round,
-                  label: 'Open Astrology',
-                  onTap: () => _executeCommand('Open Astrology'),
-                ),
-                _commandChip(
                   icon: Icons.account_balance_wallet,
                   label: 'Go to Finance',
                   onTap: () => _executeCommand('Go to Finance'),
@@ -530,6 +554,11 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
                   icon: Icons.track_changes,
                   label: 'Open Habits',
                   onTap: () => _executeCommand('Open Habits'),
+                ),
+                _commandChip(
+                  icon: Icons.person_outline_rounded,
+                  label: 'Open Profile',
+                  onTap: () => _executeCommand('Open Profile'),
                 ),
               ],
             ),

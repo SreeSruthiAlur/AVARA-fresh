@@ -50,6 +50,7 @@ class AstrologyChatScreen extends StatefulWidget {
     super.key,
     this.chartJson, // now optional — null means chat-first mode
     this.apiKey = '',
+    this.initialQuestion,
   });
 
   /// Optional pre-computed kundali from the Birth Profile screen.
@@ -58,6 +59,9 @@ class AstrologyChatScreen extends StatefulWidget {
 
   /// Google AI Studio API key. Pass this securely from your app config.
   final String apiKey;
+
+  /// Optional question to auto-submit immediately upon opening.
+  final String? initialQuestion;
 
   @override
   State<AstrologyChatScreen> createState() => _AstrologyChatScreenState();
@@ -142,6 +146,17 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
           : 'Namaste 🙏 I am AVARA, your Vedic Astrology guide. How can I guide you today?';
     }
     _messages.add(_ChatMessage(text: greeting, sender: _MessageSender.ai));
+
+    // If an initial voice question was provided, automatically submit it
+    if (widget.initialQuestion != null &&
+        widget.initialQuestion!.trim().isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _inputController.text = widget.initialQuestion!.trim();
+          _sendMessage();
+        }
+      });
+    }
   }
 
   Future<void> _loadStoredProfileIfAvailable() async {

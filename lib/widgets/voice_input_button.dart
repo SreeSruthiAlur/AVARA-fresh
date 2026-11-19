@@ -237,7 +237,10 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
         if (text.trim().isNotEmpty) {
           // Check if user spoke a command like "Change to Telugu"
           final commandResult = voice.tryExecuteCommand(text);
-          if (commandResult != null) {
+          if (commandResult != null &&
+              (commandResult.type == VoiceCommandType.changeLanguage ||
+                  (widget.onSpeechComplete == null &&
+                      commandResult.type != VoiceCommandType.dictateText))) {
             _stopListening();
             _showFloatingStatusOverlay(
               text: '✅ ${commandResult.feedbackMessage ?? "Command executed!"}',
