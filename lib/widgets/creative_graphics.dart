@@ -3189,6 +3189,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
     with SingleTickerProviderStateMixin {
   int _selectedMantraIndex = 0;
   bool _isPlaying = false;
+  bool _isPlayingTranslation = false;
   late final AnimationController _rippleController;
   String _translationChoice = 'auto'; // 'auto', 'en', 'te', 'none'
 
@@ -3226,7 +3227,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
       'sourceEn': 'Rigveda 3.62.10 • Meditative Chanting',
       'sourceTe': 'ఋగ్వేదం 3.62.10 • ధ్యాన పఠనం (Meditative India)',
       'sourceTanglish': 'Rigveda 3.62.10 • Dhyana Pathanam',
-      'devanagari': 'ॐ भूर्भुवः स्वः ।\nतत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि ।\nधियो यो नः प्रचोदयात् ॥',
+      'devanagari': 'ॐ भూర్భువః స్వః ।\nतत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि ।\nधियो यो नः प्रचोदयात् ॥',
       'transliteration': 'Om Bhur Bhuvah Svah |\nTat Savitur Varenyam Bhargo Devasya Dhimahi |\nDhiyo Yo Nah Prachodayat ||',
       'teluguScript': 'ఓం భూర్భువః స్వః ।\nతత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి ।\nధియో యో నః ప్రచోదయాత్ ॥',
       'meaningEn': 'We meditate upon the transcendental radiance of the divine Sun (Savitr). May that sacred celestial light stimulate and guide our intellect onto the righteous path of truth.',
@@ -3274,9 +3275,11 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
   void _handleTtsChange() {
     if (mounted) {
       final isSpeaking = TtsService.instance.isSpeaking;
-      if (isSpeaking != _isPlaying) {
+      final isSpeakingTr = TtsService.instance.isSpeakingTranslation;
+      if (isSpeaking != _isPlaying || isSpeakingTr != _isPlayingTranslation) {
         setState(() {
           _isPlaying = isSpeaking;
+          _isPlayingTranslation = isSpeakingTr;
           if (_isPlaying) {
             _rippleController.repeat();
           } else {
@@ -3298,13 +3301,19 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
   void _toggleChant() {
     if (_isPlaying) {
       TtsService.instance.stop();
-      setState(() => _isPlaying = false);
+      setState(() {
+        _isPlaying = false;
+        _isPlayingTranslation = false;
+      });
       _rippleController.stop();
       _rippleController.reset();
     } else {
       final m = _mantras[_selectedMantraIndex];
       TtsService.instance.playSacredChant(m['sanskritSpeech']!);
-      setState(() => _isPlaying = true);
+      setState(() {
+        _isPlaying = true;
+        _isPlayingTranslation = false;
+      });
       _rippleController.repeat();
 
       final currentLang = AppLanguageService.instance.currentLanguage;
@@ -3335,10 +3344,71 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
     }
   }
 
+  void _toggleTranslationAudio(String effectiveLang) {
+    if (_isPlayingTranslation) {
+      TtsService.instance.stop();
+      setState(() {
+        _isPlayingTranslation = false;
+        _isPlaying = false;
+      });
+      _rippleController.stop();
+      _rippleController.reset();
+    } else {
+      final m = _mantras[_selectedMantraIndex];
+      final mantraKey = m['id']!;
+      final lang = effectiveLang == 'te' ? 'te' : 'en';
+      final fallback = lang == 'te'
+          ? '${m['meaningTe']!} ${m['benefitTe']!}'
+          : '${m['meaningEn']!} ${m['benefitEn']!}';
+
+      TtsService.instance.playTranslationVoice(
+        mantraKey: mantraKey,
+        langCode: lang,
+        fallbackText: fallback,
+      );
+      setState(() {
+        _isPlayingTranslation = true;
+        _isPlaying = true;
+      });
+      _rippleController.repeat();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                lang == 'te' ? Icons.translate_rounded : Icons.record_voice_over_rounded,
+                color: const Color(0xFFFDE68A),
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  lang == 'te'
+                      ? '🔊 పవిత్ర తెలుగు అర్థ వివరణ వింటున్నారు (Authentic Telugu Voice)...'
+                      : '🔊 Reading English Translation Aloud (Clear Meditative Voice)...',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF78350F),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
   Widget _buildTranslationChoiceChip(String label, String value, String activeValue) {
     final isSelected = activeValue == value;
     return GestureDetector(
-      onTap: () => setState(() => _translationChoice = value),
+      onTap: () {
+        if (_isPlayingTranslation) {
+          TtsService.instance.stop();
+        }
+        setState(() => _translationChoice = value);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
@@ -3562,6 +3632,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                           if (_isPlaying) {
                             TtsService.instance.stop();
                             _isPlaying = false;
+                            _isPlayingTranslation = false;
                           }
                         });
                       }
@@ -3780,7 +3851,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                 ],
                 const SizedBox(height: 16),
 
-                // Animated Soundwave Visualizer (Pulsing when chanting)
+                // Animated Soundwave Visualizer (Pulsing when chanting or reading translation)
                 if (_isPlaying) ...[
                   AnimatedBuilder(
                     animation: _rippleController,
@@ -3807,9 +3878,13 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                             }),
                             const SizedBox(width: 10),
                             Text(
-                              isTe
-                                  ? '432Hz వేద నాదం మారుమ్రోగుతోంది...'
-                                  : 'Resonating with authentic 432Hz Vedic resonance...',
+                              _isPlayingTranslation
+                                  ? (effectiveTranslation == 'te'
+                                      ? 'తెలుగు అర్థ వివరణ పఠనం సాగుతోంది (Pure Telugu Voice)...'
+                                      : 'Reading English translation aloud (Clear Voice)...')
+                                  : (isTe
+                                      ? '432Hz వేద నాదం మారుమ్రోగుతోంది...'
+                                      : 'Resonating with authentic 432Hz Vedic resonance...'),
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -3824,18 +3899,20 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                   const SizedBox(height: 10),
                 ],
 
-                // Audio Chanting Button (Pure Indian Sanskrit Tone)
+                // 1. Audio Chanting Button (Pure Indian Sanskrit Tone)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: _toggleChant,
                     icon: Icon(
-                      _isPlaying ? Icons.stop_circle_rounded : Icons.volume_up_rounded,
+                      (_isPlaying && !_isPlayingTranslation)
+                          ? Icons.stop_circle_rounded
+                          : Icons.volume_up_rounded,
                       size: 24,
                       color: Colors.white,
                     ),
                     label: Text(
-                      _isPlaying
+                      (_isPlaying && !_isPlayingTranslation)
                           ? (isTe ? 'పఠనం ఆపండి (Stop Chanting)' : 'Stop Chanting')
                           : (isTe
                               ? 'పవిత్ర సంస్కృత పఠనం వినండి (Pure Sanskrit Tone)'
@@ -3843,13 +3920,53 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isPlaying ? const Color(0xFFDC2626) : const Color(0xFFB45309),
+                      backgroundColor: (_isPlaying && !_isPlayingTranslation)
+                          ? const Color(0xFFDC2626)
+                          : const Color(0xFFB45309),
                       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       elevation: 3,
                     ),
                   ),
                 ),
+
+                // 2. Translation Voice Button (Reads in the user's chosen language: English or Telugu!)
+                if (effectiveTranslation != 'none') ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _toggleTranslationAudio(effectiveTranslation),
+                      icon: Icon(
+                        _isPlayingTranslation
+                            ? Icons.stop_circle_rounded
+                            : Icons.record_voice_over_rounded,
+                        size: 20,
+                        color: const Color(0xFF78350F),
+                      ),
+                      label: Text(
+                        _isPlayingTranslation
+                            ? (effectiveTranslation == 'te'
+                                ? 'వివరణ ఆపండి (Stop Voice)'
+                                : 'Stop Voice Reading')
+                            : (effectiveTranslation == 'te'
+                                ? '🔊 తెలుగు భావాన్ని స్పష్టమైన గొంతుతో వినండి (Play Telugu Voice)'
+                                : '🔊 Listen to English Translation Aloud (Play English Voice)'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0xFF78350F),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFEF3C7).withValues(alpha: 0.65),
+                        side: const BorderSide(color: Color(0xFFD97706), width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

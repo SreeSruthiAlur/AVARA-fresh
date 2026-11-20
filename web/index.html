@@ -77,7 +77,13 @@
         'gayatri': new Audio('gayatri_mantra.m4a'),
         'gayatri_webm': new Audio('gayatri_mantra.webm'),
         'mrityunjaya': new Audio('maha_mrityunjaya.m4a'),
-        'mrityunjaya_webm': new Audio('maha_mrityunjaya.webm')
+        'mrityunjaya_webm': new Audio('maha_mrityunjaya.webm'),
+        'asato_ma_meaning_en': new Audio('asato_ma_meaning_en.mp3'),
+        'asato_ma_meaning_te': new Audio('asato_ma_meaning_te.mp3'),
+        'gayatri_meaning_en': new Audio('gayatri_meaning_en.mp3'),
+        'gayatri_meaning_te': new Audio('gayatri_meaning_te.mp3'),
+        'mrityunjaya_meaning_en': new Audio('mrityunjaya_meaning_en.mp3'),
+        'mrityunjaya_meaning_te': new Audio('mrityunjaya_meaning_te.mp3')
       };
 
       for (var k in chantAudios) {
@@ -201,6 +207,34 @@
           }
         } catch (err) {
           console.error("🕉️ [AVARA Audio Play Exception]:", err);
+        }
+      };
+
+      window.playTranslationAudio = function(mantraKey, langCode) {
+        console.log("🕉️ [AVARA Audio]: Playing spoken translation...", mantraKey, langCode);
+        window.stopSacredChant();
+
+        var key = (mantraKey || 'asato_ma') + '_meaning_' + (langCode === 'te' ? 'te' : 'en');
+        var audio = chantAudios[key];
+        if (!audio) {
+          audio = new Audio(key + '.mp3');
+          chantAudios[key] = audio;
+        }
+
+        try {
+          currentMeaningAudio = audio;
+          audio.currentTime = 0;
+          audio.volume = 1.0;
+          var p = audio.play();
+          if (p !== undefined) {
+            p.then(function() {
+              console.log("🕉️ [AVARA Audio]: Spoken translation is playing in", langCode);
+            }).catch(function(err) {
+              console.warn("Translation audio error:", err);
+            });
+          }
+        } catch (e) {
+          console.error("Translation audio exception:", e);
         }
       };
 

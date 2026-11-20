@@ -89,6 +89,9 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  bool _isSpeakingTranslation = false;
+  bool get isSpeakingTranslation => _isSpeakingTranslation;
+
   /// Stops current speech output.
   Future<void> stop() async {
     if (kIsWeb) {
@@ -97,10 +100,12 @@ class TtsService extends ChangeNotifier {
     try {
       await _tts.stop();
       _isSpeaking = false;
+      _isSpeakingTranslation = false;
       _currentlySpeakingText = null;
       notifyListeners();
     } catch (_) {
       _isSpeaking = false;
+      _isSpeakingTranslation = false;
       notifyListeners();
     }
   }
@@ -110,10 +115,28 @@ class TtsService extends ChangeNotifier {
     if (kIsWeb) {
       playSacredChantWeb(sanskrit, translation);
       _isSpeaking = true;
+      _isSpeakingTranslation = false;
       _currentlySpeakingText = sanskrit;
       notifyListeners();
     } else {
       await speak(sanskrit, language: AppLanguage.english);
+    }
+  }
+
+  /// Plays natural human voice translation for the specified mantra in the chosen language.
+  Future<void> playTranslationVoice({
+    required String mantraKey,
+    required String langCode, // 'en' or 'te'
+    required String fallbackText,
+  }) async {
+    if (kIsWeb) {
+      playTranslationAudioWeb(mantraKey, langCode);
+      _isSpeaking = true;
+      _isSpeakingTranslation = true;
+      _currentlySpeakingText = fallbackText;
+      notifyListeners();
+    } else {
+      await speak(fallbackText, language: langCode == 'te' ? AppLanguage.telugu : AppLanguage.english);
     }
   }
 

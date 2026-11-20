@@ -22,3 +22,12 @@ void playTempleBellWeb() {
     js.context.callMethod('playTempleBell', []);
   } catch (_) {}
 }
+
+void playTranslationAudioWeb(String mantraKey, String langCode) {
+  try {
+    js.context.callMethod('playTranslationAudio', [mantraKey, langCode]);
+  } catch (e) {
+    // ignore: avoid_print
+    print('Web translation JS error: $e');
+  }
+}

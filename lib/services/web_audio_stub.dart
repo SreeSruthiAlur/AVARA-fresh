@@ -2,3 +2,4 @@
 void playSacredChantWeb(String sanskrit, String telugu) {}
 void stopSacredChantWeb() {}
 void playTempleBellWeb() {}
+void playTranslationAudioWeb(String mantraKey, String langCode) {}
