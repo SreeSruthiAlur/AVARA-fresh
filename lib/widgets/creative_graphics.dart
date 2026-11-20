@@ -1372,3 +1372,587 @@ class Spherical3DBubblePainter extends CustomPainter {
       oldDelegate.floatOffset != floatOffset;
 }
 
+// =============================================================================
+// 7. Connected Pillars Nexus Widget (Interconnected Holistic Ecosystem)
+// =============================================================================
+
+/// Interactive interconnected pentagonal nexus showing how Astrology, Health,
+/// Habits, Finance, and Insights are interconnected in daily life.
+class ConnectedPillarsNexusWidget extends StatefulWidget {
+  const ConnectedPillarsNexusWidget({
+    super.key,
+    required this.onOpenPillar,
+  });
+
+  final void Function(int pillarIndex) onOpenPillar;
+
+  @override
+  State<ConnectedPillarsNexusWidget> createState() =>
+      _ConnectedPillarsNexusWidgetState();
+}
+
+class _ConnectedPillarsNexusWidgetState
+    extends State<ConnectedPillarsNexusWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  int _selectedPillar = 0; // 0: Astrology, 1: Health, 2: Habits, 3: Finance, 4: Insights
+
+  static const List<Map<String, dynamic>> _pillars = [
+    {
+      'name': 'Astrology',
+      'role': 'Circadian & Cosmic Clock',
+      'color': Color(0xFF6C5CE7),
+      'icon': Icons.nightlight_round,
+      'synergy': 'Guides peak mental energy windows (10 AM - 1 PM) and lunar emotional cycles.',
+      'connectsTo': 'Feeds optimal waking and nutrition timing directly into Health & Habits.',
+    },
+    {
+      'name': 'Health',
+      'role': 'Vital Body & Rest',
+      'color': Color(0xFF00CEC9),
+      'icon': Icons.favorite_rounded,
+      'synergy': 'Provides physiological energy, deep sleep, and low stress cortisol.',
+      'connectsTo': 'Gives physical willpower needed to maintain consistent daily Habits.',
+    },
+    {
+      'name': 'Habits',
+      'role': 'Daily Execution',
+      'color': Color(0xFFE17055),
+      'icon': Icons.track_changes_rounded,
+      'synergy': 'Builds myelinated neural pathways through 25m focus & evening wind-downs.',
+      'connectsTo': 'Eliminates impulsive stress-spending and protects Mindful Finance.',
+    },
+    {
+      'name': 'Finance',
+      'role': 'Mindful Wealth',
+      'color': Color(0xFF00B894),
+      'icon': Icons.account_balance_wallet_rounded,
+      'synergy': 'Disciplined budgeting and 24-hr cooling pauses preserve freedom.',
+      'connectsTo': 'Removes financial anxiety, allowing deep peace for Insights & Meditation.',
+    },
+    {
+      'name': 'Insights',
+      'role': 'Holistic Synthesis',
+      'color': Color(0xFFE84393),
+      'icon': Icons.auto_graph_rounded,
+      'synergy': 'Synthesizes all 4 components into a unified 88% Holistic Life Index.',
+      'connectsTo': 'Reveals cross-pillar patterns so you continuously grow better.',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activePillar = _pillars[_selectedPillar];
+    final activeColor = activePillar['color'] as Color;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: activeColor.withValues(alpha: 0.35), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: activeColor.withValues(alpha: 0.1),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: activeColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.hub_rounded, color: activeColor, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unified Life Ecosystem',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: AppColors.deepNavy,
+                        ),
+                      ),
+                      Text(
+                        'All 5 pillars connected as one life flow',
+                        style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00B894).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.link_rounded, size: 14, color: Color(0xFF00B894)),
+                    SizedBox(width: 4),
+                    Text(
+                      '88% In Sync',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF00B894),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Nexus Interactive Canvas Graph
+          SizedBox(
+            height: 230,
+            child: AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, _) {
+                return CustomPaint(
+                  painter: _NexusPainter(
+                    pulse: _pulseController.value,
+                    selectedPillar: _selectedPillar,
+                  ),
+                  child: Stack(
+                    children: [
+                      // Center AVARA Core Hub
+                      Center(
+                        child: Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [activeColor, activeColor.withValues(alpha: 0.75)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: activeColor.withValues(alpha: 0.35),
+                                blurRadius: 14,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('AVARA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.8)),
+                                Text('Nexus', style: TextStyle(color: Colors.white70, fontSize: 8.5)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Surrounding 5 Interactive Pillar Buttons
+                      ...List.generate(5, (index) {
+                        final p = _pillars[index];
+                        final pColor = p['color'] as Color;
+                        final angle = (index * 72 - 90) * math.pi / 180;
+                        const radius = 86.0;
+
+                        return Align(
+                          alignment: Alignment(
+                            math.cos(angle) * 0.88,
+                            math.sin(angle) * 0.88,
+                          ),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedPillar = index),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: _selectedPillar == index ? pColor : Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: pColor,
+                                  width: _selectedPillar == index ? 2.5 : 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: pColor.withValues(alpha: _selectedPillar == index ? 0.35 : 0.15),
+                                    blurRadius: _selectedPillar == index ? 12 : 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  p['icon'] as IconData,
+                                  color: _selectedPillar == index ? Colors.white : pColor,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Interconnection Detail Card
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: activeColor.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: activeColor.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(activePillar['icon'] as IconData, size: 16, color: activeColor),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${activePillar['name']} • ${activePillar['role']}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                            color: activeColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    InkWell(
+                      onTap: () => widget.onOpenPillar(_selectedPillar),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        child: Row(
+                          children: [
+                            Text('Open ${activePillar['name']}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: activeColor)),
+                            const SizedBox(width: 3),
+                            Icon(Icons.arrow_forward_rounded, size: 13, color: activeColor),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '⚡ How it functions: ${activePillar['synergy']}',
+                  style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.3),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '🔗 Interconnection: ${activePillar['connectsTo']}',
+                  style: TextStyle(fontSize: 11, color: activeColor, fontWeight: FontWeight.w600, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NexusPainter extends CustomPainter {
+  _NexusPainter({
+    required this.pulse,
+    required this.selectedPillar,
+  });
+
+  final double pulse;
+  final int selectedPillar;
+
+  static const List<Color> pillarColors = [
+    Color(0xFF6C5CE7), // Astrology
+    Color(0xFF00CEC9), // Health
+    Color(0xFFE17055), // Habits
+    Color(0xFF00B894), // Finance
+    Color(0xFFE84393), // Insights
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.height * 0.39;
+
+    // Calculate the 5 pillar node positions
+    final nodePoints = List.generate(5, (i) {
+      final angle = (i * 72 - 90) * math.pi / 180;
+      return Offset(center.dx + math.cos(angle) * radius, center.dy + math.sin(angle) * radius);
+    });
+
+    // Draw connecting closed pentagonal loop (Astrology -> Health -> Habits -> Finance -> Insights -> Astrology)
+    final loopPaint = Paint()
+      ..color = const Color(0xFF6C5CE7).withValues(alpha: 0.18)
+      ..strokeWidth = 2.2
+      ..style = PaintingStyle.stroke;
+
+    final loopPath = Path()..moveTo(nodePoints[0].dx, nodePoints[0].dy);
+    for (int i = 1; i < 5; i++) {
+      loopPath.lineTo(nodePoints[i].dx, nodePoints[i].dy);
+    }
+    loopPath.close();
+    canvas.drawPath(loopPath, loopPaint);
+
+    // Draw lines connecting each pillar to the central AVARA hub
+    for (int i = 0; i < 5; i++) {
+      final isSel = selectedPillar == i;
+      final spokePaint = Paint()
+        ..color = isSel
+            ? pillarColors[i].withValues(alpha: 0.55)
+            : Colors.grey.withValues(alpha: 0.18)
+        ..strokeWidth = isSel ? 2.5 : 1.2
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(center, nodePoints[i], spokePaint);
+
+      // Draw flowing energy sparks moving between nodes
+      final p1 = nodePoints[i];
+      final p2 = nodePoints[(i + 1) % 5];
+      final t = (pulse + (i * 0.2)) % 1.0;
+      final sparkPos = Offset(p1.dx + (p2.dx - p1.dx) * t, p1.dy + (p2.dy - p1.dy) * t);
+
+      final sparkPaint = Paint()..color = pillarColors[i].withValues(alpha: 0.7);
+      canvas.drawCircle(sparkPos, 3.5, sparkPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _NexusPainter oldDelegate) =>
+      oldDelegate.pulse != pulse ||
+      oldDelegate.selectedPillar != selectedPillar;
+}
+
+// =============================================================================
+// 8. Unified Daily Holistic Synergy Stream (Chronological Connected Flow)
+// =============================================================================
+
+/// Chronological connected flow showing how today's Astrology, Health, Habits,
+/// Finance, and Insights work together as one seamless progression.
+class UnifiedHolisticSynergyStream extends StatelessWidget {
+  const UnifiedHolisticSynergyStream({
+    super.key,
+    required this.onOpenPillar,
+  });
+
+  final void Function(int pillarIndex) onOpenPillar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.timeline_rounded, color: AppColors.blue, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Today’s Integrated Life Stream',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.5,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                '5 Pillars Aligned',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.blue,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          _buildStreamStep(
+            index: 0,
+            icon: Icons.nightlight_round,
+            color: const Color(0xFF6C5CE7),
+            pillarName: 'Astrology',
+            timing: 'Dawn (06:00 AM)',
+            action: 'Mercury in 10th house favors strategic decision making & study.',
+            isLast: false,
+          ),
+          _buildStreamStep(
+            index: 1,
+            icon: Icons.favorite_rounded,
+            color: const Color(0xFF00CEC9),
+            pillarName: 'Health',
+            timing: 'Morning (07:30 AM)',
+            action: 'Hydrate with warm water & 15m sunlight walk to prime dopamine.',
+            isLast: false,
+          ),
+          _buildStreamStep(
+            index: 2,
+            icon: Icons.track_changes_rounded,
+            color: const Color(0xFFE17055),
+            pillarName: 'Habits',
+            timing: 'Midday Focus (10:00 AM)',
+            action: 'Execute your 25-minute Pomodoro deep work sprint without phone.',
+            isLast: false,
+          ),
+          _buildStreamStep(
+            index: 3,
+            icon: Icons.account_balance_wallet_rounded,
+            color: const Color(0xFF00B894),
+            pillarName: 'Finance',
+            timing: 'Afternoon (03:00 PM)',
+            action: 'Apply the 24-hr cooling pause on non-essential online retail.',
+            isLast: false,
+          ),
+          _buildStreamStep(
+            index: 4,
+            icon: Icons.auto_graph_rounded,
+            color: const Color(0xFFE84393),
+            pillarName: 'Insights',
+            timing: 'Evening (08:30 PM)',
+            action: 'Review your 88% holistic synergy score and reflect on growth.',
+            isLast: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreamStep({
+    required int index,
+    required IconData icon,
+    required Color color,
+    required String pillarName,
+    required String timing,
+    required String action,
+    required bool isLast,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Step timeline indicator
+          Column(
+            children: [
+              GestureDetector(
+                onTap: () => onOpenPillar(index),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color, width: 1.5),
+                  ),
+                  child: Icon(icon, size: 16, color: color),
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: color.withValues(alpha: 0.3),
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // Step content
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+              child: GestureDetector(
+                onTap: () => onOpenPillar(index),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '$pillarName • $timing',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, size: 16, color: color.withValues(alpha: 0.7)),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      action,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.deepNavy,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+

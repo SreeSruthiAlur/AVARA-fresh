@@ -141,6 +141,31 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() {});
   }
 
+  void _navigateToPillar(int index) {
+    switch (index) {
+      case 0:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const AstrologyHubScreen()),
+        );
+      case 1:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const HealthScreen()),
+        );
+      case 2:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const HabitsScreen()),
+        );
+      case 3:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const FinanceScreen()),
+        );
+      case 4:
+        Navigator.of(context).push<void>(
+          MaterialPageRoute<void>(builder: (_) => const InsightsScreen()),
+        );
+    }
+  }
+
   /// Default routing table — maps module labels to real screens.
   ///
   /// Callers can override by supplying [HomeScreen.onModuleTap].
@@ -201,9 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
               // Daily Self-Help Multi-Graphic Reports (Point 10 & Point 3)
               _buildDailyReportsSection(context),
               const SizedBox(height: 28),
-              _buildExploreHeader(context),
-              const SizedBox(height: 16),
-              _buildExploreGrid(context, onTap),
+              // Unified Interconnected Pillars Nexus (Astrology, Health, Habits, Finance, Insights)
+              ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
+              const SizedBox(height: 18),
+              // Chronological Daily Holistic Synergy Stream
+              UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
             ],
           ),
         ),
