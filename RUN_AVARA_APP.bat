@@ -20,14 +20,16 @@ if !ERRORLEVEL! equ 0 (
     set "PYTHON_EXE=python"
 )
 
-:: Detect Flutter
-where flutter >nul 2>nul
-if !ERRORLEVEL! equ 0 (
-    set "FLUTTER_BAT=flutter"
-) else if exist "C:\Users\mcasu\Downloads\flutter_windows_3.50.0-stable\flutter\bin\flutter.bat" (
+:: Detect Flutter (always use .bat to avoid running the Linux bash script on Windows)
+if exist "C:\Users\mcasu\Downloads\flutter_windows_3.50.0-stable\flutter\bin\flutter.bat" (
     set "FLUTTER_BAT=C:\Users\mcasu\Downloads\flutter_windows_3.50.0-stable\flutter\bin\flutter.bat"
 ) else (
-    set "FLUTTER_BAT=flutter"
+    where flutter.bat >nul 2>nul
+    if !ERRORLEVEL! equ 0 (
+        set "FLUTTER_BAT=flutter.bat"
+    ) else (
+        set "FLUTTER_BAT=flutter"
+    )
 )
 
 echo [Step 1/3] Checking AVARA Backend...
