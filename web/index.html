@@ -58,10 +58,13 @@
     })();
 
     // =========================================================================
-    // AVARA Sacred Vedic Audio & Chanting Synthesis Engine (432Hz Harmonic Bowl + Speech)
+    // AVARA Sacred Vedic Audio & Authentic Chanting Engine
+    // (432Hz Harmonic Singing Bowl + Pure Indian Sanskrit Recitation Audio)
     // =========================================================================
     (function() {
       var audioCtx = null;
+      var currentChantAudio = null;
+      var currentMeaningAudio = null;
 
       function getAudioContext() {
         if (!audioCtx) {
@@ -76,10 +79,55 @@
         return audioCtx;
       }
 
+      // Authentic Temple Brass Bell sound for Japa Mala counting
+      window.playTempleBell = function() {
+        try {
+          var ctx = getAudioContext();
+          if (ctx) {
+            var now = ctx.currentTime;
+            var osc = ctx.createOscillator();
+            var osc2 = ctx.createOscillator();
+            var gain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1760, now); // A6 pure bell
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(3520, now); // A7 harmonic overtone
+
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+
+            osc.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc2.start(now);
+            osc.stop(now + 0.9);
+            osc2.stop(now + 0.9);
+          }
+        } catch (e) {
+          console.warn("Temple bell audio:", e);
+        }
+      };
+
       window.playSacredChant = function(sanskritText, teluguMeaning) {
-        console.log("🕉️ [AVARA Audio]: Playing sacred Vedic chime and chant...");
+        console.log("🕉️ [AVARA Audio]: Playing authentic Indian Vedic chant...", sanskritText);
         
-        // 1. Play authentic harmonic Vedic singing bowl chime (108Hz + 216Hz + 432Hz)
+        // Stop any currently playing chants
+        if (currentChantAudio) {
+          try { currentChantAudio.pause(); currentChantAudio.currentTime = 0; } catch(e){}
+          currentChantAudio = null;
+        }
+        if (currentMeaningAudio) {
+          try { currentMeaningAudio.pause(); currentMeaningAudio.currentTime = 0; } catch(e){}
+          currentMeaningAudio = null;
+        }
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+
+        // 1. Play authentic harmonic Vedic singing bowl chime (108Hz + 216Hz + 432Hz + 528Hz)
         try {
           var ctx = getAudioContext();
           if (ctx) {
@@ -106,44 +154,64 @@
           console.warn("🕉️ [AVARA Audio Bell]:", e);
         }
 
-        // 2. Synthesize Vedic Chanting Voice
+        // 2. Select pure authentic Indian Sanskrit audio file
+        var chantSrc = 'asato_ma_sanskrit.mp3';
+        var query = (sanskritText || '').toLowerCase();
+        if (query.indexOf('gayatri') >= 0 || query.indexOf('गायत्री') >= 0 || query.indexOf('bhur') >= 0 || query.indexOf('savitur') >= 0) {
+          chantSrc = 'gayatri_mantra.ogg';
+        } else if (query.indexOf('tryambakam') >= 0 || query.indexOf('mrityunjaya') >= 0 || query.indexOf('त्र्यम्बकं') >= 0) {
+          chantSrc = 'maha_mrityunjaya.mp3';
+        }
+
         try {
-          if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
+          var audio = new Audio(chantSrc);
+          currentChantAudio = audio;
+          audio.volume = 1.0;
 
-            var chantPhrase = "Om. Asato maa sad gamaya. Tamaso maa jyotir gamaya. Mrityor maa amritam gamaya. " +
-              (teluguMeaning || "Nannu asatyamu nundi satyamu vaipuku, cheekati nundi velugu vaipuku nadipinchu paramaatmaa.");
-            
-            var utter = new SpeechSynthesisUtterance(chantPhrase);
-            utter.rate = 0.82; // Calming meditative cadence
-            utter.pitch = 0.95;
-            utter.volume = 1.0;
-
-            // Pick voice with fallback
-            var voices = window.speechSynthesis.getVoices();
-            if (voices && voices.length > 0) {
-              var selectedVoice = voices.find(function(v) { return v.lang === 'te-IN' || v.lang.startsWith('te'); }) ||
-                                  voices.find(function(v) { return v.lang === 'hi-IN' || v.lang.startsWith('hi'); }) ||
-                                  voices.find(function(v) { return v.lang === 'en-IN'; }) ||
-                                  voices.find(function(v) { return v.lang.startsWith('en'); }) ||
-                                  voices[0];
-              if (selectedVoice) {
-                utter.voice = selectedVoice;
-                utter.lang = selectedVoice.lang;
-              }
+          audio.onended = function() {
+            console.log("🕉️ [AVARA Audio]: Sanskrit chant recitation completed.");
+            // If Telugu meaning is requested and chant was Asato Ma, play pure native Telugu translation audio
+            if (teluguMeaning && chantSrc === 'asato_ma_sanskrit.mp3') {
+              var teluguAudio = new Audio('asato_ma_telugu.mp3');
+              currentMeaningAudio = teluguAudio;
+              teluguAudio.volume = 0.95;
+              teluguAudio.play().catch(function(err){ console.warn("Telugu audio error:", err); });
             }
+          };
 
-            // Speak shortly after singing bowl begins
-            setTimeout(function() {
-              window.speechSynthesis.speak(utter);
-            }, 600);
-          }
+          // Delay 500ms to allow 432Hz singing bowl resonance to blossom first
+          setTimeout(function() {
+            if (currentChantAudio === audio) {
+              audio.play().catch(function(err) {
+                console.warn("🕉️ [AVARA Audio]: Direct Audio play error, trying speech fallback", err);
+                _speakFallback(sanskritText, teluguMeaning);
+              });
+            }
+          }, 500);
         } catch (err) {
-          console.warn("🕉️ [AVARA Speech]:", err);
+          console.warn("🕉️ [AVARA Audio Play Exception]:", err);
+          _speakFallback(sanskritText, teluguMeaning);
         }
       };
 
+      function _speakFallback(sanskritText, teluguMeaning) {
+        if ('speechSynthesis' in window) {
+          var utter = new SpeechSynthesisUtterance(sanskritText + ". " + (teluguMeaning || ""));
+          utter.rate = 0.82;
+          utter.pitch = 0.95;
+          window.speechSynthesis.speak(utter);
+        }
+      }
+
       window.stopSacredChant = function() {
+        if (currentChantAudio) {
+          try { currentChantAudio.pause(); currentChantAudio.currentTime = 0; } catch(e){}
+          currentChantAudio = null;
+        }
+        if (currentMeaningAudio) {
+          try { currentMeaningAudio.pause(); currentMeaningAudio.currentTime = 0; } catch(e){}
+          currentMeaningAudio = null;
+        }
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
         }

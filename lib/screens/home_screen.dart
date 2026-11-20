@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:avara_astrology_trial/screens/astrology_hub_screen.dart';
 import 'package:avara_astrology_trial/screens/explore_topics_screen.dart';
 import 'package:avara_astrology_trial/screens/finance_screen.dart';
@@ -256,12 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
         // 1. Cyber-Glow Hero with XP Bar & Quick Focus Pods
         CyberGlowHeroWidget(
           userName: widget.userName,
-          onOpenFocus: () => _navigateToPillar(2), // Habits
-          onOpenBreathing: () => _navigateToPillar(1), // Health
+          onOpenFocus: () => _showYouthPomodoroModal(context),
+          onOpenBreathing: () => _showYouthBreathingModal(context),
           onOpenCareer: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const ExploreTopicsScreen()),
           ),
-          onOpenDetox: () => _navigateToPillar(2), // Habits
+          onOpenDetox: () => _showYouthDetoxModal(context),
         ),
         const SizedBox(height: 20),
 
@@ -331,19 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // 1. Sacred Vedic Sanctuary Arched Header & Daily Sloka Card with Audio
         SacredVedicSanctuaryCard(
           userName: widget.userName,
-          onOpenAudioSloka: () {
-            TtsService.instance.playSacredChant(
-              'Om Asato maa sad gamaya, Tamaso maa jyotir gamaya, Mrityor maa amritam gamaya.',
-              'నన్ను అసత్యము నుండి సత్యము వైపుకు, అజ్ఞానపు చీకటి నుండి జ్ఞానపు వెలుగు వైపుకు నడిపించు పరమాత్మా.',
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🔔 Chanting Sacred Sloka with 432Hz Vedic Chime...'),
-                backgroundColor: Color(0xFFB45309),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
           onOpenAyurveda: () => _navigateToPillar(1), // Health
           onOpenWalk: () => _navigateToPillar(2), // Habits
           onOpenBlessings: () => _navigateToPillar(0), // Astrology
@@ -797,6 +786,100 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  void _showYouthPomodoroModal(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF13092C),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        return _YouthPomodoroSheet(
+          onCompleted: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('⚡ +50 XP Awarded! Astral Focus Sprint Completed! 🚀'),
+                backgroundColor: Color(0xFF6C5CE7),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showYouthBreathingModal(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        return const _YouthBreathingSheet();
+      },
+    );
+  }
+
+  void _showYouthDetoxModal(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF13092C),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: const BorderSide(color: Color(0xFF00CEC9)),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.phonelink_erase_rounded, color: Color(0xFF55EFC4), size: 26),
+            SizedBox(width: 10),
+            Text('Dopamine Detox Pod', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Reset your neurochemical dopamine baseline:',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+            SizedBox(height: 12),
+            Text('• 1 Hour Zero-Screen Deep Study or Walking', style: TextStyle(color: Colors.white, fontSize: 13, height: 1.4)),
+            Text('• No social media reels or notifications', style: TextStyle(color: Colors.white, fontSize: 13, height: 1.4)),
+            Text('• Replenishes prefrontal attention span by 40%', style: TextStyle(color: Color(0xFF55EFC4), fontSize: 13, fontWeight: FontWeight.bold, height: 1.4)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('⚡ +30 XP! 1-Hour Dopamine Detox Challenge Started!'),
+                  backgroundColor: Color(0xFF00CEC9),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00CEC9),
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Start Detox (+30 XP)', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Tappable circular avatar — navigates to [ProfileScreen] on tap.
@@ -836,6 +919,339 @@ class _TappableAvatar extends StatelessWidget {
     }
     final result = buffer.toString();
     return result.isEmpty ? '?' : result;
+  }
+}
+
+/// Interactive 25-minute Pomodoro timer bottom sheet for Youth mode.
+class _YouthPomodoroSheet extends StatefulWidget {
+  const _YouthPomodoroSheet({required this.onCompleted});
+
+  final VoidCallback onCompleted;
+
+  @override
+  State<_YouthPomodoroSheet> createState() => _YouthPomodoroSheetState();
+}
+
+class _YouthPomodoroSheetState extends State<_YouthPomodoroSheet> {
+  static const int _totalSeconds = 25 * 60;
+  int _secondsRemaining = _totalSeconds;
+  bool _isRunning = false;
+  Timer? _timer;
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _toggleTimer() {
+    if (_isRunning) {
+      _timer?.cancel();
+      setState(() => _isRunning = false);
+    } else {
+      setState(() => _isRunning = true);
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_secondsRemaining > 0) {
+          setState(() => _secondsRemaining--);
+        } else {
+          _timer?.cancel();
+          setState(() => _isRunning = false);
+          widget.onCompleted();
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
+  void _resetTimer() {
+    _timer?.cancel();
+    setState(() {
+      _isRunning = false;
+      _secondsRemaining = _totalSeconds;
+    });
+  }
+
+  String _formatTime(int sec) {
+    final m = (sec ~/ 60).toString().padLeft(2, '0');
+    final s = (sec % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = 1.0 - (_secondsRemaining / _totalSeconds);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.bolt_rounded, color: Color(0xFFFFEAA7), size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    '25m Cyber Focus Pod',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Circular Neon Timer Disc
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 170,
+                height: 170,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 10,
+                  backgroundColor: Colors.white.withValues(alpha: 0.15),
+                  valueColor: const AlwaysStoppedAnimation(Color(0xFF00CEC9)),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatTime(_secondsRemaining),
+                    style: const TextStyle(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _isRunning ? 'FOCUSING...' : 'PAUSED',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      color: _isRunning ? const Color(0xFF55EFC4) : Colors.white54,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: _resetTimer,
+                icon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white70),
+                label: const Text('Reset', style: TextStyle(color: Colors.white70)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white24),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: _toggleTimer,
+                icon: Icon(_isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded, color: Colors.black),
+                label: Text(
+                  _isRunning ? 'Pause Sprint' : 'Start Focus (+50 XP)',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00CEC9),
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '💡 Mercury Hora is active. Deep work blocks finish 30% faster today!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 11.5, color: Colors.white60),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Guided 4-7-8 Exam Calm Cosmic Breathing Orb sheet for Youth mode.
+class _YouthBreathingSheet extends StatefulWidget {
+  const _YouthBreathingSheet();
+
+  @override
+  State<_YouthBreathingSheet> createState() => _YouthBreathingSheetState();
+}
+
+class _YouthBreathingSheetState extends State<_YouthBreathingSheet>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _breathController;
+  int _phase = 0; // 0: Inhale (4s), 1: Hold (7s), 2: Exhale (8s)
+  Timer? _phaseTimer;
+
+  static const List<Map<String, dynamic>> _phases = [
+    {'title': 'INHALING (4s)', 'sub': 'Draw in calm cosmic oxygen', 'color': Color(0xFF74B9FF), 'scale': 1.3},
+    {'title': 'HOLDING (7s)', 'sub': 'Settle your heart rate & mind', 'color': Color(0xFFA29BFE), 'scale': 1.3},
+    {'title': 'EXHALING (8s)', 'sub': 'Release all exam tension & anxiety', 'color': Color(0xFF55EFC4), 'scale': 0.8},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _breathController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    );
+    _startCycle();
+  }
+
+  void _startCycle() {
+    _stepPhase(0);
+  }
+
+  void _stepPhase(int p) {
+    if (!mounted) return;
+    setState(() => _phase = p);
+
+    int dur = 4;
+    if (p == 0) {
+      dur = 4;
+      _breathController.animateTo(1.0, duration: const Duration(seconds: 4));
+    } else if (p == 1) {
+      dur = 7;
+    } else if (p == 2) {
+      dur = 8;
+      _breathController.animateTo(0.0, duration: const Duration(seconds: 8));
+    }
+
+    _phaseTimer = Timer(Duration(seconds: dur), () {
+      if (mounted) {
+        _stepPhase((p + 1) % 3);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _phaseTimer?.cancel();
+    _breathController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cur = _phases[_phase];
+    final color = cur['color'] as Color;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.air_rounded, color: Color(0xFF74B9FF), size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    '4-7-8 Cosmic Pranayama',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+
+          // Pulsing Glow Breathing Orb
+          AnimatedBuilder(
+            animation: _breathController,
+            builder: (context, _) {
+              final scale = 0.8 + (_breathController.value * 0.4);
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.1)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.5),
+                        blurRadius: 30,
+                        spreadRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      cur['title'] as String,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 30),
+
+          Text(
+            cur['sub'] as String,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13.5, color: Colors.white70),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white12,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('Done Breathing', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 }
 

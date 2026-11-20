@@ -117,6 +117,13 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  /// Rings the sacred temple brass bell chime (for Japa Mala bead counting).
+  void playTempleBell() {
+    if (kIsWeb) {
+      playTempleBellWeb();
+    }
+  }
+
   /// Toggles speech for a specific text message (e.g. from an audio play button).
   Future<void> toggleSpeak(String text, {AppLanguage? language}) async {
     if (_isSpeaking && _currentlySpeakingText == text) {

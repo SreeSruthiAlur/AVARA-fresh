@@ -16,3 +16,9 @@ void stopSacredChantWeb() {
     js.context.callMethod('stopSacredChant', []);
   } catch (_) {}
 }
+
+void playTempleBellWeb() {
+  try {
+    js.context.callMethod('playTempleBell', []);
+  } catch (_) {}
+}
