@@ -3332,6 +3332,705 @@ class SacredVedicSanctuaryCard extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// 14. Senior 108-Bead Sacred Japa Mala Counter (Interactive Chanting Widget)
+// =============================================================================
+
+class SacredJapaMalaCounterWidget extends StatefulWidget {
+  const SacredJapaMalaCounterWidget({super.key});
+
+  @override
+  State<SacredJapaMalaCounterWidget> createState() =>
+      _SacredJapaMalaCounterWidgetState();
+}
+
+class _SacredJapaMalaCounterWidgetState
+    extends State<SacredJapaMalaCounterWidget> {
+  int _count = 27;
+  static const int _target = 108;
+  String _selectedMantra = 'గాయత్రీ మంత్రం (Gayatri Mantra)';
+
+  static const List<String> _mantras = [
+    'గాయత్రీ మంత్రం (Gayatri Mantra)',
+    'ఓం నమః శివాయ (Om Namah Shivaya)',
+    'ఓం నమో నారాయణాయ (Maha Vishnu Mantra)',
+    'మహా మృత్యుంజయ మంత్రం (Maha Mrityunjaya)',
+  ];
+
+  void _increment() {
+    setState(() {
+      if (_count < _target) {
+        _count++;
+      } else {
+        _count = 1;
+      }
+    });
+  }
+
+  void _reset() {
+    setState(() => _count = 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _count / _target;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFD97706), width: 1.8),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFB45309).withValues(alpha: 0.12),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFEF3C7),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.circle_outlined, color: Color(0xFFB45309), size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '108 జపమాల కౌంటర్',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF78350F),
+                        ),
+                      ),
+                      Text(
+                        'Sacred 108 Japa Bead Chanting',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              TextButton.icon(
+                onPressed: _reset,
+                icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFB45309)),
+                label: const Text('రీసెట్', style: TextStyle(color: Color(0xFFB45309), fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Mantra Selector Dropdown
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFFDE68A)),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedMantra,
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFB45309)),
+                items: _mantras.map((m) {
+                  return DropdownMenuItem(
+                    value: m,
+                    child: Text(
+                      m,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF78350F),
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedMantra = val);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // Central Tap Rosary Bead Disc
+          Center(
+            child: GestureDetector(
+              onTap: _increment,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 10,
+                      backgroundColor: const Color(0xFFFDE68A),
+                      valueColor: const AlwaysStoppedAnimation(Color(0xFFB45309)),
+                    ),
+                  ),
+                  Container(
+                    width: 126,
+                    height: 126,
+                    decoration: BoxDecoration(
+                      gradient: const RadialGradient(
+                        colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFB45309).withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$_count',
+                          style: const TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF78350F),
+                          ),
+                        ),
+                        const Text(
+                          '/ 108 మణులు',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'స్పర్శించండి (TAP)',
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFB45309),
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          Center(
+            child: Text(
+              _count == _target
+                  ? '🎉 108 మణుల జపం పూర్తయింది! శాంతి శాంతి శాంతిః 🙏'
+                  : 'ఒక్కొక్క మణిని జపిస్తూ స్క్రీన్‌పై తాకండి (Tap to Count Bead)',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF78350F),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 15. Senior Ayurvedic Tridosha Vitality Wheel
+// =============================================================================
+
+class AyurvedicTridoshaWheel extends StatelessWidget {
+  const AyurvedicTridoshaWheel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.eco_rounded, color: Color(0xFF047857), size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    'ఆయుర్వేద త్రిదోష సమతుల్యత (Tridosha Balance)',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // 3 Dosha Bars
+          _buildDoshaRow(
+            dosha: 'వాతం (Vata - Air & Space)',
+            pct: 0.35,
+            color: const Color(0xFF3B82F6),
+            balance: 'శాంతంగా ఉంది (Balanced)',
+            tip: 'కీళ్లకు నువ్వుల నూనె మర్దన & గోరువెచ్చని ఆహారం మేలు చేస్తుంది.',
+          ),
+          const SizedBox(height: 10),
+          _buildDoshaRow(
+            dosha: 'పిత్తం (Pitta - Fire & Energy)',
+            pct: 0.45,
+            color: const Color(0xFFF59E0B),
+            balance: 'మధ్యస్థం (Optimal)',
+            tip: 'మధ్యాహ్నం నెయ్యి మరియు దానిమ్మ రసంతో అగ్నిని చల్లబరచండి.',
+          ),
+          const SizedBox(height: 10),
+          _buildDoshaRow(
+            dosha: 'కఫం (Kapha - Earth & Water)',
+            pct: 0.20,
+            color: const Color(0xFF10B981),
+            balance: 'స్థిరంగా ఉంది (Steady)',
+            tip: 'ఉదయం నడకతో శ్వాసకోశాలను ఉత్తేజపరచండి.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDoshaRow({
+    required String dosha,
+    required double pct,
+    required Color color,
+    required String balance,
+    required String tip,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                dosha,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              Text(
+                balance,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 6,
+              backgroundColor: Colors.black.withValues(alpha: 0.06),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            tip,
+            style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.3),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 16. Youth Interactive Quest & Pomodoro Engine (<22)
+// =============================================================================
+
+class YouthCyberQuestEngine extends StatefulWidget {
+  const YouthCyberQuestEngine({super.key});
+
+  @override
+  State<YouthCyberQuestEngine> createState() => _YouthCyberQuestEngineState();
+}
+
+class _YouthCyberQuestEngineState extends State<YouthCyberQuestEngine> {
+  final Set<int> _completedQuests = {0};
+
+  void _toggleQuest(int index) {
+    setState(() {
+      if (_completedQuests.contains(index)) {
+        _completedQuests.remove(index);
+      } else {
+        _completedQuests.add(index);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final quests = [
+      {
+        'title': '25m Deep Focus Study Sprint',
+        'sub': 'Phone on silent • Complete 1 textbook concept',
+        'xp': '+50 XP',
+        'icon': Icons.timer_rounded,
+        'color': const Color(0xFF6C5CE7),
+      },
+      {
+        'title': '3m Exam Calm Breathing Reset',
+        'sub': 'Inhale 4s, Hold 4s, Exhale 6s to lower test anxiety',
+        'xp': '+30 XP',
+        'icon': Icons.air_rounded,
+        'color': const Color(0xFF00CEC9),
+      },
+      {
+        'title': '24-Hour Social Media Dopamine Pause',
+        'sub': 'Replace night phone scrolling with 5 pages reading',
+        'xp': '+40 XP',
+        'icon': Icons.phonelink_erase_rounded,
+        'color': const Color(0xFFFF7675),
+      },
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF6C5CE7).withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.sports_esports_rounded, color: Color(0xFF6C5CE7), size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    '⚡ Daily Mind Quests',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_completedQuests.length} of 3 Done',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6C5CE7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          ...quests.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final q = entry.value;
+            final isDone = _completedQuests.contains(idx);
+            final color = q['color'] as Color;
+
+            return GestureDetector(
+              onTap: () => _toggleQuest(idx),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isDone ? color.withValues(alpha: 0.08) : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDone ? color : AppColors.border,
+                    width: isDone ? 1.6 : 1.0,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isDone ? color : color.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isDone ? Icons.check_rounded : (q['icon'] as IconData),
+                        size: 18,
+                        color: isDone ? Colors.white : color,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            q['title'] as String,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                              color: isDone ? color : AppColors.deepNavy,
+                              decoration: isDone ? TextDecoration.lineThrough : null,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            q['sub'] as String,
+                            style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        q['xp'] as String,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 17. Adult Executive Circadian Energy Flow Waveform (22-45)
+// =============================================================================
+
+class ExecutiveCircadianFlowCard extends StatelessWidget {
+  const ExecutiveCircadianFlowCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.timeline_rounded, color: Color(0xFF1E3A8A), size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Circadian Focus & Peak Hours',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Peak: 10 AM - 1 PM',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 4 Workday Segments
+          _buildSegmentTile(
+            time: '06:00 AM – 09:00 AM',
+            label: 'Metabolic Priming',
+            desc: 'Hydration & sunlight reset dopamine • Light planning',
+            level: '85% Energy',
+            color: const Color(0xFF0D9488),
+          ),
+          const SizedBox(height: 8),
+          _buildSegmentTile(
+            time: '10:00 AM – 01:30 PM',
+            label: '⚡ Executive Deep Work Peak',
+            desc: 'High cognitive bandwidth • Protect from low-priority meetings',
+            level: '96% Energy',
+            color: const Color(0xFF2563EB),
+          ),
+          const SizedBox(height: 8),
+          _buildSegmentTile(
+            time: '02:00 PM – 03:30 PM',
+            label: 'Post-Prandial Creative Flow',
+            desc: 'Strategic brainstorming, design thinking & informal 1-on-1s',
+            level: '74% Energy',
+            color: const Color(0xFFF59E0B),
+          ),
+          const SizedBox(height: 8),
+          _buildSegmentTile(
+            time: '08:30 PM – 10:30 PM',
+            label: 'Cortisol Decompression',
+            desc: 'Digital sunset • Prepares melatonin for restorative REM sleep',
+            level: '55% Energy',
+            color: const Color(0xFF8B5CF6),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentTile({
+    required String time,
+    required String label,
+    required String desc,
+    required String level,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color),
+                    ),
+                    Text(
+                      level,
+                      style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: color),
+                    ),
+                  ],
+                ),
+                Text(
+                  time,
+                  style: const TextStyle(fontSize: 10, color: AppColors.secondaryText),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  desc,
+                  style: const TextStyle(fontSize: 11, color: AppColors.deepNavy),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 
 
 

@@ -56,6 +56,99 @@
       window.addEventListener('click', ensureMicrophone, { once: true });
       window.addEventListener('touchstart', ensureMicrophone, { once: true });
     })();
+
+    // =========================================================================
+    // AVARA Sacred Vedic Audio & Chanting Synthesis Engine (432Hz Harmonic Bowl + Speech)
+    // =========================================================================
+    (function() {
+      var audioCtx = null;
+
+      function getAudioContext() {
+        if (!audioCtx) {
+          var AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            audioCtx = new AudioContext();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      window.playSacredChant = function(sanskritText, teluguMeaning) {
+        console.log("🕉️ [AVARA Audio]: Playing sacred Vedic chime and chant...");
+        
+        // 1. Play authentic harmonic Vedic singing bowl chime (108Hz + 216Hz + 432Hz)
+        try {
+          var ctx = getAudioContext();
+          if (ctx) {
+            var now = ctx.currentTime;
+            var harmonics = [108, 216, 432, 528, 864];
+            harmonics.forEach(function(freq, idx) {
+              var osc = ctx.createOscillator();
+              var gain = ctx.createGain();
+              osc.type = idx === 0 ? 'sine' : 'triangle';
+              osc.frequency.setValueAtTime(freq, now);
+              
+              var peakGain = 0.22 / (idx + 1);
+              gain.gain.setValueAtTime(0.0001, now);
+              gain.gain.linearRampToValueAtTime(peakGain, now + 0.08);
+              gain.gain.exponentialRampToValueAtTime(0.00001, now + 5.0);
+
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(now);
+              osc.stop(now + 5.0);
+            });
+          }
+        } catch (e) {
+          console.warn("🕉️ [AVARA Audio Bell]:", e);
+        }
+
+        // 2. Synthesize Vedic Chanting Voice
+        try {
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+
+            var chantPhrase = "Om. Asato maa sad gamaya. Tamaso maa jyotir gamaya. Mrityor maa amritam gamaya. " +
+              (teluguMeaning || "Nannu asatyamu nundi satyamu vaipuku, cheekati nundi velugu vaipuku nadipinchu paramaatmaa.");
+            
+            var utter = new SpeechSynthesisUtterance(chantPhrase);
+            utter.rate = 0.82; // Calming meditative cadence
+            utter.pitch = 0.95;
+            utter.volume = 1.0;
+
+            // Pick voice with fallback
+            var voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length > 0) {
+              var selectedVoice = voices.find(function(v) { return v.lang === 'te-IN' || v.lang.startsWith('te'); }) ||
+                                  voices.find(function(v) { return v.lang === 'hi-IN' || v.lang.startsWith('hi'); }) ||
+                                  voices.find(function(v) { return v.lang === 'en-IN'; }) ||
+                                  voices.find(function(v) { return v.lang.startsWith('en'); }) ||
+                                  voices[0];
+              if (selectedVoice) {
+                utter.voice = selectedVoice;
+                utter.lang = selectedVoice.lang;
+              }
+            }
+
+            // Speak shortly after singing bowl begins
+            setTimeout(function() {
+              window.speechSynthesis.speak(utter);
+            }, 600);
+          }
+        } catch (err) {
+          console.warn("🕉️ [AVARA Speech]:", err);
+        }
+      };
+
+      window.stopSacredChant = function() {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      };
+    })();
   </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.

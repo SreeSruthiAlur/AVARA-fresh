@@ -263,21 +263,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           onOpenDetox: () => _navigateToPillar(2), // Habits
         ),
+        const SizedBox(height: 20),
+
+        // 2. Interactive Mind Quests & XP Task Tracker
+        const YouthCyberQuestEngine(),
         const SizedBox(height: 22),
 
-        // 2. 5-Pillar Synergy Spider Radar (Gamified Life Harmony)
+        // 3. 5-Pillar Synergy Spider Radar (Gamified Life Harmony)
         const HolisticRadarSynergyChart(),
         const SizedBox(height: 20),
 
-        // 3. Cybernetic Nexus Graph (Astrology, Health, Habits, Finance, Insights)
+        // 4. Cybernetic Nexus Graph (Astrology, Health, Habits, Finance, Insights)
         ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
         const SizedBox(height: 18),
 
-        // 4. Chronological Daily Synergy Stream
+        // 5. Chronological Daily Synergy Stream
         UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
         const SizedBox(height: 22),
 
-        // 5. Daily Self-Help Multi-Graphic Reports
+        // 6. Daily Self-Help Multi-Graphic Reports
         _buildDailyReportsSection(context),
       ],
     );
@@ -294,23 +298,27 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 20),
 
-        // 2. Executive Moment Card (Circadian Peak & Decision Making)
+        // 2. Executive Circadian Energy Flow & Peak Hours
+        const ExecutiveCircadianFlowCard(),
+        const SizedBox(height: 20),
+
+        // 3. Executive Moment Card (Circadian Peak & Decision Making)
         _buildMomentCard(context),
         const SizedBox(height: 22),
 
-        // 3. 5-Pillar Executive Radar
+        // 4. 5-Pillar Executive Radar
         const HolisticRadarSynergyChart(),
         const SizedBox(height: 20),
 
-        // 4. Connected Pillars Nexus Widget
+        // 5. Connected Pillars Nexus Widget
         ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
         const SizedBox(height: 18),
 
-        // 5. Daily Executive Circadian Stream
+        // 6. Daily Executive Circadian Stream
         UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
         const SizedBox(height: 22),
 
-        // 6. Multi-Graphic Daily Reports
+        // 7. Multi-Graphic Daily Reports
         _buildDailyReportsSection(context),
       ],
     );
@@ -324,13 +332,13 @@ class _HomeScreenState extends State<HomeScreen> {
         SacredVedicSanctuaryCard(
           userName: widget.userName,
           onOpenAudioSloka: () {
-            TtsService.instance.speak(
-              'ఓం అసతో మా సద్గమయ, తమసో మా జ్యోతిర్గమయ, మృత్యోర్మా అమృతం గమయ. '
+            TtsService.instance.playSacredChant(
+              'Om Asato maa sad gamaya, Tamaso maa jyotir gamaya, Mrityor maa amritam gamaya.',
               'నన్ను అసత్యము నుండి సత్యము వైపుకు, అజ్ఞానపు చీకటి నుండి జ్ఞానపు వెలుగు వైపుకు నడిపించు పరమాత్మా.',
             );
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('🔊 Chanting Sacred Sloka in Telugu / వేద శ్లోక పఠనం...'),
+                content: Text('🔔 Chanting Sacred Sloka with 432Hz Vedic Chime...'),
                 backgroundColor: Color(0xFFB45309),
                 behavior: SnackBarBehavior.floating,
               ),
@@ -340,21 +348,29 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenWalk: () => _navigateToPillar(2), // Habits
           onOpenBlessings: () => _navigateToPillar(0), // Astrology
         ),
+        const SizedBox(height: 20),
+
+        // 2. 108-Bead Sacred Japa Mala Counter (Tap to chant)
+        const SacredJapaMalaCounterWidget(),
+        const SizedBox(height: 20),
+
+        // 3. Ayurvedic Tridosha Vitality Wheel (Vata, Pitta, Kapha)
+        const AyurvedicTridoshaWheel(),
         const SizedBox(height: 22),
 
-        // 2. Sacred 5-Pillar Mandala of Life Harmony
+        // 4. Sacred 5-Pillar Mandala of Life Harmony
         ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
         const SizedBox(height: 18),
 
-        // 3. Chronological Spiritual Daily Routine
+        // 5. Chronological Spiritual Daily Routine
         UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
         const SizedBox(height: 22),
 
-        // 4. Holistic Life Radar
+        // 6. Holistic Life Radar
         const HolisticRadarSynergyChart(),
         const SizedBox(height: 20),
 
-        // 5. Daily Reports
+        // 7. Daily Reports
         _buildDailyReportsSection(context),
       ],
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/web_audio_stub.dart'
+    if (dart.library.js) 'package:avara_astrology_trial/services/web_audio_web.dart';
 
 /// Text-To-Speech (TTS) Voice Synthesis Engine for AVARA.
 ///
@@ -89,6 +91,9 @@ class TtsService extends ChangeNotifier {
 
   /// Stops current speech output.
   Future<void> stop() async {
+    if (kIsWeb) {
+      stopSacredChantWeb();
+    }
     try {
       await _tts.stop();
       _isSpeaking = false;
@@ -97,6 +102,18 @@ class TtsService extends ChangeNotifier {
     } catch (_) {
       _isSpeaking = false;
       notifyListeners();
+    }
+  }
+
+  /// Plays the authentic Vedic singing bowl chime and chants the sacred mantra.
+  Future<void> playSacredChant(String sanskrit, String telugu) async {
+    if (kIsWeb) {
+      playSacredChantWeb(sanskrit, telugu);
+      _isSpeaking = true;
+      _currentlySpeakingText = sanskrit;
+      notifyListeners();
+    } else {
+      await speak('$sanskrit. $telugu', language: AppLanguage.telugu);
     }
   }
 
