@@ -1954,5 +1954,680 @@ class UnifiedHolisticSynergyStream extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// 8. Interactive Age Cohort Mode Switcher (Point 11 & Point 2)
+// =============================================================================
+
+class AgeCohortSelectorBar extends StatelessWidget {
+  const AgeCohortSelectorBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: AgeProfileService.instance,
+      builder: (context, _) {
+        final currentGroup = AgeProfileService.instance.ageGroup;
+        final activeTheme = AgeProfileService.instance.activeTheme;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: activeTheme.cardBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: activeTheme.primaryAccent.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: activeTheme.primaryAccent.withValues(alpha: 0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              _buildSegment(
+                context,
+                title: '⚡ Youth (<22)',
+                group: AgeGroup.youth,
+                isActive: currentGroup == AgeGroup.youth,
+                activeColor: const Color(0xFF6C5CE7),
+              ),
+              _buildSegment(
+                context,
+                title: '💼 Adult (22-45)',
+                group: AgeGroup.adult,
+                isActive: currentGroup == AgeGroup.adult,
+                activeColor: const Color(0xFF1E3A8A),
+              ),
+              _buildSegment(
+                context,
+                title: '🌸 Senior (45+)',
+                group: AgeGroup.senior,
+                isActive: currentGroup == AgeGroup.senior,
+                activeColor: const Color(0xFFB45309),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSegment(
+    BuildContext context, {
+    required String title,
+    required AgeGroup group,
+    required bool isActive,
+    required Color activeColor,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          AgeProfileService.instance.setAgeGroup(group);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive ? Colors.white : AppColors.secondaryText,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 9. Holistic Radar Synergy Chart (5-Pillar Spider Chart)
+// =============================================================================
+
+class HolisticRadarSynergyChart extends StatefulWidget {
+  const HolisticRadarSynergyChart({
+    super.key,
+    this.astrologyScore = 0.92,
+    this.healthScore = 0.85,
+    this.habitsScore = 0.88,
+    this.financeScore = 0.80,
+    this.insightsScore = 0.90,
+  });
+
+  final double astrologyScore;
+  final double healthScore;
+  final double habitsScore;
+  final double financeScore;
+  final double insightsScore;
+
+  @override
+  State<HolisticRadarSynergyChart> createState() =>
+      _HolisticRadarSynergyChartState();
+}
+
+class _HolisticRadarSynergyChartState extends State<HolisticRadarSynergyChart>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final compositeScore = ((widget.astrologyScore +
+                widget.healthScore +
+                widget.habitsScore +
+                widget.financeScore +
+                widget.insightsScore) /
+            5 *
+            100)
+        .round();
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.radar_rounded, color: Color(0xFF6C5CE7), size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    '5-Pillar Synergy Radar',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$compositeScore% Life Harmony',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6C5CE7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 220,
+            child: AnimatedBuilder(
+              animation: _animController,
+              builder: (context, _) {
+                return CustomPaint(
+                  painter: _RadarPainter(
+                    progress: _animController.value,
+                    scores: [
+                      widget.astrologyScore,
+                      widget.healthScore,
+                      widget.habitsScore,
+                      widget.financeScore,
+                      widget.insightsScore,
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RadarPainter extends CustomPainter {
+  _RadarPainter({required this.progress, required this.scores});
+
+  final double progress;
+  final List<double> scores; // 0: Astrology, 1: Health, 2: Habits, 3: Finance, 4: Insights
+
+  static const List<String> labels = ['Astrology', 'Health', 'Habits', 'Finance', 'Insights'];
+  static const List<Color> colors = [
+    Color(0xFF6C5CE7),
+    Color(0xFF00CEC9),
+    Color(0xFFE17055),
+    Color(0xFF00B894),
+    Color(0xFFE84393),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) * 0.36;
+
+    final gridPaint = Paint()
+      ..color = AppColors.border
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Draw concentric pentagons (20%, 40%, 60%, 80%, 100%)
+    for (int step = 1; step <= 5; step++) {
+      final r = radius * (step / 5);
+      final path = Path();
+      for (int i = 0; i < 5; i++) {
+        final angle = (i * 2 * math.pi / 5) - (math.pi / 2);
+        final x = center.dx + r * math.cos(angle);
+        final y = center.dy + r * math.sin(angle);
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+      path.close();
+      canvas.drawPath(path, gridPaint);
+    }
+
+    // Draw radial axis spokes
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 2 * math.pi / 5) - (math.pi / 2);
+      final end = Offset(
+        center.dx + radius * math.cos(angle),
+        center.dy + radius * math.sin(angle),
+      );
+      canvas.drawLine(center, end, gridPaint);
+    }
+
+    // Draw animated filled synergy polygon
+    final polyPath = Path();
+    final polyPoints = <Offset>[];
+    for (int i = 0; i < 5; i++) {
+      final angle = (i * 2 * math.pi / 5) - (math.pi / 2);
+      final val = scores[i] * progress;
+      final pt = Offset(
+        center.dx + radius * val * math.cos(angle),
+        center.dy + radius * val * math.sin(angle),
+      );
+      polyPoints.add(pt);
+      if (i == 0) {
+        polyPath.moveTo(pt.dx, pt.dy);
+      } else {
+        polyPath.lineTo(pt.dx, pt.dy);
+      }
+    }
+    polyPath.close();
+
+    final fillPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF6C5CE7).withValues(alpha: 0.38),
+          const Color(0xFF00CEC9).withValues(alpha: 0.18),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(polyPath, fillPaint);
+
+    final borderPaint = Paint()
+      ..color = const Color(0xFF6C5CE7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2;
+    canvas.drawPath(polyPath, borderPaint);
+
+    // Draw vertex dots and labels
+    for (int i = 0; i < 5; i++) {
+      final pt = polyPoints[i];
+      final nodePaint = Paint()
+        ..color = colors[i]
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(pt, 5, nodePaint);
+      canvas.drawCircle(pt, 5, Paint()..color = Colors.white..style = PaintingStyle.stroke..strokeWidth = 1.5);
+
+      // Label
+      final angle = (i * 2 * math.pi / 5) - (math.pi / 2);
+      final labelDist = radius + 22;
+      final lx = center.dx + labelDist * math.cos(angle);
+      final ly = center.dy + labelDist * math.sin(angle);
+
+      final textSpan = TextSpan(
+        text: '${labels[i]}\n${(scores[i] * 100).toInt()}%',
+        style: TextStyle(
+          color: colors[i],
+          fontSize: 9.5,
+          fontWeight: FontWeight.bold,
+          height: 1.1,
+        ),
+      );
+      final textPainter = TextPainter(
+        text: textSpan,
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(
+        canvas,
+        Offset(lx - textPainter.width / 2, ly - textPainter.height / 2),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _RadarPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+// =============================================================================
+// 10. Cross-Pillar Synergy Bridge (Embedded on Individual Screens)
+// =============================================================================
+
+/// Dynamic 4-way cross-link card placed on any pillar screen showing how that
+/// component directly powers the other 4 components in daily self-help life.
+class HolisticCrossPillarBridge extends StatelessWidget {
+  const HolisticCrossPillarBridge({
+    super.key,
+    required this.currentPillarIndex, // 0: Astrology, 1: Health, 2: Habits, 3: Finance, 4: Insights
+    this.onNavigateToPillar,
+  });
+
+  final int currentPillarIndex;
+  final void Function(int targetIndex)? onNavigateToPillar;
+
+  static const List<Map<String, dynamic>> _pillarMeta = [
+    {'name': 'Astrology', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
+    {'name': 'Health', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
+    {'name': 'Habits', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
+    {'name': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
+    {'name': 'Insights', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
+  ];
+
+  List<Map<String, dynamic>> _getCrossConnections() {
+    switch (currentPillarIndex) {
+      case 0: // From Astrology
+        return [
+          {
+            'targetIndex': 1,
+            'title': 'Health & Body Vitals',
+            'desc': 'Pitta-pacifying cooling nutrition & 10 PM sleep align with current lunar cycle.',
+          },
+          {
+            'targetIndex': 2,
+            'title': 'Daily Habits Execution',
+            'desc': 'Surya Hora (Solar hour) favors your hardest 25m cognitive focus sprint.',
+          },
+          {
+            'targetIndex': 3,
+            'title': 'Mindful Wealth & Finance',
+            'desc': 'Mercury aspect advises strategic budgeting over impulsive speculative investments.',
+          },
+          {
+            'targetIndex': 4,
+            'title': 'Holistic Insights',
+            'desc': 'Vedic planetary archetypes provide compassionate context to your emotional patterns.',
+          },
+        ];
+
+      case 1: // From Health
+        return [
+          {
+            'targetIndex': 0,
+            'title': 'Cosmic & Circadian Clock',
+            'desc': 'Syncing sleep with lunar circadian rhythms deepens restorative REM by 34%.',
+          },
+          {
+            'targetIndex': 2,
+            'title': 'Neural Habit Streaks',
+            'desc': 'High physiological energy gives the prefrontal willpower to sustain hard habit streaks.',
+          },
+          {
+            'targetIndex': 3,
+            'title': 'Impulse Spend Protection',
+            'desc': 'Low cortisol stress levels reduce emotional retail and comfort spending by 42%.',
+          },
+          {
+            'targetIndex': 4,
+            'title': 'Holistic Insights',
+            'desc': '7+ hours of quality sleep directly predicts your calmest, high-clarity days.',
+          },
+        ];
+
+      case 2: // From Habits
+        return [
+          {
+            'targetIndex': 0,
+            'title': 'Astrological Energy Peak',
+            'desc': 'Completing morning habits at 7:30 AM catches the peak solar prana window.',
+          },
+          {
+            'targetIndex': 1,
+            'title': 'Physical Health Vitality',
+            'desc': 'Morning sunlight & hydration habit boosts dopamine and resets nighttime melatonin.',
+          },
+          {
+            'targetIndex': 3,
+            'title': 'Financial Freedom',
+            'desc': 'The 24-hr shopping cooling pause habit has prevented ₹1,850 in impulse buys.',
+          },
+          {
+            'targetIndex': 4,
+            'title': 'Holistic Life Score',
+            'desc': 'Active 6-day habit streaks correlate with a 91% life harmony rating.',
+          },
+        ];
+
+      case 3: // From Finance
+        return [
+          {
+            'targetIndex': 0,
+            'title': 'Astrological Wisdom',
+            'desc': 'Align long-term asset allocation with auspicious Jupiter transit phases.',
+          },
+          {
+            'targetIndex': 1,
+            'title': 'Preventative Health',
+            'desc': 'Removing financial uncertainty lowers chronic cardiovascular stress and anxiety.',
+          },
+          {
+            'targetIndex': 2,
+            'title': 'Daily Habit Streaks',
+            'desc': 'Daily 2-minute expense logging habit builds lifelong wealth discipline.',
+          },
+          {
+            'targetIndex': 4,
+            'title': 'Holistic Reflections',
+            'desc': 'Financial peace of mind contributes 30% to your overall weekly life satisfaction.',
+          },
+        ];
+
+      case 4: // From Insights
+      default:
+        return [
+          {
+            'targetIndex': 0,
+            'title': 'Astrology Grounding',
+            'desc': 'Combines planetary transits with your actual journaled mood shifts.',
+          },
+          {
+            'targetIndex': 1,
+            'title': 'Health Recovery Trends',
+            'desc': 'Visualizes the link between sleep recovery and weekly creative productivity.',
+          },
+          {
+            'targetIndex': 2,
+            'title': 'Habit Neural Growth',
+            'desc': 'Identifies micro-friction points so your 1% habit improvements stick easily.',
+          },
+          {
+            'targetIndex': 3,
+            'title': 'Budgeting Balance',
+            'desc': 'Tracks your emotional ROI and money saved from mindful habit choices.',
+          },
+        ];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activePillar = _pillarMeta[currentPillarIndex];
+    final activeColor = activePillar['color'] as Color;
+    final connections = _getCrossConnections();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: activeColor.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: activeColor.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: activeColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.hub_rounded, color: activeColor, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '🔗 How ${activePillar['name']} Connects',
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.deepNavy,
+                        ),
+                      ),
+                      const Text(
+                        'Part of your 5-pillar holistic ecosystem',
+                        style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00B894).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'Connected',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00B894),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // 4 Cross-Connections
+          ...connections.map((c) {
+            final targetIdx = c['targetIndex'] as int;
+            final targetMeta = _pillarMeta[targetIdx];
+            final targetColor = targetMeta['color'] as Color;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: targetColor.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: targetColor.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: targetColor.withValues(alpha: 0.15),
+                    child: Icon(targetMeta['icon'] as IconData, size: 14, color: targetColor),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              targetMeta['name'] as String,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: targetColor,
+                              ),
+                            ),
+                            if (onNavigateToPillar != null)
+                              GestureDetector(
+                                onTap: () => onNavigateToPillar!(targetIdx),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'Open',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: targetColor,
+                                      ),
+                                    ),
+                                    Icon(Icons.chevron_right, size: 13, color: targetColor),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          c['desc'] as String,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.deepNavy,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+
 
 

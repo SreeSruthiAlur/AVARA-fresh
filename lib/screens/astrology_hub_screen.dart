@@ -238,7 +238,11 @@ class AstrologyHubScreen extends StatelessWidget {
               badgeColor: const Color(0xFFE65100),
               onTap: () => _showLockedAstrologerDialog(context),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // 4-Way Holistic Connections (Health, Habits, Finance, Insights)
+            const HolisticCrossPillarBridge(currentPillarIndex: 0),
+            const SizedBox(height: 18),
 
             // Fact Banner Button
             Container(

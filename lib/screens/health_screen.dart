@@ -5,6 +5,7 @@ import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/health_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -231,7 +232,10 @@ class _HealthBody extends StatelessWidget {
         const SizedBox(height: 20),
         // Daily check-in prompt
         _CheckInPrompt(onTap: onAddEntry),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
+        // 4-Way Holistic Connections (Astrology, Habits, Finance, Insights)
+        const HolisticCrossPillarBridge(currentPillarIndex: 1),
+        const SizedBox(height: 20),
         // History
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

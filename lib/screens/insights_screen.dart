@@ -9,6 +9,7 @@ import 'package:avara_astrology_trial/services/health_service.dart';
 import 'package:avara_astrology_trial/services/insights_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -142,6 +143,12 @@ class _ThisWeekTab extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       children: [
         _ReflectionCard(summary: summary),
+        const SizedBox(height: 18),
+        // 5-Pillar Holistic Synergy Spider Radar
+        const HolisticRadarSynergyChart(),
+        const SizedBox(height: 14),
+        // 4-Way Holistic Connections (Astrology, Health, Habits, Finance)
+        const HolisticCrossPillarBridge(currentPillarIndex: 4),
         const SizedBox(height: 24),
         if (summary.keyObservations.isNotEmpty) ...[
           Text('Patterns you can explore',

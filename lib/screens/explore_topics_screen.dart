@@ -385,24 +385,37 @@ class _ExploreTopicsScreenState extends State<ExploreTopicsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Explore Self-Help Pillars', style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.blue),
-            tooltip: 'Scientific Facts',
-            onPressed: () => FactPopup.show(context),
+    return ListenableBuilder(
+      listenable: AgeProfileService.instance,
+      builder: (context, _) {
+        final ageGroup = AgeProfileService.instance.ageGroup;
+        final bgColor = switch (ageGroup) {
+          AgeGroup.youth => const Color(0xFFFAF9FF),
+          AgeGroup.adult => const Color(0xFFF8FAFC),
+          AgeGroup.senior => const Color(0xFFFFFDF5),
+        };
+
+        return Scaffold(
+          backgroundColor: bgColor,
+          appBar: AppBar(
+            title: const Text('Explore Self-Help Pillars', style: TextStyle(fontWeight: FontWeight.bold)),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.blue),
+                tooltip: 'Scientific Facts',
+                onPressed: () => FactPopup.show(context),
+              ),
+            ],
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Motivational header
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Age Cohort Mode Switcher
+                const AgeCohortSelectorBar(),
+                const SizedBox(height: 14),
+                // Motivational header
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -491,6 +504,8 @@ class _ExploreTopicsScreenState extends State<ExploreTopicsScreen> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 

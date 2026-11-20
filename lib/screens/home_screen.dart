@@ -207,34 +207,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final onTap = widget.onModuleTap ?? _defaultModuleTap;
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildGreeting(context),
-              const SizedBox(height: 18),
-              // Dynamic Age-Adaptive Creative Header Graphic (Point 11 & Point 9)
-              _buildAgeAdaptiveCard(context),
-              const SizedBox(height: 20),
-              _buildMomentCard(context),
-              const SizedBox(height: 24),
-              // Daily Self-Help Multi-Graphic Reports (Point 10 & Point 3)
-              _buildDailyReportsSection(context),
-              const SizedBox(height: 28),
-              // Unified Interconnected Pillars Nexus (Astrology, Health, Habits, Finance, Insights)
-              ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
-              const SizedBox(height: 18),
-              // Chronological Daily Holistic Synergy Stream
-              UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
-            ],
+    return ListenableBuilder(
+      listenable: AgeProfileService.instance,
+      builder: (context, _) {
+        final ageService = AgeProfileService.instance;
+        final ageGroup = ageService.ageGroup;
+        final bgColor = switch (ageGroup) {
+          AgeGroup.youth => const Color(0xFFFAF9FF),
+          AgeGroup.adult => const Color(0xFFF8FAFC),
+          AgeGroup.senior => const Color(0xFFFFFDF5),
+        };
+
+        return Scaffold(
+          backgroundColor: bgColor,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildGreeting(context),
+                  const SizedBox(height: 12),
+                  // Age Cohort Mode Switcher (Youth / Adult / Senior instant transformation)
+                  const AgeCohortSelectorBar(),
+                  const SizedBox(height: 16),
+                  // Dynamic Age-Adaptive Creative Header Graphic (Point 11 & Point 9)
+                  _buildAgeAdaptiveCard(context),
+                  const SizedBox(height: 20),
+                  _buildMomentCard(context),
+                  const SizedBox(height: 24),
+                  // Daily Self-Help Multi-Graphic Reports (Point 10 & Point 3)
+                  _buildDailyReportsSection(context),
+                  const SizedBox(height: 28),
+                  // 5-Pillar Holistic Synergy Radar (Astrology, Health, Habits, Finance, Insights)
+                  const HolisticRadarSynergyChart(),
+                  const SizedBox(height: 20),
+                  // Unified Interconnected Pillars Nexus (Interactive pentagonal ecosystem)
+                  ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
+                  const SizedBox(height: 18),
+                  // Chronological Daily Holistic Synergy Stream
+                  UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -410,15 +428,32 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                _greetingPrefix(),
+                switch (activeTheme.group) {
+                  AgeGroup.youth => '⚡ Hey there, explorer!',
+                  AgeGroup.adult => _greetingPrefix(),
+                  AgeGroup.senior => '🌸 Namaste, peace & good health.',
+                },
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
                     ?.copyWith(color: AppColors.secondaryText),
               ),
               const SizedBox(height: 2),
-              Text(widget.userName,
-                  style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                switch (activeTheme.group) {
+                  AgeGroup.youth => '${widget.userName} ⚡',
+                  AgeGroup.adult => widget.userName,
+                  AgeGroup.senior => '${widget.userName} ji 🙏',
+                },
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: activeTheme.group == AgeGroup.senior
+                          ? const Color(0xFF78350F)
+                          : (activeTheme.group == AgeGroup.youth
+                              ? const Color(0xFF4834D4)
+                              : AppColors.deepNavy),
+                      fontSize: activeTheme.group == AgeGroup.senior ? 24 : 20,
+                    ),
+              ),
             ],
           ),
         ),
