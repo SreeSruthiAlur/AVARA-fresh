@@ -57,10 +57,10 @@ echo.
 
 netstat -ano | findstr :5000 | findstr LISTENING >nul 2>nul
 if !ERRORLEVEL! equ 0 (
-    echo [OK] AVARA Flutter App is ALREADY actively running on port 5000!
+    echo [OK] AVARA Flutter App is ALREADY actively running on port 5000
     echo Launching Chrome directly...
     start http://localhost:5000
-    echo Done! App opened at http://localhost:5000.
+    echo [SUCCESS] App opened in Chrome at http://localhost:5000
     pause
     exit /b 0
 )
