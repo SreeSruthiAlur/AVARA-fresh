@@ -33,6 +33,30 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // Proactively request microphone access on user gesture to avoid Web Speech API permission blocks
+    (function() {
+      var requested = false;
+      function ensureMicrophone() {
+        if (requested) return;
+        requested = true;
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+              console.log('🎤 [AVARA Web]: Microphone permission successfully granted.');
+              // Stop tracks immediately so hardware mic is released for SpeechRecognition
+              stream.getTracks().forEach(function(track) { track.stop(); });
+            })
+            .catch(function(err) {
+              console.warn('🎤 [AVARA Web]: Microphone permission not granted yet:', err);
+            });
+        }
+      }
+      window.ensureMicrophone = ensureMicrophone;
+      window.addEventListener('click', ensureMicrophone, { once: true });
+      window.addEventListener('touchstart', ensureMicrophone, { once: true });
+    })();
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

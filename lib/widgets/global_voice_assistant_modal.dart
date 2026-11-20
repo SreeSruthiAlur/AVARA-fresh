@@ -163,14 +163,32 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
               voice.dispatchCommandResult(result);
             }
           });
-        } else if (isFinal) {
+        } else if (isFinal && words.trim().isNotEmpty) {
+          // For non-typing users: any spoken question or sentence that isn't a direct
+          // system command is automatically dispatched to the AI Assistant!
+          final aiResult = VoiceCommandResult(
+            type: VoiceCommandType.askAstrology,
+            rawTranscript: words,
+            astrologyQuestion: words,
+            feedbackMessage: 'Opening AVARA AI for: "$words"',
+          );
+          voice.stopListening();
           setState(() {
             _isListening = false;
-            _lastResult = result;
-            _statusMessage = result.feedbackMessage ?? 'Heard: "$words"';
+            _lastResult = aiResult;
+            _statusMessage = 'Asking AVARA AI: "$words"...';
           });
           _pulseController.stop();
           _pulseController.reset();
+
+          TtsService.instance.speak('Asking AVARA: $words');
+
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+              voice.dispatchCommandResult(aiResult);
+            }
+          });
         }
       },
     );
@@ -196,7 +214,15 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
       _liveTranscript = command.trim();
     });
     final voice = VoiceService.instance;
-    final result = voice.parseCommandOnly(command.trim());
+    var result = voice.parseCommandOnly(command.trim());
+    if (!result.isActionable || result.type == VoiceCommandType.dictateText) {
+      result = VoiceCommandResult(
+        type: VoiceCommandType.askAstrology,
+        rawTranscript: command.trim(),
+        astrologyQuestion: command.trim(),
+        feedbackMessage: 'Opening AVARA AI for: "${command.trim()}"',
+      );
+    }
     setState(() {
       _lastResult = result;
       _statusMessage = result.feedbackMessage ?? 'Command executed!';

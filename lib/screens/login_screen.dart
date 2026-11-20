@@ -6,6 +6,7 @@ import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
+import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
@@ -143,6 +144,12 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         actions: [
+          // Voice Assistant in header
+          IconButton(
+            icon: const Icon(Icons.mic_rounded, color: AppColors.blue),
+            tooltip: 'Voice Assistant / మాట్లాడండి',
+            onPressed: () => GlobalVoiceAssistantModal.show(context),
+          ),
           // Quick Language Switcher Button
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -159,6 +166,19 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => GlobalVoiceAssistantModal.show(context),
+        icon: const Icon(Icons.mic_rounded, color: Colors.white, size: 26),
+        label: const Text(
+          'Speak / మాట్లాడండి',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        backgroundColor: AppColors.blue,
       ),
       body: SafeArea(
         child: Center(
@@ -321,20 +341,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildGuestButton(BuildContext context) {
     return SizedBox(
-      height: AppTheme.buttonHeight,
-      child: OutlinedButton.icon(
+      height: 52,
+      child: ElevatedButton.icon(
         onPressed: _continueAsGuest,
-        icon: const Icon(Icons.record_voice_over_rounded, color: AppColors.blue, size: 20),
-        label: const Text(
-          'Continue without typing (Guest)',
-          style: TextStyle(
-            color: AppColors.deepNavy,
-            fontWeight: FontWeight.w600,
-          ),
+        icon: const Icon(Icons.record_voice_over_rounded, color: Colors.white, size: 22),
+        label: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Continue without typing (Guest)',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            Text(
+              'అతిథిగా ప్రవేశించండి (నో టైపింగ్)',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+              ),
+            ),
+          ],
         ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0F9D58),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 2,
         ),
       ),
     );

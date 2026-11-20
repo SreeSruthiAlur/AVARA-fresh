@@ -134,6 +134,17 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
             date: DateTime.now().toIso8601String().substring(0, 10),
           ),
         );
+        if (mounted) {
+          setState(() => _currentIndex = 2);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Added ₹${amount.toInt()} for $description ($category)'),
+              backgroundColor: AppColors.blue,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
       } catch (_) {
         if (mounted) {
           Navigator.of(context).push(
