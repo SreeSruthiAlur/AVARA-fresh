@@ -21,6 +21,7 @@ if !ERRORLEVEL! equ 0 (
 )
 
 :: Detect Flutter (always use .bat to avoid running the Linux bash script on Windows)
+git config --global --add safe.directory "C:/Users/mcasu/Downloads/flutter_windows_3.50.0-stable/flutter" >nul 2>nul
 if exist "C:\Users\mcasu\Downloads\flutter_windows_3.50.0-stable\flutter\bin\flutter.bat" (
     set "FLUTTER_BAT=C:\Users\mcasu\Downloads\flutter_windows_3.50.0-stable\flutter\bin\flutter.bat"
 ) else (
@@ -28,7 +29,7 @@ if exist "C:\Users\mcasu\Downloads\flutter_windows_3.50.0-stable\flutter\bin\flu
     if !ERRORLEVEL! equ 0 (
         set "FLUTTER_BAT=flutter.bat"
     ) else (
-        set "FLUTTER_BAT=flutter"
+        set "FLUTTER_BAT=flutter.bat"
     )
 )
 
@@ -53,6 +54,16 @@ echo  Microphone is automatically approved via Chrome media flags.
 echo  Opening at: http://localhost:5000
 echo ======================================================================
 echo.
+
+netstat -ano | findstr :5000 | findstr LISTENING >nul 2>nul
+if !ERRORLEVEL! equ 0 (
+    echo [OK] AVARA Flutter App is ALREADY actively running on port 5000!
+    echo Launching Chrome directly...
+    start http://localhost:5000
+    echo Done! App opened at http://localhost:5000.
+    pause
+    exit /b 0
+)
 
 call "!FLUTTER_BAT!" run -d chrome --web-port=5000 --web-browser-flag="--use-fake-ui-for-media-stream"
 
