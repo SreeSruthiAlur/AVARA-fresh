@@ -5,6 +5,7 @@ import 'package:avara_astrology_trial/services/habits_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
@@ -58,10 +59,67 @@ class _HabitsScreenState extends State<HabitsScreen>
     if (mounted) {
       setState(() {
         _habits = List<Habit>.from(summary.habits);
+        if (_habits.isEmpty) {
+          _habits = [
+            const Habit(
+              title: '10 PM Digital Sunset',
+              frequency: 'daily',
+              currentStreak: 4,
+              isCompletedToday: false,
+              originalStruggle: 'Late night phone scrolling in bed',
+              upgradedHabit: 'Put phone outside bedroom at 10 PM & read 5 pages',
+              scientificFact: 'Cutting blue light 30 min before bed increases deep delta sleep by 38%.',
+              neuralScore: 68,
+              upgradeTier: 2,
+            ),
+            const Habit(
+              title: 'Morning Sun & Hydration',
+              frequency: 'daily',
+              currentStreak: 6,
+              isCompletedToday: true,
+              originalStruggle: 'Hitting snooze 3 times & waking sluggish',
+              upgradedHabit: 'Drink 1 glass of water & look at natural sky light for 5 min',
+              scientificFact: 'Morning photons on retinal melanopsin trigger natural cortisol wakefulness.',
+              neuralScore: 84,
+              upgradeTier: 3,
+            ),
+            const Habit(
+              title: '25-Min Deep Focus Sprint',
+              frequency: 'daily',
+              currentStreak: 2,
+              isCompletedToday: false,
+              originalStruggle: 'Procrastinating on important study/work',
+              upgradedHabit: 'Set timer for 25 mins of deep focus with phone on silent',
+              scientificFact: 'Cognitive load theory shows 25 min sprints avoid prefrontal fatigue.',
+              neuralScore: 55,
+              upgradeTier: 1,
+            ),
+          ];
+        }
         _dataLoaded = true;
       });
     }
     return summary;
+  }
+
+  void _showHabitOptimizerSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _HabitOptimizerSheet(
+        onAdopt: (newHabit) {
+          setState(() => _habits.insert(0, newHabit));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🎉 Upgraded habit adopted: "${newHabit.title}"'),
+              backgroundColor: const Color(0xFF6C5CE7),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _refresh() async {
@@ -257,6 +315,11 @@ class _HabitsScreenState extends State<HabitsScreen>
             style: Theme.of(context).textTheme.titleLarge),
         actions: [
           IconButton(
+            icon: const Icon(Icons.lightbulb_outline_rounded, color: AppColors.blue),
+            tooltip: 'Samskaras & Neuroplasticity Facts',
+            onPressed: () => FactPopup.show(context, category: 'habits'),
+          ),
+          IconButton(
             icon: const Icon(Icons.language_rounded),
             onPressed: () => LanguageSelectorSheet.show(context),
             tooltip: tr('lang_switch_title'),
@@ -323,13 +386,36 @@ class _HabitsScreenState extends State<HabitsScreen>
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: SizedBox(
-            height: AppTheme.buttonHeight,
-            child: ElevatedButton.icon(
-              onPressed: _showAddHabitSheet,
-              icon: const Icon(Icons.add),
-              label: Text(tr('habits_add_btn')),
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _showAddHabitSheet,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Add Simple'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: _showHabitOptimizerSheet,
+                  icon: const Icon(Icons.bolt_rounded, size: 20),
+                  label: const Text('⚡ Transform a Habit', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C5CE7),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -565,6 +651,7 @@ class _HabitTile extends StatelessWidget {
                   Text(
                     habit.title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                           decoration: habit.isCompletedToday
                               ? TextDecoration.lineThrough
                               : null,
@@ -573,16 +660,91 @@ class _HabitTile extends StatelessWidget {
                               : AppColors.deepNavy,
                         ),
                   ),
-                  if (habit.currentStreak > 0) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      '🔥 ${habit.currentStreak}-day streak',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: AppColors.orange),
+                  if (habit.originalStruggle != null && habit.upgradedHabit != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.red),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  'Old Habit: ${habit.originalStruggle}',
+                                  style: const TextStyle(fontSize: 10.5, color: Colors.red, fontWeight: FontWeight.w600),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Icon(Icons.arrow_upward_rounded, size: 12, color: Color(0xFF00B894)),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  'Better Upgrade: ${habit.upgradedHabit}',
+                                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF00B894), fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
+                  if (habit.neuralScore != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: (habit.neuralScore! / 100).clamp(0.05, 1.0),
+                              minHeight: 4,
+                              backgroundColor: AppColors.border,
+                              valueColor: const AlwaysStoppedAnimation(Color(0xFF6C5CE7)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${habit.neuralScore}% neural pathway',
+                          style: const TextStyle(fontSize: 10, color: AppColors.secondaryText),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (habit.currentStreak > 0)
+                        Text(
+                          '🔥 ${habit.currentStreak}d streak',
+                          style: const TextStyle(fontSize: 11, color: AppColors.orange, fontWeight: FontWeight.bold),
+                        ),
+                      if (habit.scientificFact != null) ...[
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () => FactPopup.show(context, category: 'habits'),
+                          child: const Text(
+                            '💡 Why it works',
+                            style: TextStyle(fontSize: 11, color: AppColors.blue, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -990,6 +1152,258 @@ class _ErrorView extends StatelessWidget {
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Habit Optimizer & Transformation Sheet (Point 8)
+// ---------------------------------------------------------------------------
+
+class _HabitOptimizerSheet extends StatefulWidget {
+  const _HabitOptimizerSheet({required this.onAdopt});
+  final void Function(Habit habit) onAdopt;
+
+  @override
+  State<_HabitOptimizerSheet> createState() => _HabitOptimizerSheetState();
+}
+
+class _HabitOptimizerSheetState extends State<_HabitOptimizerSheet> {
+  final _inputController = TextEditingController();
+  int _selectedPresetIndex = -1;
+  int _selectedTier = 2;
+
+  static const List<Map<String, dynamic>> _presets = [
+    {
+      'struggle': 'Late night phone scrolling in bed',
+      'title': '10 PM Digital Sunset & Moon Breath',
+      'tier1': 'Put phone on table 10 min before sleep',
+      'tier2': 'Replace screen with 5 min gratitude & soft reading',
+      'tier3': '10 PM digital shutdown with 8 hours restorative sleep',
+      'fact': 'Cutting blue light 30 min before bed increases deep delta sleep by 38%.',
+      'neural': 70,
+    },
+    {
+      'struggle': 'Hitting snooze 3 times & morning fatigue',
+      'title': 'Morning Sun & Cellular Hydration',
+      'tier1': 'Place alarm across room so you must stand up',
+      'tier2': 'Drink 1 full glass of water & open curtains for sky light',
+      'tier3': 'Early dawn wakefulness with 15 min natural sunlight walk',
+      'fact': 'Photons hitting retinal ganglion cells trigger natural cortisol awakening without adrenaline spikes.',
+      'neural': 82,
+    },
+    {
+      'struggle': 'Procrastinating on study or deep work',
+      'title': '25-Min Deep Focus Sprint',
+      'tier1': 'Open book/file and work for just 5 minutes',
+      'tier2': 'Do a single 25-minute Pomodoro block with phone in another room',
+      'tier3': 'Two consecutive 50-minute deep work blocks every morning',
+      'fact': 'Cognitive load theory shows breaking work into 25 min sprints prevents prefrontal exhaustion.',
+      'neural': 64,
+    },
+    {
+      'struggle': 'Impulsive online spending when stressed',
+      'title': '24-Hour Mindful Pause',
+      'tier1': 'Add item to wishlist instead of instant checkout',
+      'tier2': 'Wait 24 hours and review your monthly savings goals',
+      'tier3': 'Conscious allocation: 15% automated investment on payday',
+      'fact': 'Delaying impulse purchases allows prefrontal executive control to cool dopamine cravings.',
+      'neural': 75,
+    },
+  ];
+
+  @override
+  void dispose() {
+    _inputController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeData = _selectedPresetIndex >= 0 ? _presets[_selectedPresetIndex] : null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Icon(Icons.bolt_rounded, color: Color(0xFF6C5CE7), size: 24),
+                SizedBox(width: 8),
+                Text(
+                  'Self-Help Habit Transformer',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.deepNavy),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Tell us your struggle or current bad habit — AVARA will optimize it into a better daily habit.',
+              style: TextStyle(fontSize: 12, color: AppColors.secondaryText),
+            ),
+            const SizedBox(height: 16),
+            const Text('Choose a Common Struggle to Transform:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(_presets.length, (i) {
+                final isSel = _selectedPresetIndex == i;
+                return ChoiceChip(
+                  label: Text(_presets[i]['struggle'] as String, style: TextStyle(fontSize: 11, fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
+                  selected: isSel,
+                  selectedColor: const Color(0xFF6C5CE7).withValues(alpha: 0.15),
+                  onSelected: (val) {
+                    setState(() {
+                      _selectedPresetIndex = val ? i : -1;
+                      if (val) _inputController.text = _presets[i]['struggle'] as String;
+                    });
+                  },
+                );
+              }),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _inputController,
+              decoration: InputDecoration(
+                labelText: 'Or describe your struggle in your words',
+                hintText: 'e.g. Eating junk food at 4 PM...',
+                prefixIcon: const Icon(Icons.edit_note_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (activeData != null) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F0FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFD6C9FF)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.auto_awesome, color: Color(0xFF6C5CE7), size: 18),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Optimized Upgrade: ${activeData['title']}',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4834D4)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _tierChoice(1, 'Level 1: Micro-Step', activeData['tier1'] as String),
+                    const SizedBox(height: 6),
+                    _tierChoice(2, 'Level 2: Progressive Habit', activeData['tier2'] as String),
+                    const SizedBox(height: 6),
+                    _tierChoice(3, 'Level 3: Master Identity', activeData['tier3'] as String),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(Icons.science_rounded, size: 14, color: Color(0xFF00B894)),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            activeData['fact'] as String,
+                            style: const TextStyle(fontSize: 10.5, fontStyle: FontStyle.italic, color: AppColors.secondaryText),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            ElevatedButton(
+              onPressed: () {
+                final struggle = _inputController.text.trim();
+                if (struggle.isEmpty && activeData == null) return;
+
+                final title = activeData != null ? activeData['title'] as String : 'Mindful $struggle Transformation';
+                final upgraded = activeData != null
+                    ? (_selectedTier == 1 ? activeData['tier1'] : (_selectedTier == 2 ? activeData['tier2'] : activeData['tier3'])) as String
+                    : 'Practice 2-minute mindful pause whenever the urge to $struggle arises';
+                final fact = activeData != null ? activeData['fact'] as String : 'Rewiring habits requires replacing old cues with positive micro-rewards.';
+                final neural = activeData != null ? activeData['neural'] as int : 60;
+
+                widget.onAdopt(
+                  Habit(
+                    title: title,
+                    frequency: 'daily',
+                    currentStreak: 1,
+                    isCompletedToday: false,
+                    originalStruggle: struggle.isNotEmpty ? struggle : (activeData?['struggle'] as String? ?? 'Old habit'),
+                    upgradedHabit: upgraded,
+                    scientificFact: fact,
+                    neuralScore: neural,
+                    upgradeTier: _selectedTier,
+                  ),
+                );
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C5CE7),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Text('Adopt this Upgraded Habit', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tierChoice(int tier, String label, String text) {
+    final isSel = _selectedTier == tier;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTier = tier),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSel ? Colors.white : Colors.white60,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: isSel ? const Color(0xFF6C5CE7) : AppColors.border, width: isSel ? 1.5 : 1.0),
+        ),
+        child: Row(
+          children: [
+            Icon(isSel ? Icons.radio_button_checked : Icons.radio_button_off, size: 16, color: isSel ? const Color(0xFF6C5CE7) : AppColors.secondaryText),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: isSel ? const Color(0xFF4834D4) : AppColors.secondaryText)),
+                  Text(text, style: const TextStyle(fontSize: 11.5, color: AppColors.deepNavy, fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
           ],
         ),

@@ -3,6 +3,7 @@ import 'package:avara_astrology_trial/screens/astrologers_screen.dart';
 import 'package:avara_astrology_trial/screens/astrology_chat_screen.dart';
 import 'package:avara_astrology_trial/screens/astrology_hub_screen.dart';
 import 'package:avara_astrology_trial/screens/birth_profile_screen.dart';
+import 'package:avara_astrology_trial/screens/explore_topics_screen.dart';
 import 'package:avara_astrology_trial/screens/finance_add_expense_screen.dart';
 import 'package:avara_astrology_trial/screens/finance_screen.dart';
 import 'package:avara_astrology_trial/screens/habits_screen.dart';
@@ -70,6 +71,13 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
           Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => AstrologyChatScreen(apiKey: widget.apiKey),
+            ),
+          );
+          break;
+        case 'explore_topics':
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ExploreTopicsScreen(),
             ),
           );
           break;

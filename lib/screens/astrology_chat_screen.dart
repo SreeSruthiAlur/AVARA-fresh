@@ -7,6 +7,8 @@ import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
+import 'package:avara_astrology_trial/widgets/fact_popup.dart';
+import 'package:avara_astrology_trial/widgets/keyword_glossary_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/square_kundli_widget.dart';
 import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
@@ -80,29 +82,32 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
   final ScrollController _scrollController = ScrollController();
   final FocusNode _inputFocusNode = FocusNode();
 
-  // Suggestion chips shown before the first message
+  // Suggestion chips shown before the first message — relatable common people questions
   static const List<String> _suggestions = [
+    'How can I stay calm, peaceful, and reduce stress today?',
+    'What career or job path aligns with my natural talents?',
+    'When will I find relationship harmony and life partner?',
+    'How can I improve my financial stability and savings habits?',
     'What does my Moon sign say about my emotions?',
-    'Describe my Lagna and its effect on my personality.',
-    'Which planets are in kendras in my chart?',
-    'What career path suits my Janma Nakshatra?',
   ];
 
   List<String> get _currentSuggestions {
     switch (AppLanguageService.instance.currentLanguage) {
       case AppLanguage.telugu:
         return const [
+          'ఈ రోజు నేను ప్రశాంతంగా ఉండటానికి మరియు ఒత్తిడి తగ్గించడానికి ఏమి చేయాలి?',
+          'నా సహజ ప్రతిభకు ఏ ఉద్యోగం లేదా కెరీర్ సరిపోతుంది?',
+          'నా జీవిత భాగస్వామి మరియు వివాహ సంబంధం గురించి వేద మార్గదర్శనం ఏమిటి?',
+          'నా ఆర్థిక స్థిరత్వం మరియు పొదుపు అలవాట్లను ఎలా మెరుగుపరుచుకోవాలి?',
           'నా చంద్ర రాశి నా భావోద్వేగాల గురించి ఏమి చెబుతోంది?',
-          'నా లగ్నం మరియు నా వ్యక్తిత్వం గురించి వివరించండి.',
-          'నా చార్ట్ లో కేంద్రాలలో ఉన్న గ్రహాలు ఏవి?',
-          'నా జన్మ నక్షత్రానికి ఏ కెరీర్ సరిపోతుంది?',
         ];
       case AppLanguage.tanglish:
         return const [
+          'Ee roju nenu peaceful ga undadaniki em cheyali?',
+          'Naa natural talents ki ae career or job set avuthundi?',
+          'Life partner mariyu relationship harmony gurinchi em chepthondi?',
+          'Savings mariyu financial stability ela penchukovali?',
           'Naa Moon sign emotions gurinchi em chepthondi?',
-          'Naa Lagna mariyu personality gurinchi cheppu.',
-          'Naa chart lo kendralalo unna grahalu enti?',
-          'Naa Janma Nakshatram ki ae career set avuthundi?',
         ];
       case AppLanguage.english:
         return _suggestions;
@@ -312,6 +317,16 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
         ],
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 20),
+          tooltip: 'Vedic Terms Glossary',
+          onPressed: () => KeywordGlossaryModal.showFullGlossary(context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.lightbulb_outline_rounded, color: Colors.white, size: 20),
+          tooltip: 'Scientific Facts',
+          onPressed: () => FactPopup.show(context, category: 'astrology'),
+        ),
         GestureDetector(
           onTap: () => LanguageSelectorSheet.show(context),
           child: Container(
@@ -647,39 +662,92 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
   }
 
   Widget _buildSuggestionChips() {
+    const glossaryKeywords = [
+      'Lagna',
+      'Nakshatra',
+      'Moon Sign',
+      'Mahadasha',
+      'Kendra',
+      'Saturn / Shani',
+    ];
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16, left: 36),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _currentSuggestions
-            .map(
-              (s) => GestureDetector(
-                onTap: () {
-                  _inputController.text = s;
-                  _inputFocusNode.requestFocus();
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: AppColors.deepNavy.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.blue.withValues(alpha: 0.4),
+      padding: const EdgeInsets.only(bottom: 16, left: 24, right: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Everyday Guidance Questions:',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.secondaryText),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _currentSuggestions
+                .map(
+                  (s) => GestureDetector(
+                    onTap: () {
+                      _inputController.text = s;
+                      _inputFocusNode.requestFocus();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.deepNavy.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.blue.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        s,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    s,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: 12,
-                    ),
-                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF6C5CE7)),
+              const SizedBox(width: 4),
+              const Text(
+                'Tap any keyword to see what it means (Glossary):',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6C5CE7)),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => KeywordGlossaryModal.showFullGlossary(context),
+                child: const Text(
+                  'View All',
+                  style: TextStyle(fontSize: 11, color: AppColors.blue, decoration: TextDecoration.underline),
                 ),
               ),
-            )
-            .toList(),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: glossaryKeywords.map((kw) {
+              return ActionChip(
+                label: Text(kw, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                avatar: const Icon(Icons.help_outline_rounded, size: 14, color: AppColors.blue),
+                backgroundColor: Colors.white,
+                side: const BorderSide(color: AppColors.border),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                onPressed: () => KeywordGlossaryModal.showTerm(context, kw),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

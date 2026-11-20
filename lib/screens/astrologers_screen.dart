@@ -27,6 +27,7 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
   late Future<List<Astrologer>> _listFuture;
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _isFeatureUnlocked = false;
 
   @override
   void initState() {
@@ -46,8 +47,93 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
     await _listFuture;
   }
 
+  void _showLockDialog() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Center(
+              child: CircleAvatar(
+                radius: 32,
+                backgroundColor: Color(0xFFFFF3E0),
+                child: Icon(Icons.lock_rounded, size: 34, color: Color(0xFFE65100)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Feature Locked: Human Astrologer Consultation',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.deepNavy,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '1-on-1 consultations with verified human astrologers are reserved for members with an active 7-day habit streak or VIP early access.',
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColors.secondaryText,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                setState(() => _isFeatureUnlocked = true);
+                Navigator.of(ctx).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('🎉 Demo Pass Activated! You can now book consultations.'),
+                    backgroundColor: Colors.green.shade800,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F9D58),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              child: const Text('Unlock with Mentor Demo Pass', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showBookingSheet(BuildContext context, Astrologer astrologer,
       {required bool isVideo}) {
+    if (!_isFeatureUnlocked) {
+      _showLockDialog();
+      return;
+    }
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -111,6 +197,51 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
             color: AppColors.violet,
             child: Column(
               children: [
+                if (!_isFeatureUnlocked)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_rounded, color: Color(0xFFD97706), size: 24),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Feature Locked: VIP Consultation',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF92400E)),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Requires an active 7-day habit streak or VIP early access pass.',
+                                style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() => _isFeatureUnlocked = true);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('🎉 Demo Pass Activated! You can now book consultations.'),
+                                backgroundColor: Colors.green.shade800,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                          child: const Text('Unlock', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        ),
+                      ],
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                   child: TextField(
@@ -146,6 +277,7 @@ class _AstrologersScreenState extends State<AstrologersScreen> {
                               const SizedBox(height: 12),
                           itemBuilder: (context, i) => _AstrologerCard(
                             astrologer: filtered[i],
+                            isLocked: !_isFeatureUnlocked,
                             onChat: () => _showBookingSheet(
                               context,
                               filtered[i],
@@ -177,11 +309,13 @@ class _AstrologerCard extends StatelessWidget {
     required this.astrologer,
     required this.onChat,
     required this.onVideo,
+    this.isLocked = false,
   });
 
   final Astrologer astrologer;
   final VoidCallback onChat;
   final VoidCallback onVideo;
+  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
@@ -307,8 +441,8 @@ class _AstrologerCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onChat,
-                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                  label: const Text('Chat'),
+                  icon: Icon(isLocked ? Icons.lock_outline_rounded : Icons.chat_bubble_outline, size: 16),
+                  label: Text(isLocked ? '🔒 Chat' : 'Chat'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.deepNavy,
                     side: const BorderSide(color: AppColors.border),
@@ -319,8 +453,8 @@ class _AstrologerCard extends StatelessWidget {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: onVideo,
-                  icon: const Icon(Icons.videocam_outlined, size: 16),
-                  label: const Text('Video'),
+                  icon: Icon(isLocked ? Icons.lock_outline_rounded : Icons.videocam_outlined, size: 16),
+                  label: Text(isLocked ? '🔒 Video' : 'Video'),
                 ),
               ),
             ],

@@ -3,11 +3,13 @@ import 'package:avara_astrology_trial/screens/register_screen.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
+import 'package:avara_astrology_trial/services/survey_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
+import 'package:avara_astrology_trial/widgets/survey_modal.dart';
 import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -34,6 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    SurveyService.instance.loadSurveyState();
     VoiceService.instance.onLoginAsGuestRequest = _continueAsGuest;
     VoiceService.instance.onOpenScreenRequest = (screen) {
       if (!mounted) return;
@@ -94,27 +97,36 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _continueAsGuest() {
-    final apiKey = dotenv.get('GROQ_API_KEY',
-        fallback: dotenv.get('GEMINI_API_KEY', fallback: ''));
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(
-        builder: (_) => MainNavigationScaffold(
-          apiKey: apiKey,
-          userName: 'Guest User',
-        ),
-      ),
-      (_) => false,
-    );
+    if (!SurveyService.instance.isCompleted) {
+      SurveyModal.show(
+        context,
+        onCompleted: () => _proceedHome('Guest User'),
+      );
+      return;
+    }
+    _proceedHome('Guest User');
   }
 
   void _navigateHome(AuthUser user) {
+    final name = user.fullName.isNotEmpty ? user.fullName : user.username;
+    if (!SurveyService.instance.isCompleted) {
+      SurveyModal.show(
+        context,
+        onCompleted: () => _proceedHome(name),
+      );
+      return;
+    }
+    _proceedHome(name);
+  }
+
+  void _proceedHome(String userName) {
     final apiKey = dotenv.get('GROQ_API_KEY',
         fallback: dotenv.get('GEMINI_API_KEY', fallback: ''));
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(
         builder: (_) => MainNavigationScaffold(
           apiKey: apiKey,
-          userName: user.fullName.isNotEmpty ? user.fullName : user.username,
+          userName: userName,
         ),
       ),
       (_) => false, // remove every prior route

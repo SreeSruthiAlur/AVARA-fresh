@@ -20,6 +20,11 @@ class Habit {
     this.targetDaysPerWeek = 7,
     this.currentStreak = 0,
     this.isCompletedToday = false,
+    this.originalStruggle,
+    this.upgradedHabit,
+    this.scientificFact,
+    this.neuralScore,
+    this.upgradeTier,
   });
 
   /// Server-assigned id. `null` before the habit is persisted.
@@ -40,6 +45,21 @@ class Habit {
   /// Whether the habit has already been completed today.
   final bool isCompletedToday;
 
+  /// The original suboptimal habit/struggle the user wanted to transform.
+  final String? originalStruggle;
+
+  /// The upgraded, optimized version suggested by AVARA's self-help engine.
+  final String? upgradedHabit;
+
+  /// Behavioral science or Vedic chronobiology fact explaining why this habit works.
+  final String? scientificFact;
+
+  /// Neural habit formation pathway strength (0 - 100%).
+  final int? neuralScore;
+
+  /// Tier of the habit: 1 (Micro-Step), 2 (Steady), 3 (Mastery).
+  final int? upgradeTier;
+
   // ---- de-serialisation ---------------------------------------------------
 
   factory Habit.fromJson(Map<String, dynamic> json) {
@@ -51,6 +71,11 @@ class Habit {
           (json['target_days_per_week'] as num?)?.toInt() ?? 7,
       currentStreak: (json['current_streak'] as num?)?.toInt() ?? 0,
       isCompletedToday: json['is_completed_today'] as bool? ?? false,
+      originalStruggle: json['original_struggle']?.toString(),
+      upgradedHabit: json['upgraded_habit']?.toString(),
+      scientificFact: json['scientific_fact']?.toString(),
+      neuralScore: (json['neural_score'] as num?)?.toInt(),
+      upgradeTier: (json['upgrade_tier'] as num?)?.toInt(),
     );
   }
 
@@ -60,6 +85,11 @@ class Habit {
         'title': title,
         'frequency': frequency,
         'target_days_per_week': targetDaysPerWeek,
+        if (originalStruggle != null) 'original_struggle': originalStruggle,
+        if (upgradedHabit != null) 'upgraded_habit': upgradedHabit,
+        if (scientificFact != null) 'scientific_fact': scientificFact,
+        if (neuralScore != null) 'neural_score': neuralScore,
+        if (upgradeTier != null) 'upgrade_tier': upgradeTier,
       };
 
   /// Returns a copy with [isCompletedToday] toggled.
@@ -72,6 +102,13 @@ class Habit {
             ? (currentStreak - 1).clamp(0, 9999)
             : currentStreak + 1,
         isCompletedToday: !isCompletedToday,
+        originalStruggle: originalStruggle,
+        upgradedHabit: upgradedHabit,
+        scientificFact: scientificFact,
+        neuralScore: isCompletedToday
+            ? ((neuralScore ?? 40) - 4).clamp(10, 100)
+            : ((neuralScore ?? 40) + 6).clamp(10, 100),
+        upgradeTier: upgradeTier,
       );
 }
 

@@ -1,10 +1,13 @@
 import 'package:avara_astrology_trial/screens/login_screen.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
+import 'package:avara_astrology_trial/widgets/survey_modal.dart';
 import 'package:flutter/material.dart';
 
 /// A single entry in the profile menu list.
@@ -164,10 +167,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
         children: [
           _buildHeader(context),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          _buildAgeAndSurveyCard(context),
+          const SizedBox(height: 20),
           _buildMenuSection(context),
           const SizedBox(height: 24),
           _buildLogoutButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAgeAndSurveyCard(BuildContext context) {
+    final ageService = AgeProfileService.instance;
+    final activeTheme = ageService.activeTheme;
+
+    return AvaraSurfaceCard(
+      backgroundColor: AppColors.white,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(activeTheme.iconData, color: activeTheme.primaryAccent, size: 22),
+              const SizedBox(width: 8),
+              const Text(
+                'Personalized Experience & Themes',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.deepNavy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Active Generation Theme: ${activeTheme.displayName}',
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: activeTheme.primaryAccent),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            activeTheme.tagline,
+            style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {
+                  showModalBottomSheet<void>(
+                    context: context,
+                    builder: (ctx) => Container(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('Select Your Age Group Theme', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const SizedBox(height: 14),
+                          ListTile(
+                            leading: const Icon(Icons.school_rounded, color: Color(0xFF6C5CE7)),
+                            title: const Text('🎒 Youth & Student (< 22)'),
+                            subtitle: const Text('Vibrant energetic graphics, study and career focus'),
+                            onTap: () {
+                              ageService.setAgeGroup(AgeGroup.youth);
+                              Navigator.of(ctx).pop();
+                              setState(() {});
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.work_outline_rounded, color: Color(0xFF1E3A8A)),
+                            title: const Text('💼 Achiever & Professional (22 - 45)'),
+                            subtitle: const Text('Sleek executive visuals, mindfulness & financial balance'),
+                            onTap: () {
+                              ageService.setAgeGroup(AgeGroup.adult);
+                              Navigator.of(ctx).pop();
+                              setState(() {});
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.spa_rounded, color: Color(0xFFB45309)),
+                            title: const Text('🌸 Grace & Serenity (45+)'),
+                            subtitle: const Text('Sacred gold lotus, daily peace & health focus'),
+                            onTap: () {
+                              ageService.setAgeGroup(AgeGroup.senior);
+                              Navigator.of(ctx).pop();
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.tune_rounded, size: 16),
+                label: const Text('Change Theme', style: TextStyle(fontSize: 12)),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  SurveyModal.show(
+                    context,
+                    onCompleted: () {
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Self-Help profile updated!')),
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.quiz_outlined, size: 16),
+                label: const Text('Retake Survey', style: TextStyle(fontSize: 12)),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => FactPopup.show(context),
+                icon: const Icon(Icons.lightbulb_outline_rounded, size: 16),
+                label: const Text('💡 Scientific Facts', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
         ],
       ),
     );

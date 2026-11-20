@@ -4,9 +4,13 @@ import 'package:avara_astrology_trial/screens/habits_screen.dart';
 import 'package:avara_astrology_trial/screens/health_screen.dart';
 import 'package:avara_astrology_trial/screens/insights_screen.dart';
 import 'package:avara_astrology_trial/screens/profile_screen.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
+import 'package:avara_astrology_trial/services/fact_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
+import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
@@ -120,6 +124,23 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    AgeProfileService.instance.loadPreferences();
+    AgeProfileService.instance.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    AgeProfileService.instance.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) setState(() {});
+  }
+
   /// Default routing table — maps module labels to real screens.
   ///
   /// Callers can override by supplying [HomeScreen.onModuleTap].
@@ -171,8 +192,14 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildGreeting(context),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
+              // Dynamic Age-Adaptive Creative Header Graphic (Point 11 & Point 9)
+              _buildAgeAdaptiveCard(context),
+              const SizedBox(height: 20),
               _buildMomentCard(context),
+              const SizedBox(height: 24),
+              // Daily Self-Help Multi-Graphic Reports (Point 10 & Point 3)
+              _buildDailyReportsSection(context),
               const SizedBox(height: 28),
               _buildExploreHeader(context),
               const SizedBox(height: 16),
@@ -181,6 +208,134 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAgeAdaptiveCard(BuildContext context) {
+    final ageService = AgeProfileService.instance;
+    final activeTheme = ageService.activeTheme;
+
+    return Stack(
+      children: [
+        AgeAdaptiveHeaderGraphic(ageGroup: ageService.ageGroup, height: 140),
+        Positioned.fill(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(activeTheme.iconData, size: 14, color: Colors.white),
+                          const SizedBox(width: 6),
+                          Text(
+                            activeTheme.displayName,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Age group quick switcher chip
+                    PopupMenuButton<AgeGroup>(
+                      icon: const Icon(Icons.tune_rounded, color: Colors.white, size: 18),
+                      tooltip: 'Change Age Graphics',
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      onSelected: (group) => ageService.setAgeGroup(group),
+                      itemBuilder: (ctx) => [
+                        const PopupMenuItem(
+                          value: AgeGroup.youth,
+                          child: Text('🎒 Youth Theme (< 22)'),
+                        ),
+                        const PopupMenuItem(
+                          value: AgeGroup.adult,
+                          child: Text('💼 Achiever Theme (22 - 45)'),
+                        ),
+                        const PopupMenuItem(
+                          value: AgeGroup.senior,
+                          child: Text('🌸 Grace & Serenity (45+)'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      activeTheme.tagline,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Creative Style: ${activeTheme.graphicStyleDescription}',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDailyReportsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Daily Holistic Growth Report',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.deepNavy,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => FactPopup.show(context),
+              icon: const Icon(Icons.lightbulb_rounded, size: 16, color: AppColors.blue),
+              label: const Text('💡 Facts', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Graphic 1: Radial Multi-Ring Energy Gauge (Point 10)
+        const RadialEnergyGauge(
+          mindScore: 0.88,
+          vitalityScore: 0.74,
+          habitScore: 0.91,
+          wealthScore: 0.80,
+        ),
+        const SizedBox(height: 14),
+        // Graphic 2: Circadian Waveform Flow Curve (Point 10)
+        const CircadianWaveformChart(),
+        const SizedBox(height: 14),
+        // Graphic 3: Planetary Harmony 5-Axis Radar Matrix (Point 10)
+        const PlanetaryHarmonyRadar(),
+      ],
     );
   }
 

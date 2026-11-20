@@ -548,6 +548,24 @@ class VoiceService extends ChangeNotifier {
       );
     }
 
+    // Explore Topics (Bubbles for Love, Education, Career — Point 6):
+    if (_matchesPattern(clean, [
+      'explore topics',
+      'open explore topics',
+      'explore bubbles',
+      'topic bubbles',
+      'explore love',
+      'explore education',
+      'explore career',
+    ])) {
+      return VoiceCommandResult(
+        type: VoiceCommandType.openScreen,
+        rawTranscript: spokenText,
+        targetRouteName: 'explore_topics',
+        feedbackMessage: 'Opening Explore Topics (Love, Education, Career)',
+      );
+    }
+
     // Human Astrologers Directory:
     if (_matchesPattern(clean, [
       'talk to astrologer',
