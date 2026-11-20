@@ -1,5 +1,6 @@
 import 'package:avara_astrology_trial/screens/main_navigation_scaffold.dart';
 import 'package:avara_astrology_trial/screens/register_screen.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/auth_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
@@ -202,7 +203,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildHeader(context),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
+                  _buildAgeQuickEntry(context),
+                  const SizedBox(height: 24),
                   _buildForm(context),
                   const SizedBox(height: 20),
                   _buildLoginButton(context),
@@ -277,6 +280,29 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00B894).withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.hub_rounded, size: 14, color: Color(0xFF00B894)),
+              SizedBox(width: 5),
+              Text(
+                '5 Pillars Connected: Astrology • Health • Habits • Finance • Insights',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF00B894),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 12),
         Text(
           'Welcome to AVARA',
@@ -294,6 +320,123 @@ class _LoginScreenState extends State<LoginScreen> {
               ?.copyWith(color: AppColors.secondaryText),
         ),
       ],
+    );
+  }
+
+  Widget _buildAgeQuickEntry(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF6C5CE7).withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.palette_rounded, color: Color(0xFF6C5CE7), size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Explore AVARA by Age Cohort',
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.deepNavy,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '1-Tap to experience dynamic age-adaptive graphics & themes:',
+            style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildAgeChip(
+                context,
+                title: '⚡ Youth\n(<22)',
+                group: AgeGroup.youth,
+                color: const Color(0xFF6C5CE7),
+                icon: Icons.bolt_rounded,
+              ),
+              const SizedBox(width: 8),
+              _buildAgeChip(
+                context,
+                title: '💼 Adult\n(22-45)',
+                group: AgeGroup.adult,
+                color: const Color(0xFF1E3A8A),
+                icon: Icons.self_improvement_rounded,
+              ),
+              const SizedBox(width: 8),
+              _buildAgeChip(
+                context,
+                title: '🌸 Senior\n(45+)',
+                group: AgeGroup.senior,
+                color: const Color(0xFFB45309),
+                icon: Icons.spa_rounded,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAgeChip(
+    BuildContext context, {
+    required String title,
+    required AgeGroup group,
+    required Color color,
+    required IconData icon,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: () async {
+          await AgeProfileService.instance.setAgeGroup(group);
+          if (!mounted) return;
+          SurveyModal.show(
+            context,
+            onCompleted: () => _proceedHome('Guest (${group.name})'),
+          );
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: 0.35), width: 1.2),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

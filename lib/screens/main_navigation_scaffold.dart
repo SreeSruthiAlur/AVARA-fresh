@@ -12,6 +12,7 @@ import 'package:avara_astrology_trial/screens/home_screen.dart';
 import 'package:avara_astrology_trial/screens/insights_screen.dart';
 import 'package:avara_astrology_trial/screens/profile_screen.dart';
 import 'package:avara_astrology_trial/screens/register_screen.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
@@ -228,39 +229,63 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
 
     final tr = AppLanguageService.instance.tr;
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => GlobalVoiceAssistantModal.show(context),
-        backgroundColor: AppColors.deepNavy,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shape: const CircleBorder(),
-        tooltip: tr('voice_assistant_title'),
-        child: const Icon(Icons.mic_rounded, size: 28),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.blue,
-        unselectedItemColor: AppColors.secondaryText,
-        backgroundColor: AppColors.white,
-        elevation: 0,
-        selectedFontSize: 12,
-        unselectedFontSize: 11,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: [
-          for (final d in _destinations)
-            BottomNavigationBarItem(
-              icon: Icon(d.icon),
-              activeIcon: Icon(d.activeIcon),
-              label: tr(d.labelKey),
+    return ListenableBuilder(
+      listenable: AgeProfileService.instance,
+      builder: (context, _) {
+        final ageTheme = AgeProfileService.instance.activeTheme;
+        final isSenior = ageTheme.group == AgeGroup.senior;
+
+        return Scaffold(
+          body: IndexedStack(
+            index: _currentIndex,
+            children: _screens,
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => GlobalVoiceAssistantModal.show(context),
+            backgroundColor: ageTheme.primaryAccent,
+            foregroundColor: Colors.white,
+            elevation: 4,
+            shape: const CircleBorder(),
+            tooltip: tr('voice_assistant_title'),
+            child: const Icon(Icons.mic_rounded, size: 28),
+          ),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: isSenior ? const Color(0xFFFFFDF5) : AppColors.white,
+              border: Border(
+                top: BorderSide(
+                  color: ageTheme.primaryAccent.withValues(alpha: 0.2),
+                  width: 1.2,
+                ),
+              ),
             ),
-        ],
-      ),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: ageTheme.primaryAccent,
+              unselectedItemColor: isSenior ? const Color(0xFF92400E) : AppColors.secondaryText,
+              backgroundColor: isSenior ? const Color(0xFFFFFDF5) : AppColors.white,
+              elevation: 0,
+              iconSize: isSenior ? 26 : 24,
+              selectedFontSize: isSenior ? 13 : 12,
+              unselectedFontSize: isSenior ? 11.5 : 11,
+              selectedLabelStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: ageTheme.primaryAccent,
+              ),
+              onTap: (index) => setState(() => _currentIndex = index),
+              items: [
+                for (final d in _destinations)
+                  BottomNavigationBarItem(
+                    icon: Icon(d.icon),
+                    activeIcon: Icon(d.activeIcon),
+                    label: tr(d.labelKey),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

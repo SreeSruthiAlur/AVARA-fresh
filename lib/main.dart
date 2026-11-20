@@ -1,4 +1,5 @@
 import 'package:avara_astrology_trial/screens/auth_gate.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env', mergeWith: {});
   await AppLanguageService.instance.init();
+  await AgeProfileService.instance.loadPreferences();
   await TtsService.instance.init();
   runApp(const AvaraApp());
 }
@@ -32,12 +34,32 @@ class AvaraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: AppLanguageService.instance,
+      listenable: Listenable.merge([
+        AppLanguageService.instance,
+        AgeProfileService.instance,
+      ]),
       builder: (context, _) {
+        final ageTheme = AgeProfileService.instance.activeTheme;
+
         return MaterialApp(
           title: 'AVARA',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.lightTheme.copyWith(
+            scaffoldBackgroundColor: ageTheme.cardBackground,
+            primaryColor: ageTheme.primaryAccent,
+            colorScheme: AppTheme.lightTheme.colorScheme.copyWith(
+              primary: ageTheme.primaryAccent,
+              secondary: ageTheme.secondaryAccent,
+            ),
+          ),
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(ageTheme.textScaleFactor),
+              ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           scaffoldMessengerKey: rootScaffoldMessengerKey,
           // AuthGate checks for a stored JWT; routes to MainNavigationScaffold
           // or LoginScreen accordingly. It also acts as the splash screen while
