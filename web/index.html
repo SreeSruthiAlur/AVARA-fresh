@@ -66,6 +66,20 @@
       var currentChantAudio = null;
       var currentMeaningAudio = null;
 
+      // Pre-initialize and cache audio elements to prime them in memory
+      var chantAudios = {
+        'asato_ma': new Audio('asato_ma_sanskrit.mp3'),
+        'telugu': new Audio('asato_ma_telugu.mp3'),
+        'gayatri': new Audio('gayatri_mantra.ogg'),
+        'mrityunjaya': new Audio('maha_mrityunjaya.mp3')
+      };
+
+      for (var k in chantAudios) {
+        if (chantAudios.hasOwnProperty(k) && chantAudios[k]) {
+          chantAudios[k].preload = 'auto';
+        }
+      }
+
       function getAudioContext() {
         if (!audioCtx) {
           var AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -94,8 +108,8 @@
             osc2.type = 'sine';
             osc2.frequency.setValueAtTime(3520, now); // A7 harmonic overtone
 
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+            gain.gain.setValueAtTime(0.35, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
 
             osc.connect(gain);
             osc2.connect(gain);
@@ -103,8 +117,8 @@
 
             osc.start(now);
             osc2.start(now);
-            osc.stop(now + 0.9);
-            osc2.stop(now + 0.9);
+            osc.stop(now + 0.95);
+            osc2.stop(now + 0.95);
           }
         } catch (e) {
           console.warn("Temple bell audio:", e);
@@ -112,22 +126,12 @@
       };
 
       window.playSacredChant = function(sanskritText, teluguMeaning) {
-        console.log("🕉️ [AVARA Audio]: Playing authentic Indian Vedic chant...", sanskritText);
+        console.log("🕉️ [AVARA Audio]: Playing pure Indian Sanskrit chant...", sanskritText);
         
-        // Stop any currently playing chants
-        if (currentChantAudio) {
-          try { currentChantAudio.pause(); currentChantAudio.currentTime = 0; } catch(e){}
-          currentChantAudio = null;
-        }
-        if (currentMeaningAudio) {
-          try { currentMeaningAudio.pause(); currentMeaningAudio.currentTime = 0; } catch(e){}
-          currentMeaningAudio = null;
-        }
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-        }
+        // 1. Immediately cancel any speech synthesis or active audio
+        window.stopSacredChant();
 
-        // 1. Play authentic harmonic Vedic singing bowl chime (108Hz + 216Hz + 432Hz + 528Hz)
+        // 2. Play authentic harmonic Vedic singing bowl chime (108Hz + 216Hz + 432Hz + 528Hz)
         try {
           var ctx = getAudioContext();
           if (ctx) {
@@ -142,75 +146,88 @@
               var peakGain = 0.22 / (idx + 1);
               gain.gain.setValueAtTime(0.0001, now);
               gain.gain.linearRampToValueAtTime(peakGain, now + 0.08);
-              gain.gain.exponentialRampToValueAtTime(0.00001, now + 5.0);
+              gain.gain.exponentialRampToValueAtTime(0.00001, now + 4.5);
 
               osc.connect(gain);
               gain.connect(ctx.destination);
               osc.start(now);
-              osc.stop(now + 5.0);
+              osc.stop(now + 4.5);
             });
           }
         } catch (e) {
           console.warn("🕉️ [AVARA Audio Bell]:", e);
         }
 
-        // 2. Select pure authentic Indian Sanskrit audio file
-        var chantSrc = 'asato_ma_sanskrit.mp3';
+        // 3. Select pure authentic Indian Sanskrit audio file
         var query = (sanskritText || '').toLowerCase();
+        var audioKey = 'asato_ma';
         if (query.indexOf('gayatri') >= 0 || query.indexOf('गायत्री') >= 0 || query.indexOf('bhur') >= 0 || query.indexOf('savitur') >= 0) {
-          chantSrc = 'gayatri_mantra.ogg';
+          audioKey = 'gayatri';
         } else if (query.indexOf('tryambakam') >= 0 || query.indexOf('mrityunjaya') >= 0 || query.indexOf('त्र्यम्बकं') >= 0) {
-          chantSrc = 'maha_mrityunjaya.mp3';
+          audioKey = 'mrityunjaya';
         }
 
         try {
-          var audio = new Audio(chantSrc);
+          var audio = chantAudios[audioKey];
+          if (!audio) {
+            var src = audioKey === 'gayatri' ? 'gayatri_mantra.ogg' : (audioKey === 'mrityunjaya' ? 'maha_mrityunjaya.mp3' : 'asato_ma_sanskrit.mp3');
+            audio = new Audio(src);
+            chantAudios[audioKey] = audio;
+          }
+
           currentChantAudio = audio;
+          audio.currentTime = 0;
           audio.volume = 1.0;
 
           audio.onended = function() {
             console.log("🕉️ [AVARA Audio]: Sanskrit chant recitation completed.");
             // If Telugu meaning is requested and chant was Asato Ma, play pure native Telugu translation audio
-            if (teluguMeaning && chantSrc === 'asato_ma_sanskrit.mp3') {
-              var teluguAudio = new Audio('asato_ma_telugu.mp3');
+            if (teluguMeaning && audioKey === 'asato_ma') {
+              var teluguAudio = chantAudios['telugu'] || new Audio('asato_ma_telugu.mp3');
               currentMeaningAudio = teluguAudio;
+              teluguAudio.currentTime = 0;
               teluguAudio.volume = 0.95;
               teluguAudio.play().catch(function(err){ console.warn("Telugu audio error:", err); });
             }
           };
 
-          // Delay 500ms to allow 432Hz singing bowl resonance to blossom first
-          setTimeout(function() {
-            if (currentChantAudio === audio) {
-              audio.play().catch(function(err) {
-                console.warn("🕉️ [AVARA Audio]: Direct Audio play error, trying speech fallback", err);
-                _speakFallback(sanskritText, teluguMeaning);
-              });
-            }
-          }, 500);
+          // 4. CRITICAL: Call audio.play() SYNCHRONOUSLY directly inside the user's gesture!
+          // NEVER use setTimeout and NEVER use English speechSynthesis fallback!
+          var playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.then(function() {
+              console.log("🕉️ [AVARA Audio]: Real Indian Sanskrit chanting is playing!");
+            }).catch(function(err) {
+              console.error("🕉️ [AVARA Audio Direct Play Error]:", err);
+            });
+          }
         } catch (err) {
-          console.warn("🕉️ [AVARA Audio Play Exception]:", err);
-          _speakFallback(sanskritText, teluguMeaning);
+          console.error("🕉️ [AVARA Audio Play Exception]:", err);
         }
       };
 
-      function _speakFallback(sanskritText, teluguMeaning) {
-        if ('speechSynthesis' in window) {
-          var utter = new SpeechSynthesisUtterance(sanskritText + ". " + (teluguMeaning || ""));
-          utter.rate = 0.82;
-          utter.pitch = 0.95;
-          window.speechSynthesis.speak(utter);
-        }
-      }
-
       window.stopSacredChant = function() {
         if (currentChantAudio) {
-          try { currentChantAudio.pause(); currentChantAudio.currentTime = 0; } catch(e){}
+          try {
+            currentChantAudio.pause();
+            currentChantAudio.currentTime = 0;
+          } catch(e){}
           currentChantAudio = null;
         }
         if (currentMeaningAudio) {
-          try { currentMeaningAudio.pause(); currentMeaningAudio.currentTime = 0; } catch(e){}
+          try {
+            currentMeaningAudio.pause();
+            currentMeaningAudio.currentTime = 0;
+          } catch(e){}
           currentMeaningAudio = null;
+        }
+        for (var k in chantAudios) {
+          if (chantAudios.hasOwnProperty(k) && chantAudios[k]) {
+            try {
+              chantAudios[k].pause();
+              chantAudios[k].currentTime = 0;
+            } catch(e){}
+          }
         }
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
