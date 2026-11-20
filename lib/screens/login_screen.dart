@@ -223,28 +223,63 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // AVARA brand mark
+        // AVARA creative glowing brand mark
         Container(
-          width: 54,
-          height: 54,
+          width: 58,
+          height: 58,
           decoration: BoxDecoration(
-            color: AppColors.lavender,
-            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF6C5CE7), Color(0xFF2E71DB), Color(0xFF00CEC9)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6C5CE7).withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: const Center(
             child: Text(
               'A',
               style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: AppColors.deepNavy,
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 1.0,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.auto_awesome, size: 14, color: Color(0xFF6C5CE7)),
+              SizedBox(width: 5),
+              Text(
+                'Vedic Wisdom & Modern Self-Help',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF6C5CE7),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         Text(
-          'Welcome back',
+          'Welcome to AVARA',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.deepNavy,
@@ -252,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Sign in with your email or use your voice to enter',
+          'Your daily guide for mindfulness, habits & inner growth',
           style: Theme.of(context)
               .textTheme
               .bodyMedium

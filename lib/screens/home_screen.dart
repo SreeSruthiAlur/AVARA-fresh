@@ -330,11 +330,17 @@ class _HomeScreenState extends State<HomeScreen> {
           wealthScore: 0.80,
         ),
         const SizedBox(height: 14),
-        // Graphic 2: Circadian Waveform Flow Curve (Point 10)
+        // Graphic 2: Interactive Mindful Breathing Aura Sphere
+        const MindfulBreathingAuraWidget(),
+        const SizedBox(height: 14),
+        // Graphic 3: Circadian Waveform Flow Curve (Point 10)
         const CircadianWaveformChart(),
         const SizedBox(height: 14),
-        // Graphic 3: Planetary Harmony 5-Axis Radar Matrix (Point 10)
+        // Graphic 4: Planetary Harmony 5-Axis Radar Matrix (Point 10)
         const PlanetaryHarmonyRadar(),
+        const SizedBox(height: 14),
+        // Graphic 5: Live Celestial Orbit & Navagraha Matrix
+        const ZodiacCelestialOrbitWidget(),
       ],
     );
   }

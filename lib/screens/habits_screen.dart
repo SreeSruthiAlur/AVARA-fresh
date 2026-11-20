@@ -5,6 +5,7 @@ import 'package:avara_astrology_trial/services/habits_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
@@ -532,7 +533,16 @@ class _TodayTabState extends State<_TodayTab> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
+        // Creative Graphic: Neural Synapse Habit Formation Network
+        NeuralSynapseGrowthMap(
+          neuralScore: widget.habits.isEmpty
+              ? 50
+              : (widget.habits.fold<int>(0, (sum, h) => sum + (h.neuralScore ?? 45)) ~/ widget.habits.length),
+          habitCount: widget.habits.length,
+          activeStreak: widget.habits.fold<int>(0, (maxStreak, h) => h.currentStreak > maxStreak ? h.currentStreak : maxStreak),
+        ),
+        const SizedBox(height: 18),
         // Habit list + merged goals
         if (widget.habits.isEmpty && widget.goals.isEmpty)
           _EmptyHabits()

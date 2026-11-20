@@ -599,3 +599,776 @@ class _PlanetaryRadarPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+// =============================================================================
+// 3. Interactive Mindful Pranayama Breathing Aura Visualizer
+// =============================================================================
+
+/// Animated Pranayama / Mindful Breathing Aura Sphere.
+/// Provides real-time expanding and contracting glowing auric rings
+/// with custom sacred geometry and age-tailored color harmonies.
+class MindfulBreathingAuraWidget extends StatefulWidget {
+  const MindfulBreathingAuraWidget({super.key});
+
+  @override
+  State<MindfulBreathingAuraWidget> createState() =>
+      _MindfulBreathingAuraWidgetState();
+}
+
+class _MindfulBreathingAuraWidgetState extends State<MindfulBreathingAuraWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  bool _isPlaying = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _togglePlay() {
+    setState(() {
+      if (_isPlaying) {
+        _controller.stop();
+        _isPlaying = false;
+      } else {
+        _controller.repeat(reverse: true);
+        _isPlaying = true;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ageGroup = AgeProfileService.instance.ageGroup;
+    final theme = AgeProfileService.instance.activeTheme;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: theme.primaryAccent.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: theme.primaryAccent.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.air_rounded, color: theme.primaryAccent, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Mindful Aura & Breath Harmony',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.5,
+                          color: AppColors.deepNavy,
+                        ),
+                      ),
+                      Text(
+                        '4-second rhythmic vagal reset',
+                        style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              IconButton(
+                onPressed: _togglePlay,
+                icon: Icon(
+                  _isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                  color: theme.primaryAccent,
+                  size: 26,
+                ),
+                tooltip: _isPlaying ? 'Pause Breathing' : 'Resume Breathing',
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Center(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final progress = _controller.value;
+                final isInhaling = _controller.status == AnimationStatus.forward;
+                final instruction = isInhaling ? 'Inhale Peace...' : 'Release Tension...';
+
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: 180,
+                      height: 180,
+                      child: CustomPaint(
+                        painter: _AuraBreathPainter(
+                          progress: progress,
+                          ageGroup: ageGroup,
+                          primaryColor: theme.primaryAccent,
+                          secondaryColor: theme.secondaryAccent,
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.self_improvement_rounded,
+                                size: 28,
+                                color: theme.primaryAccent,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                instruction,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.primaryAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: Text(
+              'Aligns heart-rate variability (HRV) and calms prefrontal cortex activity.',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.secondaryText.withValues(alpha: 0.9),
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuraBreathPainter extends CustomPainter {
+  _AuraBreathPainter({
+    required this.progress,
+    required this.ageGroup,
+    required this.primaryColor,
+    required this.secondaryColor,
+  });
+
+  final double progress;
+  final AgeGroup ageGroup;
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width * 0.46;
+
+    // Concentric expanding aura waves
+    for (int i = 3; i >= 1; i--) {
+      final ringScale = 0.4 + (progress * 0.45 * (i / 3.0));
+      final ringRadius = maxRadius * ringScale;
+      final opacity = ((1.0 - (ringScale * 0.7)) * 0.28).clamp(0.04, 0.4);
+
+      final auraPaint = Paint()
+        ..color = primaryColor.withValues(alpha: opacity)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(center, ringRadius, auraPaint);
+
+      final rimPaint = Paint()
+        ..color = secondaryColor.withValues(alpha: opacity * 1.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2;
+      canvas.drawCircle(center, ringRadius, rimPaint);
+    }
+
+    // Sacred petal geometry or orbital rays based on age
+    if (ageGroup == AgeGroup.senior) {
+      // Golden lotus petals expanding
+      final petalPaint = Paint()
+        ..color = const Color(0xFFD97706).withValues(alpha: 0.25)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4;
+
+      const petalCount = 8;
+      final petalDist = 36.0 + (progress * 14.0);
+      for (int k = 0; k < petalCount; k++) {
+        final angle = (k * 360 / petalCount) * math.pi / 180;
+        final px = center.dx + math.cos(angle) * petalDist;
+        final py = center.dy + math.sin(angle) * petalDist;
+        canvas.drawCircle(Offset(px, py), 12 + (progress * 4), petalPaint);
+      }
+    } else if (ageGroup == AgeGroup.youth) {
+      // Constellation stardust nodes
+      final starPaint = Paint()
+        ..color = const Color(0xFF00CEC9).withValues(alpha: 0.6)
+        ..style = PaintingStyle.fill;
+
+      const nodeCount = 6;
+      final nodeDist = 42.0 + (progress * 16.0);
+      for (int k = 0; k < nodeCount; k++) {
+        final angle = (k * 360 / nodeCount + (progress * 30)) * math.pi / 180;
+        final px = center.dx + math.cos(angle) * nodeDist;
+        final py = center.dy + math.sin(angle) * nodeDist;
+        canvas.drawCircle(Offset(px, py), 3.5, starPaint);
+      }
+    }
+
+    // Core central sanctuary sphere
+    final coreRadius = 38.0 + (progress * 6.0);
+    final coreGradient = RadialGradient(
+      colors: [
+        Colors.white,
+        primaryColor.withValues(alpha: 0.15),
+      ],
+    ).createShader(Rect.fromCircle(center: center, radius: coreRadius));
+
+    final corePaint = Paint()..shader = coreGradient;
+    canvas.drawCircle(center, coreRadius, corePaint);
+
+    final coreBorder = Paint()
+      ..color = primaryColor.withValues(alpha: 0.45)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, coreRadius, coreBorder);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AuraBreathPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.ageGroup != ageGroup ||
+      oldDelegate.primaryColor != primaryColor;
+}
+
+// =============================================================================
+// 4. Rotating Celestial Orbit & Navagraha Constellation Map
+// =============================================================================
+
+/// Rotating Celestial Orbit & Navagraha Constellation Map.
+/// Draws glowing elliptical planetary orbits, revolving planet nodes with trails,
+/// and golden stardust particles.
+class ZodiacCelestialOrbitWidget extends StatefulWidget {
+  const ZodiacCelestialOrbitWidget({super.key});
+
+  @override
+  State<ZodiacCelestialOrbitWidget> createState() =>
+      _ZodiacCelestialOrbitWidgetState();
+}
+
+class _ZodiacCelestialOrbitWidgetState extends State<ZodiacCelestialOrbitWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  String _selectedPlanet = 'Jupiter (Guru) - Wisdom & Growth';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 24),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF1E1B4B), Color(0xFF172554)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E1B4B).withValues(alpha: 0.4),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.stars_rounded, color: Color(0xFFFFD700), size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Celestial Navagraha Orbit Matrix',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.white12,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: const Text(
+                  'Live Celestial Flow',
+                  style: TextStyle(fontSize: 10, color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 190,
+            width: double.infinity,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                return CustomPaint(
+                  painter: _CelestialOrbitPainter(rotation: _controller.value),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Text(
+                'Active Alignment: $_selectedPlanet',
+                style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CelestialOrbitPainter extends CustomPainter {
+  _CelestialOrbitPainter({required this.rotation});
+
+  final double rotation;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // Background stardust twinkling
+    final starPaint = Paint()..color = Colors.white.withValues(alpha: 0.4);
+    final random = math.Random(42);
+    for (int s = 0; s < 45; s++) {
+      final sx = random.nextDouble() * size.width;
+      final sy = random.nextDouble() * size.height;
+      final sr = random.nextDouble() * 1.5 + 0.4;
+      canvas.drawCircle(Offset(sx, sy), sr, starPaint);
+    }
+
+    // Central Radiant Sun
+    final sunGradient = const RadialGradient(
+      colors: [Color(0xFFFFF7ED), Color(0xFFF59E0B), Color(0xFFD97706)],
+    ).createShader(Rect.fromCircle(center: center, radius: 18));
+    final sunGlow = Paint()
+      ..color = const Color(0xFFF59E0B).withValues(alpha: 0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(center, 22, sunGlow);
+    canvas.drawCircle(center, 14, Paint()..shader = sunGradient);
+
+    // Planetary Orbits
+    final orbitSpeeds = [1.0, 0.7, 0.45, 0.3, 0.2];
+    final orbitRadii = [34.0, 52.0, 70.0, 86.0, 102.0];
+    final planetColors = [
+      const Color(0xFF38BDF8), // Mercury
+      const Color(0xFFF472B6), // Venus
+      const Color(0xFF34D399), // Earth / Chandra
+      const Color(0xFFFB923C), // Mars
+      const Color(0xFFFBBF24), // Jupiter
+    ];
+    final planetSizes = [4.0, 5.0, 5.5, 4.5, 7.0];
+
+    final orbitLinePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (int i = 0; i < orbitRadii.length; i++) {
+      final r = orbitRadii[i];
+      canvas.drawCircle(center, r, orbitLinePaint);
+
+      // Planet position based on orbital speed
+      final angle = (rotation * 2 * math.pi * orbitSpeeds[i]) + (i * 1.3);
+      final px = center.dx + math.cos(angle) * r;
+      final py = center.dy + math.sin(angle) * r;
+
+      // Glow behind planet
+      final pGlow = Paint()
+        ..color = planetColors[i].withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(Offset(px, py), planetSizes[i] + 3, pGlow);
+
+      // Planet body
+      final pBody = Paint()..color = planetColors[i];
+      canvas.drawCircle(Offset(px, py), planetSizes[i], pBody);
+
+      // Connect subtle harmonic chord line to center
+      if (i == 4) {
+        final chordPaint = Paint()
+          ..color = const Color(0xFFFFD700).withValues(alpha: 0.25)
+          ..strokeWidth = 1.2
+          ..style = PaintingStyle.stroke;
+        canvas.drawLine(center, Offset(px, py), chordPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CelestialOrbitPainter oldDelegate) =>
+      oldDelegate.rotation != rotation;
+}
+
+// =============================================================================
+// 5. Visual Neuroplasticity Synapse Map for Habit Formation
+// =============================================================================
+
+/// Visual Neuroplasticity Synapse Map for Habit Formation.
+/// Renders an organic neural network with pulsating synaptic action potentials
+/// illustrating how repeated habits myelinate into automatic pathways.
+class NeuralSynapseGrowthMap extends StatefulWidget {
+  const NeuralSynapseGrowthMap({
+    super.key,
+    required this.neuralScore,
+    required this.habitCount,
+    required this.activeStreak,
+  });
+
+  final int neuralScore;
+  final int habitCount;
+  final int activeStreak;
+
+  @override
+  State<NeuralSynapseGrowthMap> createState() => _NeuralSynapseGrowthMapState();
+}
+
+class _NeuralSynapseGrowthMapState extends State<NeuralSynapseGrowthMap>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.psychology_rounded, color: Color(0xFF6C5CE7), size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    'Neural Pathway Synapse Network',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDE9FE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${widget.neuralScore}% Myelinated',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6C5CE7),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 140,
+            width: double.infinity,
+            child: AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, _) {
+                return CustomPaint(
+                  painter: _SynapsePainter(
+                    pulse: _pulseController.value,
+                    neuralScore: widget.neuralScore,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _metricPill(label: 'Tracked Habits', value: '${widget.habitCount} active'),
+              _metricPill(label: 'Current Streak', value: '🔥 ${widget.activeStreak} days'),
+              _metricPill(label: 'Automaticity', value: widget.neuralScore > 70 ? 'High' : 'Building'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricPill({required String label, required String value}) {
+    return Column(
+      children: [
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.deepNavy)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.secondaryText)),
+      ],
+    );
+  }
+}
+
+class _SynapsePainter extends CustomPainter {
+  _SynapsePainter({required this.pulse, required this.neuralScore});
+
+  final double pulse;
+  final int neuralScore;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 6 Synaptic node points forming a neural tree
+    final nodes = [
+      Offset(size.width * 0.12, size.height * 0.5),  // Input Root
+      Offset(size.width * 0.35, size.height * 0.25), // Association Branch 1
+      Offset(size.width * 0.35, size.height * 0.75), // Association Branch 2
+      Offset(size.width * 0.65, size.height * 0.3),  // Reinforcement Node 1
+      Offset(size.width * 0.65, size.height * 0.7),  // Reinforcement Node 2
+      Offset(size.width * 0.88, size.height * 0.5),  // Automatic Habit Core
+    ];
+
+    final edges = [
+      [0, 1],
+      [0, 2],
+      [1, 3],
+      [2, 4],
+      [3, 5],
+      [4, 5],
+      [1, 4], // Cross-hemispheric bridge
+    ];
+
+    // Draw synaptic axon lines
+    final axonPaint = Paint()
+      ..color = const Color(0xFF6C5CE7).withValues(alpha: 0.2)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    final myelinatedPaint = Paint()
+      ..color = const Color(0xFF00B894)
+      ..strokeWidth = 3.2
+      ..style = PaintingStyle.stroke;
+
+    final isHighMyelination = neuralScore >= 60;
+
+    for (final edge in edges) {
+      final p1 = nodes[edge[0]];
+      final p2 = nodes[edge[1]];
+      canvas.drawLine(p1, p2, isHighMyelination ? myelinatedPaint : axonPaint);
+
+      // Draw firing action potential particle moving along axon
+      final signalT = (pulse + (edge[0] * 0.15)) % 1.0;
+      final sx = p1.dx + (p2.dx - p1.dx) * signalT;
+      final sy = p1.dy + (p2.dy - p1.dy) * signalT;
+
+      final sparkGlow = Paint()
+        ..color = const Color(0xFF00CEC9).withValues(alpha: 0.4)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(Offset(sx, sy), 5, sparkGlow);
+      canvas.drawCircle(Offset(sx, sy), 2.5, Paint()..color = const Color(0xFF00CEC9));
+    }
+
+    // Draw synaptic nodes
+    for (int i = 0; i < nodes.length; i++) {
+      final p = nodes[i];
+      final isCore = i == 0 || i == 5;
+
+      final nodeGlow = Paint()
+        ..color = (isCore ? const Color(0xFF6C5CE7) : const Color(0xFF00B894)).withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(p, isCore ? 14 : 10, nodeGlow);
+
+      final nodeFill = Paint()
+        ..color = isCore ? const Color(0xFF6C5CE7) : const Color(0xFF00B894);
+      canvas.drawCircle(p, isCore ? 8 : 6, nodeFill);
+
+      canvas.drawCircle(
+        p,
+        isCore ? 8 : 6,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SynapsePainter oldDelegate) =>
+      oldDelegate.pulse != pulse || oldDelegate.neuralScore != neuralScore;
+}
+
+// =============================================================================
+// 6. 3D Glowing Glass Spherical Energy Bubble Painter
+// =============================================================================
+
+/// Draws a luminous 3D glass/energy sphere with glowing aura,
+/// specular highlights, and internal energy swirl for Explore Topics.
+class Spherical3DBubblePainter extends CustomPainter {
+  Spherical3DBubblePainter({
+    required this.accentColor,
+    required this.bgGradient,
+    this.floatOffset = 0.0,
+  });
+
+  final Color accentColor;
+  final List<Color> bgGradient;
+  final double floatOffset;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2 + floatOffset);
+    final radius = size.width * 0.46;
+
+    // Outer luminous aura ring
+    final auraPaint = Paint()
+      ..color = accentColor.withValues(alpha: 0.22)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
+    canvas.drawCircle(center, radius + 8, auraPaint);
+
+    // 3D Spherical Radial Gradient
+    final sphereGradient = RadialGradient(
+      center: const Alignment(-0.35, -0.4),
+      radius: 0.95,
+      colors: [
+        Colors.white.withValues(alpha: 0.9),
+        bgGradient[0],
+        bgGradient.length > 1 ? bgGradient[1] : bgGradient[0],
+        accentColor.withValues(alpha: 0.95),
+      ],
+      stops: const [0.0, 0.35, 0.7, 1.0],
+    ).createShader(Rect.fromCircle(center: center, radius: radius));
+
+    canvas.drawCircle(center, radius, Paint()..shader = sphereGradient);
+
+    // Subtle internal energy rings
+    final ringPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawCircle(center, radius * 0.75, ringPaint);
+
+    // Top-left curved specular light reflection
+    final highlightPath = Path()
+      ..addArc(
+        Rect.fromCircle(center: Offset(center.dx - radius * 0.2, center.dy - radius * 0.25), radius: radius * 0.45),
+        -math.pi * 0.8,
+        math.pi * 0.6,
+      );
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.45)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3.0;
+    canvas.drawPath(highlightPath, highlightPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant Spherical3DBubblePainter oldDelegate) =>
+      oldDelegate.accentColor != accentColor ||
+      oldDelegate.floatOffset != floatOffset;
+}
+

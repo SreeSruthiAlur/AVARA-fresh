@@ -1,5 +1,6 @@
 import 'package:avara_astrology_trial/services/fact_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:flutter/material.dart';
 
@@ -265,60 +266,96 @@ class _ExploreTopicsScreenState extends State<ExploreTopicsScreen> {
   Widget _buildTopicBubble(TopicBubbleItem topic) {
     return GestureDetector(
       onTap: () => _openTopicDetail(topic),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+      child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: topic.accentColor.withValues(alpha: 0.3), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: topic.accentColor.withValues(alpha: 0.35), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: topic.accentColor.withValues(alpha: 0.12),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+              color: topic.accentColor.withValues(alpha: 0.16),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Stack(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: topic.bgGradient),
-                    shape: BoxShape.circle,
+            // Decorative background glowing watermarked sphere
+            Positioned(
+              right: -14,
+              top: -14,
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: CustomPaint(
+                  painter: Spherical3DBubblePainter(
+                    accentColor: topic.accentColor,
+                    bgGradient: topic.bgGradient,
                   ),
-                  child: Icon(topic.icon, color: Colors.white, size: 20),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: topic.accentColor),
-              ],
+              ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  topic.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.deepNavy,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(11),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: topic.bgGradient,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: topic.accentColor.withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(topic.icon, color: Colors.white, size: 22),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: topic.accentColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.arrow_forward_ios_rounded, size: 12, color: topic.accentColor),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  topic.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    color: AppColors.secondaryText,
-                    height: 1.25,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      topic.title,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepNavy,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      topic.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        color: AppColors.secondaryText,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

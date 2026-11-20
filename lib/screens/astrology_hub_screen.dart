@@ -4,6 +4,7 @@ import 'package:avara_astrology_trial/screens/explore_topics_screen.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
@@ -187,9 +188,7 @@ class AstrologyHubScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  const Center(
-                    child: Icon(Icons.nightlight_round, size: 64, color: AppColors.violet),
-                  ),
+                  const ZodiacCelestialOrbitWidget(),
                 ],
               ),
             ),

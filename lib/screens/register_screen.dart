@@ -165,11 +165,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Create account',
-            style: Theme.of(context).textTheme.headlineMedium),
+        Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00CEC9), Color(0xFF6C5CE7), Color(0xFFE84393)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF00CEC9).withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Center(
+            child: Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text('Begin Your Journey',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.deepNavy,
+                )),
         const SizedBox(height: 6),
         Text(
-          'Join AVARA — your space for reflection, clarity, and a better you.',
+          'Join AVARA — your personal companion for self-help, mindful habits & inner clarity.',
           style: Theme.of(context)
               .textTheme
               .bodyMedium
