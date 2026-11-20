@@ -69,13 +69,15 @@
       // Pre-initialize and cache audio elements to prime them in memory
       // asato_ma: Mahakatha peace chant
       // gayatri: Meditativeindia 108 Gayatri Mantra chanting
+      // mrityunjaya: Sacred Om Tryambakam chanting
       var chantAudios = {
         'asato_ma': new Audio('asato_ma_sanskrit.m4a'),
         'asato_ma_webm': new Audio('asato_ma_sanskrit.webm'),
         'telugu': new Audio('asato_ma_telugu.mp3'),
         'gayatri': new Audio('gayatri_mantra.m4a'),
         'gayatri_webm': new Audio('gayatri_mantra.webm'),
-        'mrityunjaya': new Audio('maha_mrityunjaya.mp3')
+        'mrityunjaya': new Audio('maha_mrityunjaya.m4a'),
+        'mrityunjaya_webm': new Audio('maha_mrityunjaya.webm')
       };
 
       for (var k in chantAudios) {
@@ -174,7 +176,7 @@
         try {
           var audio = chantAudios[audioKey];
           if (!audio) {
-            var src = audioKey === 'gayatri' ? 'gayatri_mantra.m4a' : (audioKey === 'mrityunjaya' ? 'maha_mrityunjaya.mp3' : 'asato_ma_sanskrit.m4a');
+            var src = audioKey === 'gayatri' ? 'gayatri_mantra.m4a' : (audioKey === 'mrityunjaya' ? 'maha_mrityunjaya.m4a' : 'asato_ma_sanskrit.m4a');
             audio = new Audio(src);
             chantAudios[audioKey] = audio;
           }
