@@ -1,4 +1,5 @@
 import 'package:avara_astrology_trial/screens/astrology_hub_screen.dart';
+import 'package:avara_astrology_trial/screens/explore_topics_screen.dart';
 import 'package:avara_astrology_trial/screens/finance_screen.dart';
 import 'package:avara_astrology_trial/screens/habits_screen.dart';
 import 'package:avara_astrology_trial/screens/health_screen.dart';
@@ -7,6 +8,7 @@ import 'package:avara_astrology_trial/screens/profile_screen.dart';
 import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/fact_service.dart';
+import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
 import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
@@ -231,28 +233,130 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Age Cohort Mode Switcher (Youth / Adult / Senior instant transformation)
                   const AgeCohortSelectorBar(),
                   const SizedBox(height: 16),
-                  // Dynamic Age-Adaptive Creative Header Graphic (Point 11 & Point 9)
-                  _buildAgeAdaptiveCard(context),
-                  const SizedBox(height: 20),
-                  _buildMomentCard(context),
-                  const SizedBox(height: 24),
-                  // Daily Self-Help Multi-Graphic Reports (Point 10 & Point 3)
-                  _buildDailyReportsSection(context),
-                  const SizedBox(height: 28),
-                  // 5-Pillar Holistic Synergy Radar (Astrology, Health, Habits, Finance, Insights)
-                  const HolisticRadarSynergyChart(),
-                  const SizedBox(height: 20),
-                  // Unified Interconnected Pillars Nexus (Interactive pentagonal ecosystem)
-                  ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
-                  const SizedBox(height: 18),
-                  // Chronological Daily Holistic Synergy Stream
-                  UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
+                  // Render the completely bespoke UI/UX dashboard for this age cohort:
+                  if (ageGroup == AgeGroup.youth)
+                    _buildYouthDashboard(context)
+                  else if (ageGroup == AgeGroup.adult)
+                    _buildAdultDashboard(context)
+                  else
+                    _buildSeniorDashboard(context),
                 ],
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildYouthDashboard(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Cyber-Glow Hero with XP Bar & Quick Focus Pods
+        CyberGlowHeroWidget(
+          userName: widget.userName,
+          onOpenFocus: () => _navigateToPillar(2), // Habits
+          onOpenBreathing: () => _navigateToPillar(1), // Health
+          onOpenCareer: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const ExploreTopicsScreen()),
+          ),
+          onOpenDetox: () => _navigateToPillar(2), // Habits
+        ),
+        const SizedBox(height: 22),
+
+        // 2. 5-Pillar Synergy Spider Radar (Gamified Life Harmony)
+        const HolisticRadarSynergyChart(),
+        const SizedBox(height: 20),
+
+        // 3. Cybernetic Nexus Graph (Astrology, Health, Habits, Finance, Insights)
+        ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
+        const SizedBox(height: 18),
+
+        // 4. Chronological Daily Synergy Stream
+        UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
+        const SizedBox(height: 22),
+
+        // 5. Daily Self-Help Multi-Graphic Reports
+        _buildDailyReportsSection(context),
+      ],
+    );
+  }
+
+  Widget _buildAdultDashboard(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Executive KPI Equilibrium Widget
+        ExecutiveKpiEquilibriumWidget(
+          userName: widget.userName,
+          onOpenPillar: _navigateToPillar,
+        ),
+        const SizedBox(height: 20),
+
+        // 2. Executive Moment Card (Circadian Peak & Decision Making)
+        _buildMomentCard(context),
+        const SizedBox(height: 22),
+
+        // 3. 5-Pillar Executive Radar
+        const HolisticRadarSynergyChart(),
+        const SizedBox(height: 20),
+
+        // 4. Connected Pillars Nexus Widget
+        ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
+        const SizedBox(height: 18),
+
+        // 5. Daily Executive Circadian Stream
+        UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
+        const SizedBox(height: 22),
+
+        // 6. Multi-Graphic Daily Reports
+        _buildDailyReportsSection(context),
+      ],
+    );
+  }
+
+  Widget _buildSeniorDashboard(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Sacred Vedic Sanctuary Arched Header & Daily Sloka Card with Audio
+        SacredVedicSanctuaryCard(
+          userName: widget.userName,
+          onOpenAudioSloka: () {
+            TtsService.instance.speak(
+              'ఓం అసతో మా సద్గమయ, తమసో మా జ్యోతిర్గమయ, మృత్యోర్మా అమృతం గమయ. '
+              'నన్ను అసత్యము నుండి సత్యము వైపుకు, అజ్ఞానపు చీకటి నుండి జ్ఞానపు వెలుగు వైపుకు నడిపించు పరమాత్మా.',
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🔊 Chanting Sacred Sloka in Telugu / వేద శ్లోక పఠనం...'),
+                backgroundColor: Color(0xFFB45309),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          onOpenAyurveda: () => _navigateToPillar(1), // Health
+          onOpenWalk: () => _navigateToPillar(2), // Habits
+          onOpenBlessings: () => _navigateToPillar(0), // Astrology
+        ),
+        const SizedBox(height: 22),
+
+        // 2. Sacred 5-Pillar Mandala of Life Harmony
+        ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
+        const SizedBox(height: 18),
+
+        // 3. Chronological Spiritual Daily Routine
+        UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
+        const SizedBox(height: 22),
+
+        // 4. Holistic Life Radar
+        const HolisticRadarSynergyChart(),
+        const SizedBox(height: 20),
+
+        // 5. Daily Reports
+        _buildDailyReportsSection(context),
+      ],
     );
   }
 

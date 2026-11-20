@@ -2628,6 +2628,711 @@ class HolisticCrossPillarBridge extends StatelessWidget {
   }
 }
 
+// =============================================================================
+// 11. Youth Bespoke Cyber-Glow Hero & Focus Pods (<22)
+// =============================================================================
+
+class CyberGlowHeroWidget extends StatelessWidget {
+  const CyberGlowHeroWidget({
+    super.key,
+    required this.userName,
+    required this.onOpenFocus,
+    required this.onOpenBreathing,
+    required this.onOpenCareer,
+    required this.onOpenDetox,
+  });
+
+  final String userName;
+  final VoidCallback onOpenFocus;
+  final VoidCallback onOpenBreathing;
+  final VoidCallback onOpenCareer;
+  final VoidCallback onOpenDetox;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2A0845), Color(0xFF6441A5), Color(0xFF00CEC9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.4),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Top Row: Level & Fire Streak
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.bolt_rounded, color: Color(0xFFFFEAA7), size: 18),
+                    SizedBox(width: 4),
+                    Text(
+                      '⚡ Level 4 Cosmic Explorer',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF7675).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFFF7675)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('🔥 7 Days Hot!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Greeting
+          Text(
+            'Ready to Level Up, $userName? 🚀',
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Mercury is firing up your prefrontal cortex today. Channel sharp focus into your highest-priority study block!',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Colors.white.withValues(alpha: 0.9),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Gamified XP Bar
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('MIND XP TO LEVEL 5', style: TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                  Text('420 / 500 XP (84%)', style: TextStyle(color: const Color(0xFF55EFC4), fontSize: 11, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: 0.84,
+                  minHeight: 10,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  valueColor: const AlwaysStoppedAnimation(Color(0xFF00CEC9)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // 4 Quick Action Pods
+          Row(
+            children: [
+              _buildPod(
+                title: '25m Focus',
+                sub: 'Pomodoro',
+                icon: Icons.timer_rounded,
+                color: const Color(0xFFFF7675),
+                onTap: onOpenFocus,
+              ),
+              const SizedBox(width: 8),
+              _buildPod(
+                title: 'Exam Calm',
+                sub: 'Breathe',
+                icon: Icons.air_rounded,
+                color: const Color(0xFF74B9FF),
+                onTap: onOpenBreathing,
+              ),
+              const SizedBox(width: 8),
+              _buildPod(
+                title: 'Talents',
+                sub: 'Careers',
+                icon: Icons.rocket_launch_rounded,
+                color: const Color(0xFFA29BFE),
+                onTap: onOpenCareer,
+              ),
+              const SizedBox(width: 8),
+              _buildPod(
+                title: 'Dopamine',
+                sub: 'Detox',
+                icon: Icons.phonelink_erase_rounded,
+                color: const Color(0xFF55EFC4),
+                onTap: onOpenDetox,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPod({
+    required String title,
+    required String sub,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                sub,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 9.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 12. Adult Executive Flow & KPI Equilibrium Widget (22-45)
+// =============================================================================
+
+class ExecutiveKpiEquilibriumWidget extends StatelessWidget {
+  const ExecutiveKpiEquilibriumWidget({
+    super.key,
+    required this.userName,
+    required this.onOpenPillar,
+  });
+
+  final String userName;
+  final void Function(int index) onOpenPillar;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF1E3A8A), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3B82F6).withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.show_chart_rounded, color: Color(0xFF60A5FA), size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'EXECUTIVE EQUILIBRIUM',
+                        style: TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      Text(
+                        'Strategic Life Harmony',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF10B981)),
+                ),
+                child: const Text(
+                  '88% IN FLOW',
+                  style: TextStyle(color: Color(0xFF34D399), fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // 3 Metric KPI Rings
+          Row(
+            children: [
+              _buildKpiCard(
+                title: 'Strategic Focus',
+                pct: '92%',
+                sub: 'Surya Hora Peak',
+                color: const Color(0xFF60A5FA),
+                icon: Icons.track_changes_rounded,
+                onTap: () => onOpenPillar(2), // Habits
+              ),
+              const SizedBox(width: 10),
+              _buildKpiCard(
+                title: 'Burnout Defense',
+                pct: '84%',
+                sub: '7.4h Sleep REM',
+                color: const Color(0xFF34D399),
+                icon: Icons.favorite_rounded,
+                onTap: () => onOpenPillar(1), // Health
+              ),
+              const SizedBox(width: 10),
+              _buildKpiCard(
+                title: 'Mindful Wealth',
+                pct: '89%',
+                sub: '24h Pause Active',
+                color: const Color(0xFFF59E0B),
+                icon: Icons.account_balance_wallet_rounded,
+                onTap: () => onOpenPillar(3), // Finance
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Executive Strategy Tip
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF334155)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.tips_and_updates_rounded, color: Color(0xFFFBBF24), size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Peak Negotiation & Career Window',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Mercury in 10th house favors high-stakes decision-making and client reviews until 2:00 PM. Protect this block from administrative clutter.',
+                        style: TextStyle(
+                          color: const Color(0xFF94A3B8),
+                          fontSize: 11.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKpiCard({
+    required String title,
+    required String pct,
+    required String sub,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 6),
+              Text(
+                pct,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10.5,
+                ),
+              ),
+              Text(
+                sub,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 9.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// 13. Senior Sacred Vedic Sanctuary & Daily Sloka Card (45+)
+// =============================================================================
+
+class SacredVedicSanctuaryCard extends StatelessWidget {
+  const SacredVedicSanctuaryCard({
+    super.key,
+    required this.userName,
+    required this.onOpenAudioSloka,
+    required this.onOpenAyurveda,
+    required this.onOpenWalk,
+    required this.onOpenBlessings,
+  });
+
+  final String userName;
+  final VoidCallback onOpenAudioSloka;
+  final VoidCallback onOpenAyurveda;
+  final VoidCallback onOpenWalk;
+  final VoidCallback onOpenBlessings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF5),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFB45309), width: 2.0),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFB45309).withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Arched Sacred Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFDE68A),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFD97706), width: 1.5),
+                    ),
+                    child: const Icon(Icons.spa_rounded, color: Color(0xFFB45309), size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'వేద శాంతి & జీవన సౌభాగ్యం',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF92400E),
+                        ),
+                      ),
+                      Text(
+                        'నమస్తే, $userName గారు 🙏',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF78350F),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFD97706)),
+                ),
+                child: const Text(
+                  '🌸 45+ సౌభాగ్యం',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFB45309),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+
+          // Daily Sacred Sloka Card (High-Contrast Large Typography)
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFFCD34D), width: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: Color(0xFFD97706), size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'నేటి ప్రశాంత వేద శ్లోకం (Sloka of the Day)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'ॐ असतो मा सद्गमय ।\nतमसो मा ज्योतिर्गमय ।\nमृत्योर्मा अमृतं गमయ ॥',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF78350F),
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'భావం: నన్ను అసత్యము నుండి సత్యము వైపుకు, అజ్ఞానపు చీకటి నుండి దివ్యమైన జ్ఞానపు వెలుగు వైపుకు నడిపించు స్వామి.',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: Color(0xFF451A03),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Audio Chanting Button
+                ElevatedButton.icon(
+                  onPressed: onOpenAudioSloka,
+                  icon: const Icon(Icons.volume_up_rounded, size: 22, color: Colors.white),
+                  label: const Text(
+                    'శ్లోక పఠనం వినండి (Listen to Sacred Chanting)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFB45309),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // 4 Senior Health & Peace Actions (Large touch targets: minimum 60px)
+          const Text(
+            'దినచర్య & ఆయుర్వేద ఆరోగ్య రక్షణ (Daily Senior Care):',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF78350F),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          _buildSeniorActionTile(
+            title: 'గోరువెచ్చని నీరు & కీళ్ల ఆరోగ్యం (Joint & Gut Care)',
+            desc: 'వాత దోషాన్ని శాంతింపజేయడానికి ఉదయం శొంఠి మరియు గోరువెచ్చని నీరు తీసుకోండి.',
+            icon: Icons.health_and_safety_rounded,
+            color: const Color(0xFF047857),
+            onTap: onOpenAyurveda,
+          ),
+          const SizedBox(height: 10),
+          _buildSeniorActionTile(
+            title: 'ప్రశాంత ఉదయపు నడక & ప్రాణాయామం (Morning Walk)',
+            desc: 'బ్రాహ్మీ ముహూర్తంలో 15 నిమిషాల సున్నితమైన నడక మీ గుండెకు, ఊపిరితిత్తులకు అమృతం.',
+            icon: Icons.directions_walk_rounded,
+            color: const Color(0xFFB45309),
+            onTap: onOpenWalk,
+          ),
+          const SizedBox(height: 10),
+          _buildSeniorActionTile(
+            title: 'పిల్లల క్షేమం & వేద పరిహారాలు (Family Blessings)',
+            desc: 'పిల్లల, మనవళ్ల భవిష్యత్తు కోసం శాంతి మంత్రాలు మరియు గురు గ్రహ పరిహారాలు చూడండి.',
+            icon: Icons.diversity_1_rounded,
+            color: const Color(0xFF6C5CE7),
+            onTap: onOpenBlessings,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSeniorActionTile({
+    required String title,
+    required String desc,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    desc,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF451A03),
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: color, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
 
 
 
