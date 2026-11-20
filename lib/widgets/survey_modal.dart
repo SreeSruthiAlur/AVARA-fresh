@@ -1,12 +1,13 @@
 import 'package:avara_astrology_trial/services/age_profile_service.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/survey_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Interactive Onboarding Self-Help Survey shown when a user logs in or enters as a guest.
 ///
-/// Collects age group (to dynamically power creative graphics) and life priorities
-/// to personalize AVARA as a true self-help companion.
+/// Collects language preference, age group (to dynamically power creative graphics),
+/// and life priorities to personalize AVARA as a true self-help companion.
 class SurveyModal extends StatefulWidget {
   const SurveyModal({super.key, required this.onCompleted});
 
@@ -27,16 +28,26 @@ class SurveyModal extends StatefulWidget {
 class _SurveyModalState extends State<SurveyModal> {
   int _currentStep = 0;
 
+  AppLanguage _selectedLanguage = AppLanguageService.instance.currentLanguage;
   AgeGroup _selectedAgeGroup = AgeGroup.adult;
   String _selectedFocus = 'Inner Peace & Mental Calm';
   String _selectedChallenge = 'Inconsistent Routine & Procrastination';
   String _selectedStyle = 'Practical & Action-Oriented Steps';
 
-  final List<String> _stepTitles = [
+  List<String> get _stepTitles => [
+    'Choose Your Preferred Language',
     'Welcome! What is your age group?',
     'What is your main focus right now?',
     'What daily challenge do you want to conquer?',
     'How should AVARA guide you?',
+  ];
+
+  List<String> get _stepSubtitles => [
+    'Select whether you prefer English, Telugu, or Tanglish for translations and interface.',
+    'Helps us tune graphics, readability, and content specifically for your generation.',
+    'Select the life area where you seek the greatest clarity and progress today.',
+    'AVARA will design micro-habit steps to transform this into your superpower.',
+    'Choose the coaching tone that feels most natural and uplifting to you.',
   ];
 
   @override
@@ -60,7 +71,7 @@ class _SurveyModalState extends State<SurveyModal> {
                     const Icon(Icons.self_improvement_rounded, color: AppColors.blue, size: 22),
                     const SizedBox(width: 8),
                     Text(
-                      'AVARA Self-Help Survey (${_currentStep + 1}/4)',
+                      'AVARA Self-Help Survey (${_currentStep + 1}/5)',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -77,7 +88,7 @@ class _SurveyModalState extends State<SurveyModal> {
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
-              value: (_currentStep + 1) / 4,
+              value: (_currentStep + 1) / 5,
               backgroundColor: AppColors.border,
               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.blue),
               borderRadius: BorderRadius.circular(4),
@@ -127,7 +138,7 @@ class _SurveyModalState extends State<SurveyModal> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      if (_currentStep < 3) {
+                      if (_currentStep < 4) {
                         setState(() => _currentStep++);
                       } else {
                         _finishSurvey();
@@ -140,7 +151,7 @@ class _SurveyModalState extends State<SurveyModal> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
-                      _currentStep == 3 ? 'Personalize My AVARA' : 'Continue',
+                      _currentStep == 4 ? 'Personalize My AVARA' : 'Continue',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -153,16 +164,46 @@ class _SurveyModalState extends State<SurveyModal> {
     );
   }
 
-  static const List<String> _stepSubtitles = [
-    'Helps us tune graphics, readability, and content specifically for your generation.',
-    'Select the life area where you seek the greatest clarity and progress today.',
-    'AVARA will design micro-habit steps to transform this into your superpower.',
-    'Choose the coaching tone that feels most natural and uplifting to you.',
-  ];
-
   Widget _buildStepContent() {
     switch (_currentStep) {
       case 0:
+        return Column(
+          children: [
+            _optionTile(
+              icon: Icons.language_rounded,
+              title: 'English (Default)',
+              subtitle: 'All app navigation, insights, and sacred chant translations in English',
+              isSelected: _selectedLanguage == AppLanguage.english,
+              onTap: () {
+                setState(() => _selectedLanguage = AppLanguage.english);
+                AppLanguageService.instance.setLanguage(AppLanguage.english);
+              },
+            ),
+            const SizedBox(height: 10),
+            _optionTile(
+              icon: Icons.translate_rounded,
+              title: 'తెలుగు (Telugu)',
+              subtitle: 'పూర్తి తెలుగు ఇంటర్‌ఫేస్ మరియు వేద మంత్రాల అర్థ వివరణలు',
+              isSelected: _selectedLanguage == AppLanguage.telugu,
+              onTap: () {
+                setState(() => _selectedLanguage = AppLanguage.telugu);
+                AppLanguageService.instance.setLanguage(AppLanguage.telugu);
+              },
+            ),
+            const SizedBox(height: 10),
+            _optionTile(
+              icon: Icons.chat_bubble_outline_rounded,
+              title: 'Tanglish (Telugu in English)',
+              subtitle: 'Conversational blend of Telugu written in English script',
+              isSelected: _selectedLanguage == AppLanguage.tanglish,
+              onTap: () {
+                setState(() => _selectedLanguage = AppLanguage.tanglish);
+                AppLanguageService.instance.setLanguage(AppLanguage.tanglish);
+              },
+            ),
+          ],
+        );
+      case 1:
         return Column(
           children: [
             _optionTile(
@@ -208,7 +249,7 @@ class _SurveyModalState extends State<SurveyModal> {
             ),
           ],
         );
-      case 1:
+      case 2:
         final focusOptions = AgeProfileService.instance.getSurveyFocusOptions(_selectedAgeGroup);
         return Column(
           children: focusOptions.map((opt) {
@@ -224,7 +265,7 @@ class _SurveyModalState extends State<SurveyModal> {
             );
           }).toList(),
         );
-      case 2:
+      case 3:
         final challengeOptions = AgeProfileService.instance.getSurveyChallengeOptions(_selectedAgeGroup);
         return Column(
           children: challengeOptions.map((opt) {
@@ -240,7 +281,7 @@ class _SurveyModalState extends State<SurveyModal> {
             );
           }).toList(),
         );
-      case 3:
+      case 4:
       default:
         final toneTitle = _selectedAgeGroup == AgeGroup.youth
             ? 'High-Energy & Gamified Streaks'
@@ -350,6 +391,7 @@ class _SurveyModalState extends State<SurveyModal> {
   }
 
   Future<void> _finishSurvey() async {
+    await AppLanguageService.instance.setLanguage(_selectedLanguage);
     await SurveyService.instance.saveSurveyResponse(
       ageGroup: _selectedAgeGroup,
       primaryFocus: _selectedFocus,

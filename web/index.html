@@ -187,14 +187,6 @@
 
           audio.onended = function() {
             console.log("🕉️ [AVARA Audio]: Sanskrit chant recitation completed.");
-            // If Telugu meaning is requested and chant was Asato Ma, play pure native Telugu translation audio
-            if (teluguMeaning && audioKey === 'asato_ma') {
-              var teluguAudio = chantAudios['telugu'] || new Audio('asato_ma_telugu.mp3');
-              currentMeaningAudio = teluguAudio;
-              teluguAudio.currentTime = 0;
-              teluguAudio.volume = 0.95;
-              teluguAudio.play().catch(function(err){ console.warn("Telugu audio error:", err); });
-            }
           };
 
           // 4. CRITICAL: Call audio.play() SYNCHRONOUSLY directly inside the user's gesture!

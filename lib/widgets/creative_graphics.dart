@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:avara_astrology_trial/services/age_profile_service.dart';
+import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -3189,40 +3190,74 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
   int _selectedMantraIndex = 0;
   bool _isPlaying = false;
   late final AnimationController _rippleController;
+  String _translationChoice = 'auto'; // 'auto', 'en', 'te', 'none'
 
   static const List<Map<String, String>> _mantras = [
     {
-      'name': 'పవమాన శాంతి',
-      'title': 'పవమాన శాంతి మంత్రం (Asato Ma Sadgamaya)',
-      'source': 'బృహదారణ్యకోపనిషత్ 1.3.28',
+      'id': 'asato_ma',
+      'nameEn': 'Pavamana Shanti',
+      'nameTe': 'పవమాన శాంతి',
+      'nameTanglish': 'Pavamana Shanti',
+      'titleEn': 'Pavamana Shanti Mantra (Asato Ma Sadgamaya)',
+      'titleTe': 'పవమాన శాంతి మంత్రం (Asato Ma Sadgamaya)',
+      'titleTanglish': 'Pavamana Shanti Mantram (Asato Ma Sadgamaya)',
+      'sourceEn': 'Brihadaranyaka Upanishad 1.3.28',
+      'sourceTe': 'బృహదారణ్యకోపనిషత్ 1.3.28',
+      'sourceTanglish': 'Brihadaranyaka Upanishad 1.3.28',
       'devanagari': 'ॐ असतो मा सद्गमय ।\nतमसो मा ज्योतिर्गमय ।\nमृत्योर्मा अमृतं गमय ॥\nॐ शान्तिः शान्तिः शान्तिः ॥',
-      'telugu': 'ఓం అసతో మా సద్గమయ ।\nతమసో మా జ్యోతిర్గమయ ।\nమృత్యోర్మా అమృతం గమయ ॥\nఓం శాంతిః శాంతిః శాంతిః ॥',
-      'meaning': 'నన్ను అసత్యము నుండి సత్యము వైపుకు, అజ్ఞానపు చీకటి నుండి దివ్యమైన జ్ఞానపు వెలుగు వైపుకు, మృత్యు భయం నుండి మోక్షము వైపుకు నడిపించు పరమాత్మా.',
-      'benefit': 'భయ నివారణ, మానసిక ప్రశాంతత మరియు దివ్య రక్షణ చేకూరుతాయి.',
+      'transliteration': 'Om Asato Maa Sadgamaya |\nTamaso Maa Jyotirgamaya |\nMrityor Maa Amritam Gamaya ||\nOm Shantih Shantih Shantih ||',
+      'teluguScript': 'ఓం అసతో మా సద్గమయ ।\nతమసో మా జ్యోతిర్గమయ ।\nమృత్యోర్మా అమృతం గమయ ॥\nఓం శాంతిః శాంతిః శాంతిః ॥',
+      'meaningEn': 'Lead me from falsehood to eternal truth, from spiritual darkness to the supreme light of wisdom, and from mortality into immortality. Om peace, peace, peace.',
+      'meaningTe': 'నన్ను అసత్యము నుండి సత్యము వైపుకు, అజ్ఞానపు చీకటి నుండి దివ్యమైన జ్ఞానపు వెలుగు వైపుకు, మృత్యు భయం నుండి మోక్షము వైపుకు నడిపించు పరమాత్మా.',
+      'meaningTanglish': 'Nannu asathyam nundi sathyam vaipuku, cheekati nundi divyamaina velugu vaipuku, mrityu bhayam nundi moksham vaipuku nadipinchu Paramatma.',
+      'benefitEn': 'Dispels anxiety and fear, installs deep meditative composure, and bestows divine protective aura.',
+      'benefitTe': 'భయ నివారణ, మానసిక ప్రశాంతత మరియు దివ్య రక్షణ చేకూరుతాయి.',
+      'benefitTanglish': 'Bhaya nivarana, manasika prasanthata mariyu divya rakshana labhisthundi.',
       'sanskritSpeech': 'Om Asato maa sad gamaya, Tamaso maa jyotir gamaya, Mrityor maa amritam gamaya, Om Shantih Shantih Shantih.',
-      'teluguSpeech': 'నన్ను అసత్యము నుండి సత్యము వైపుకు, చీకటి నుండి వెలుగు వైపుకు నడిపించు పరమాత్మా.',
     },
     {
-      'name': 'గాయత్రీ మంత్రం',
-      'title': 'గాయత్రీ మహా మంత్రం (Gayatri Maha Mantra)',
-      'source': 'ఋగ్వేదం 3.62.10 • ధ్యాన పఠనం (Meditative India)',
+      'id': 'gayatri',
+      'nameEn': 'Gayatri Mantra',
+      'nameTe': 'గాయత్రీ మంత్రం',
+      'nameTanglish': 'Gayatri Mantram',
+      'titleEn': 'Gayatri Maha Mantra (Rigveda 3.62.10)',
+      'titleTe': 'గాయత్రీ మహా మంత్రం (ఋగ్వేదం 3.62.10)',
+      'titleTanglish': 'Gayatri Maha Mantram (Rigveda 3.62.10)',
+      'sourceEn': 'Rigveda 3.62.10 • Meditative Chanting',
+      'sourceTe': 'ఋగ్వేదం 3.62.10 • ధ్యాన పఠనం (Meditative India)',
+      'sourceTanglish': 'Rigveda 3.62.10 • Dhyana Pathanam',
       'devanagari': 'ॐ भूर्भुवः स्वः ।\nतत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि ।\nधियो यो नः प्रचोदयात् ॥',
-      'telugu': 'ఓం భూర్భువః స్వః ।\nతత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి ।\nధియో యో నః ప్రచోదయాత్ ॥',
-      'meaning': 'ముల్లోకాలను ప్రకాశింపజేసే సవితృ సూర్య భగవానుని పరమ దివ్య తేజాన్ని మేము ధ్యానిస్తున్నాము. ఆయన మా బుద్ధిని సత్య జ్ఞాన మార్గంలో నడిపించుగాక.',
-      'benefit': 'సకల పాప వినాశనం, బుద్ధి వికాసం, ఆయురారోగ్యాలు మరియు ప్రాణ శక్తి వృద్ధి.',
+      'transliteration': 'Om Bhur Bhuvah Svah |\nTat Savitur Varenyam Bhargo Devasya Dhimahi |\nDhiyo Yo Nah Prachodayat ||',
+      'teluguScript': 'ఓం భూర్భువః స్వః ।\nతత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి ।\nధియో యో నః ప్రచోదయాత్ ॥',
+      'meaningEn': 'We meditate upon the transcendental radiance of the divine Sun (Savitr). May that sacred celestial light stimulate and guide our intellect onto the righteous path of truth.',
+      'meaningTe': 'ముల్లోకాలను ప్రకాశింపజేసే సవితృ సూర్య భగవానుని పరమ దివ్య తేజాన్ని మేము ధ్యానిస్తున్నాము. ఆయన మా బుద్ధిని సత్య జ్ఞాన మార్గంలో నడిపించుగాక.',
+      'meaningTanglish': 'Mullokalani prakashimpajese Savitru Surya Bhagavanuni divya tejaanni dhyanisthunnamu. Ayana maa buddhini sanmargamlo nadipinchugaaka.',
+      'benefitEn': 'Purifies consciousness, sharpens intellect, dissolves negative mental impressions, and fosters longevity.',
+      'benefitTe': 'సకల పాప వినాశనం, బుద్ధి వికాసం, ఆయురారోగ్యాలు మరియు ప్రాణ శక్తి వృద్ధి.',
+      'benefitTanglish': 'Sakala papa nashanam, buddhi vikasam mariyu ayur-arogyalu labhisthayi.',
       'sanskritSpeech': 'Om Bhur Bhuvah Svah, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat.',
-      'teluguSpeech': 'సూర్య భగవానుని దివ్య తేజస్సు మా బుద్ధిని సన్మార్గంలో నడిపించుగాక.',
     },
     {
-      'name': 'మహా మృత్యుంజయ',
-      'title': 'మహా మృత్యుంజయ మంత్రం (Maha Mrityunjaya)',
-      'source': 'ఋగ్వేదం 7.59.12 • మార్కండేయ మహర్షి',
+      'id': 'mrityunjaya',
+      'nameEn': 'Maha Mrityunjaya',
+      'nameTe': 'మహా మృత్యుంజయ',
+      'nameTanglish': 'Maha Mrityunjaya',
+      'titleEn': 'Maha Mrityunjaya Mantra (Rigveda 7.59.12)',
+      'titleTe': 'మహా మృత్యుంజయ మంత్రం (ఋగ్వేదం 7.59.12)',
+      'titleTanglish': 'Maha Mrityunjaya Mantram (Rigveda 7.59.12)',
+      'sourceEn': 'Rigveda 7.59.12 • Sage Markandeya',
+      'sourceTe': 'ఋగ్వేదం 7.59.12 • మార్కండేయ మహర్షి',
+      'sourceTanglish': 'Rigveda 7.59.12 • Markandeya Maharshi',
       'devanagari': 'ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् ।\nउर्वारुकमिव बन्धनान् मृत्योर्मुक्षीय माऽमृतात् ॥',
-      'telugu': 'ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ ।\nఉర్వారుకమివ బంధనాన్ మృత్యోర్ముక్షీయ మామృతాత్ ॥',
-      'meaning': 'సుగంధభరితుడై, సకల ప్రాణులను పోషించే ముక్కంటి పరమేశ్వరుని మేము పూజిస్తున్నాము. పండిన దోసపండు తొడిమ నుండి సునాయాసంగా రాలినట్లు, మమ్ములను మృత్యు భయాల నుండి విముక్తులను చేయుము.',
-      'benefit': 'దీర్ఘాయుష్షు, రోగ నివారణ, అకాల మృత్యు భయ నాశనం మరియు సంపూర్ణ స్వస్థత.',
+      'transliteration': 'Om Tryambakam Yajaamahe Sugandhim Pushtivardhanam |\nUrvaarukamiva Bandhanaan Mrityor Muksheeya Maamritaat ||',
+      'teluguScript': 'ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ ।\nఉర్వారుకమివ బంధనాన్ మృత్యోర్ముక్షీయ మామృతాత్ ॥',
+      'meaningEn': 'We worship the fragrant, three-eyed Lord Shiva who nourishes and sustains all beings. As a ripe fruit naturally frees itself from the vine, liberate us from mortal fears and spiritual bondages into immortality.',
+      'meaningTe': 'సుగంధభరితుడై, సకల ప్రాణులను పోషించే ముక్కంటి పరమేశ్వరుని మేము పూజిస్తున్నాము. పండిన దోసపండు తొడిమ నుండి సునాయాసంగా రాలినట్లు, మమ్ములను మృత్యు భయాల నుండి విముక్తులను చేయుము.',
+      'meaningTanglish': 'Sugandha bharitudai, sakala pranulanu poshinchu Mukkanti Parameshwaruni poojisthunnamu. Mrityu bhayam nundi vimukthulanu cheyumu.',
+      'benefitEn': 'Grants longevity, relief from ailments, liberation from mortal fears, vitality, and spiritual healing.',
+      'benefitTe': 'దీర్ఘాయుష్షు, రోగ నివారణ, అకాల మృత్యు భయ నాశనం మరియు సంపూర్ణ స్వస్థత.',
+      'benefitTanglish': 'Deerghayushshu, roga nivarana mariyu arogya siddhi labhisthayi.',
       'sanskritSpeech': 'Om Tryambakam Yajaamahe Sugandhim Pushtivardhanam, Urvaarukamiva Bandhanaan Mrityor Muksheeya Maamritaat.',
-      'teluguSpeech': 'పరమశివుని కటాక్షంతో దీర్ఘాయుష్షు మరియు సంపూర్ణ ఆరోగ్యం కలుగుగాక.',
     },
   ];
 
@@ -3268,9 +3303,13 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
       _rippleController.reset();
     } else {
       final m = _mantras[_selectedMantraIndex];
-      TtsService.instance.playSacredChant(m['sanskritSpeech']!, m['teluguSpeech']!);
+      TtsService.instance.playSacredChant(m['sanskritSpeech']!);
       setState(() => _isPlaying = true);
       _rippleController.repeat();
+
+      final currentLang = AppLanguageService.instance.currentLanguage;
+      final isTe = currentLang == AppLanguage.telugu;
+      final title = isTe ? m['titleTe']! : m['titleEn']!;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -3280,7 +3319,9 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '🔔 పవిత్ర సంస్కృత వేద పఠనం: ${m['title']} (Pure Indian Sanskrit Tone)',
+                  isTe
+                      ? '🔔 పవిత్ర సంస్కృత వేద పఠనం: $title (Pure Indian Sanskrit Tone)'
+                      : '🔔 Sacred Sanskrit Recitation: $title (Pure Indian Sanskrit Tone)',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ),
@@ -3294,9 +3335,64 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
     }
   }
 
+  Widget _buildTranslationChoiceChip(String label, String value, String activeValue) {
+    final isSelected = activeValue == value;
+    return GestureDetector(
+      onTap: () => setState(() => _translationChoice = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFB45309) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF92400E) : const Color(0xFFFCD34D),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : const Color(0xFF78350F),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final currentLang = AppLanguageService.instance.currentLanguage;
+    final isTe = currentLang == AppLanguage.telugu;
+    final isTanglish = currentLang == AppLanguage.tanglish;
+
     final m = _mantras[_selectedMantraIndex];
+
+    final effectiveTranslation = _translationChoice == 'auto'
+        ? (isTe ? 'te' : 'en')
+        : _translationChoice;
+
+    final headerSubtitle = isTe
+        ? 'వేద శాంతి & జీవన సౌభాగ్యం'
+        : (isTanglish ? 'Vedic Shanti & Jeevana Soubhagyam' : 'Vedic Peace & Vitality');
+
+    final greeting = isTe
+        ? 'నమస్తే, ${widget.userName} గారు 🙏'
+        : (isTanglish ? 'Namaste, ${widget.userName} garu 🙏' : 'Namaste, ${widget.userName} 🙏');
+
+    final badgeText = isTe
+        ? '🌸 45+ సౌభాగ్యం'
+        : (isTanglish ? '🌸 45+ Serenity' : '🌸 45+ Grace & Serenity');
+
+    final mantraTitle = isTe
+        ? m['titleTe']!
+        : (isTanglish ? m['titleTanglish']! : m['titleEn']!);
+
+    final mantraSource = isTe
+        ? m['sourceTe']!
+        : (isTanglish ? m['sourceTanglish']! : m['sourceEn']!);
 
     return Container(
       decoration: BoxDecoration(
@@ -3315,7 +3411,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Arched Sacred Header
+          // Arched Sacred Header with quick language switcher
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -3334,16 +3430,16 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'వేద శాంతి & జీవన సౌభాగ్యం',
-                        style: TextStyle(
+                      Text(
+                        headerSubtitle,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF92400E),
                         ),
                       ),
                       Text(
-                        'నమస్తే, ${widget.userName} గారు 🙏',
+                        greeting,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
@@ -3354,21 +3450,79 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD97706)),
-                ),
-                child: const Text(
-                  '🌸 45+ సౌభాగ్యం',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFB45309),
+              Row(
+                children: [
+                  // Quick Language Toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFD97706), width: 1.2),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: () => AppLanguageService.instance.setLanguage(AppLanguage.english),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: currentLang == AppLanguage.english ? const Color(0xFFB45309) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'EN',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: currentLang == AppLanguage.english ? Colors.white : const Color(0xFF78350F),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        InkWell(
+                          onTap: () => AppLanguageService.instance.setLanguage(AppLanguage.telugu),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: currentLang == AppLanguage.telugu ? const Color(0xFFB45309) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'తెలుగు',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: currentLang == AppLanguage.telugu ? Colors.white : const Color(0xFF78350F),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFD97706)),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFB45309),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -3380,11 +3534,15 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
             child: Row(
               children: List.generate(_mantras.length, (idx) {
                 final isSel = idx == _selectedMantraIndex;
+                final mantraLabel = isTe
+                    ? _mantras[idx]['nameTe']!
+                    : (isTanglish ? _mantras[idx]['nameTanglish']! : _mantras[idx]['nameEn']!);
+
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: ChoiceChip(
                     label: Text(
-                      _mantras[idx]['name']!,
+                      mantraLabel,
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.bold,
@@ -3436,7 +3594,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              m['title']!,
+                              mantraTitle,
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
@@ -3448,7 +3606,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                       ),
                     ),
                     Text(
-                      m['source']!,
+                      mantraSource,
                       style: const TextStyle(
                         fontSize: 10.5,
                         color: Color(0xFFB45309),
@@ -3459,7 +3617,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                 ),
                 const SizedBox(height: 12),
 
-                // Sanskrit Devanagari Script
+                // Sanskrit Devanagari Script (Pure Scripture)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
@@ -3479,53 +3637,147 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
 
-                // Telugu Script
-                Text(
-                  m['telugu']!,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF92400E),
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Telugu Meaning & Benefits
-                Text(
-                  'భావం: ${m['meaning']}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF451A03),
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 6),
+                // Translation Preference Bar (Asks the user directly!)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFFFFFDF5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCD34D)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.shield_outlined, color: Color(0xFFB45309), size: 16),
+                      const Icon(Icons.translate_rounded, size: 15, color: Color(0xFF92400E)),
                       const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'ఫలం: ${m['benefit']}',
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF92400E),
-                          ),
+                      Text(
+                        isTe ? 'అనువాదం:' : 'Translation:',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF92400E),
                         ),
                       ),
+                      const Spacer(),
+                      _buildTranslationChoiceChip('English', 'en', effectiveTranslation),
+                      const SizedBox(width: 4),
+                      _buildTranslationChoiceChip('తెలుగు', 'te', effectiveTranslation),
+                      const SizedBox(width: 4),
+                      _buildTranslationChoiceChip(isTe ? 'కేవలం సంస్కృతం' : 'None', 'none', effectiveTranslation),
                     ],
                   ),
                 ),
+                const SizedBox(height: 10),
+
+                // Display Based on Chosen Translation Preference
+                if (effectiveTranslation == 'en') ...[
+                  // English Transliteration
+                  Text(
+                    m['transliteration']!,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF78350F),
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // English Meaning
+                  Text(
+                    'Meaning: ${m['meaningEn']}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF451A03),
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.shield_outlined, color: Color(0xFFB45309), size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Spiritual Benefit: ${m['benefitEn']}',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else if (effectiveTranslation == 'te') ...[
+                  // Telugu Script
+                  Text(
+                    m['teluguScript']!,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF92400E),
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Telugu Meaning
+                  Text(
+                    'భావం: ${m['meaningTe']}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF451A03),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.shield_outlined, color: Color(0xFFB45309), size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'ఫలం: ${m['benefitTe']}',
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  // Pure Sanskrit Selected
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      isTe
+                          ? 'సంస్కృత మూల శ్లోకం మాత్రమే ప్రదర్శించబడుతోంది. అనువాదం కోసం పైన "English" లేదా "తెలుగు" ఎంచుకోండి.'
+                          : 'Pure Vedic chanting mode active. Select English or Telugu above to view translations.',
+                      style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Color(0xFF78350F)),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Animated Soundwave Visualizer (Pulsing when chanting)
@@ -3554,9 +3806,11 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                               );
                             }),
                             const SizedBox(width: 10),
-                            const Text(
-                              '432Hz వేద నాదం మారుమ్రోగుతోంది...',
-                              style: TextStyle(
+                            Text(
+                              isTe
+                                  ? '432Hz వేద నాదం మారుమ్రోగుతోంది...'
+                                  : 'Resonating with authentic 432Hz Vedic resonance...',
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFFB45309),
@@ -3582,8 +3836,10 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
                     ),
                     label: Text(
                       _isPlaying
-                          ? 'పఠనం ఆపండి (Stop Chanting)'
-                          : 'పవిత్ర సంస్కృత పఠనం వినండి (Chant in Pure Sanskrit)',
+                          ? (isTe ? 'పఠనం ఆపండి (Stop Chanting)' : 'Stop Chanting')
+                          : (isTe
+                              ? 'పవిత్ర సంస్కృత పఠనం వినండి (Pure Sanskrit Tone)'
+                              : 'Listen to Sacred Sanskrit Chanting (Pure Tone)'),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -3600,9 +3856,11 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
           const SizedBox(height: 18),
 
           // 4 Senior Health & Peace Actions (Large touch targets: minimum 60px)
-          const Text(
-            'దినచర్య & ఆయుర్వేద ఆరోగ్య రక్షణ (Daily Senior Care):',
-            style: TextStyle(
+          Text(
+            isTe
+                ? 'దినచర్య & ఆయుర్వేద ఆరోగ్య రక్షణ (Daily Senior Care):'
+                : 'Daily Dinacharya & Ayurvedic Wellness Care:',
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
               color: Color(0xFF78350F),
@@ -3611,24 +3869,36 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
           const SizedBox(height: 10),
 
           _buildSeniorActionTile(
-            title: 'గోరువెచ్చని నీరు & కీళ్ల ఆరోగ్యం (Joint & Gut Care)',
-            desc: 'వాత దోషాన్ని శాంతింపజేయడానికి ఉదయం శొంఠి మరియు గోరువెచ్చని నీరు తీసుకోండి.',
+            title: isTe
+                ? 'గోరువెచ్చని నీరు & కీళ్ల ఆరోగ్యం (Joint & Gut Care)'
+                : 'Warm Water & Joint Care (Vata Balance)',
+            desc: isTe
+                ? 'వాత దోషాన్ని శాంతింపజేయడానికి ఉదయం శొంఠి మరియు గోరువెచ్చని నీరు తీసుకోండి.'
+                : 'Drink warm water with dry ginger in the morning to pacify Vata and nourish joint vitality.',
             icon: Icons.health_and_safety_rounded,
             color: const Color(0xFF047857),
             onTap: widget.onOpenAyurveda,
           ),
           const SizedBox(height: 10),
           _buildSeniorActionTile(
-            title: 'ప్రశాంత ఉదయపు నడక & ప్రాణాయామం (Morning Walk)',
-            desc: 'బ్రాహ్మీ ముహూర్తంలో 15 నిమిషాల సున్నితమైన నడక మీ గుండెకు, ఊపిరితిత్తులకు అమృతం.',
+            title: isTe
+                ? 'ప్రశాంత ఉదయపు నడక & ప్రాణాయామం (Morning Walk)'
+                : 'Peaceful Morning Walk & Pranayama (Sunrise Vitality)',
+            desc: isTe
+                ? 'బ్రాహ్మీ ముహూర్తంలో 15 నిమిషాల సున్నితమైన నడక మీ గుండెకు, ఊపిరితిత్తులకు అమృతం.'
+                : 'A gentle 15-minute walk during Brahma Muhurtha revitalizes circulation, lungs, and joints.',
             icon: Icons.directions_walk_rounded,
             color: const Color(0xFFB45309),
             onTap: widget.onOpenWalk,
           ),
           const SizedBox(height: 10),
           _buildSeniorActionTile(
-            title: 'పిల్లల క్షేమం & వేద పరిహారాలు (Family Blessings)',
-            desc: 'పిల్లల, మనవళ్ల భవిష్యత్తు కోసం శాంతి మంత్రాలు మరియు గురు గ్రహ పరిహారాలు చూడండి.',
+            title: isTe
+                ? 'పిల్లల క్షేమం & వేద పరిహారాలు (Family Blessings)'
+                : 'Family Blessings & Vedic Remedies',
+            desc: isTe
+                ? 'పిల్లల, మనవళ్ల భవిష్యత్తు కోసం శాంతి మంత్రాలు మరియు గురు గ్రహ పరిహారాలు చూడండి.'
+                : 'Peace mantras and Jupiter remedies dedicated to the long-term flourishing of children & grandchildren.',
             icon: Icons.diversity_1_rounded,
             color: const Color(0xFF6C5CE7),
             onTap: widget.onOpenBlessings,
@@ -3638,7 +3908,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
     );
   }
 
-  Widget _buildSeniorActionTile({
+    Widget _buildSeniorActionTile({
     required String title,
     required String desc,
     required IconData icon,
@@ -3718,24 +3988,32 @@ class _SacredJapaMalaCounterWidgetState
 
   static const List<Map<String, String>> _mantras = [
     {
-      'name': 'గాయత్రీ మహా మంత్రం (Gayatri)',
+      'nameEn': 'Gayatri Maha Mantra',
+      'nameTe': 'గాయత్రీ మహా మంత్రం',
       'sanskrit': 'Om Bhur Bhuvah Svah, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat.',
-      'telugu': 'సవితృ సూర్య భగవానుని తేజస్సు మా బుద్ధిని సన్మార్గంలో నడిపించుగాక.',
+      'meaningEn': 'May the divine light of Savitr illuminate our intellect onto the righteous path.',
+      'meaningTe': 'సవితృ సూర్య భగవానుని తేజస్సు మా బుద్ధిని సన్మార్గంలో నడిపించుగాక.',
     },
     {
-      'name': 'ఓం నమః శివాయ (Panchakshari)',
+      'nameEn': 'Om Namah Shivaya (Panchakshari)',
+      'nameTe': 'ఓం నమః శివాయ (పంచాక్షరీ)',
       'sanskrit': 'Om Namah Shivaaya, Om Namah Shivaaya, Om Namah Shivaaya.',
-      'telugu': 'మంగళకరుడైన పరమశివునికి ప్రణామాలు.',
+      'meaningEn': 'Salutations to the auspicious Lord Shiva.',
+      'meaningTe': 'మంగళకరుడైన పరమశివునికి ప్రణామాలు.',
     },
     {
-      'name': 'మహా మృత్యుంజయ మంత్రం (Maha Mrityunjaya)',
+      'nameEn': 'Maha Mrityunjaya Mantra',
+      'nameTe': 'మహా మృత్యుంజయ మంత్రం',
       'sanskrit': 'Om Tryambakam Yajaamahe Sugandhim Pushtivardhanam, Urvaarukamiva Bandhanaan Mrityor Muksheeya Maamritaat.',
-      'telugu': 'పరమశివుని కటాక్షంతో దీర్ఘాయుష్షు మరియు సంపూర్ణ ఆరోగ్యం కలుగుగాక.',
+      'meaningEn': 'May Lord Shiva grant longevity, healing and complete health.',
+      'meaningTe': 'పరమశివుని కటాక్షంతో దీర్ఘాయుష్షు మరియు సంపూర్ణ ఆరోగ్యం కలుగుగాక.',
     },
     {
-      'name': 'ఓం నమో నారాయణాయ (Ashtakshari)',
+      'nameEn': 'Om Namo Narayanaya (Ashtakshari)',
+      'nameTe': 'ఓం నమో నారాయణాయ (అష్టాక్షరీ)',
       'sanskrit': 'Om Namo Naaraayanaaya, Om Namo Naaraayanaaya.',
-      'telugu': 'జగద్రక్షకుడైన శ్రీమహావిష్ణువునకు ప్రణామాలు.',
+      'meaningEn': 'Salutations to Lord Vishnu, the protector and preserver of all realms.',
+      'meaningTe': 'జగద్రక్షకుడైన శ్రీమహావిష్ణువునకు ప్రణామాలు.',
     },
   ];
 
@@ -3746,6 +4024,9 @@ class _SacredJapaMalaCounterWidgetState
         _count++;
         if (_count == _target) {
           _completedMalas++;
+          final currentLang = AppLanguageService.instance.currentLanguage;
+          final isTe = currentLang == AppLanguage.telugu;
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
@@ -3754,7 +4035,9 @@ class _SacredJapaMalaCounterWidgetState
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '🎉 108 మణుల జపం పూర్తయింది! (${_completedMalas}వ మాల సంపూర్ణం) శాంతి శాంతి శాంతిః 🙏',
+                      isTe
+                          ? '🎉 108 మణుల జపం పూర్తయింది! (${_completedMalas}వ మాల సంపూర్ణం) శాంతి శాంతి శాంతిః 🙏'
+                          : '🎉 108 Sacred Beads Japa Completed! (${_completedMalas} malas complete) Om Shanti Shanti Shanti 🙏',
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
@@ -3773,28 +4056,30 @@ class _SacredJapaMalaCounterWidgetState
   }
 
   void _reset() {
-    setState(() => _count = 0);
-  }
-
-  void _playCurrentMantra() {
-    final m = _mantras[_selectedMantraIdx];
-    TtsService.instance.playSacredChant(m['sanskrit']!, m['telugu']!);
+    setState(() {
+      _count = 0;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final progress = _count / _target;
-    final activeMantra = _mantras[_selectedMantraIdx];
+    final currentLang = AppLanguageService.instance.currentLanguage;
+    final isTe = currentLang == AppLanguage.telugu;
+
+    final double progress = _count / _target;
+    final m = _mantras[_selectedMantraIdx];
+    final mantraName = isTe ? m['nameTe']! : m['nameEn']!;
+    final mantraMeaning = isTe ? m['meaningTe']! : m['meaningEn']!;
 
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFFDF5),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFD97706), width: 1.8),
+        border: Border.all(color: const Color(0xFFB45309), width: 1.8),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFFB45309).withValues(alpha: 0.12),
-            blurRadius: 16,
+            blurRadius: 18,
             offset: const Offset(0, 5),
           ),
         ],
@@ -3803,6 +4088,7 @@ class _SacredJapaMalaCounterWidgetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header with Mala Count
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -3810,100 +4096,125 @@ class _SacredJapaMalaCounterWidgetState
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFEF3C7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFDE68A),
                       shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFD97706)),
                     ),
-                    child: const Icon(Icons.circle_outlined, color: Color(0xFFB45309), size: 22),
+                    child: const Icon(Icons.circle_outlined, color: Color(0xFFB45309), size: 20),
                   ),
                   const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Text(
-                            '108 జపమాల కౌంటర్',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF78350F),
-                            ),
-                          ),
-                          if (_completedMalas > 0) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFEF3C7),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFB45309)),
-                              ),
-                              child: Text(
-                                '$_completedMalas మాలలు',
-                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF78350F)),
-                              ),
-                            ),
-                          ],
-                        ],
+                      Text(
+                        isTe ? '108 మణుల వేద జపమాల' : '108 Sacred Beads Japa Mala',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF78350F),
+                        ),
                       ),
-                      const Text(
-                        '🔔 Tap bead to ring temple bell & count',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                      Text(
+                        isTe
+                            ? 'పూర్తయిన మాలలు: $_completedMalas'
+                            : 'Completed Malas: $_completedMalas',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF92400E),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: _playCurrentMantra,
-                    icon: const Icon(Icons.volume_up_rounded, color: Color(0xFFB45309), size: 22),
-                    tooltip: 'ఈ మంత్ర పఠనం వినండి',
+              if (_count > 0)
+                TextButton.icon(
+                  onPressed: _reset,
+                  icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFB45309)),
+                  label: Text(
+                    isTe ? 'రీసెట్' : 'Reset',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFFB45309)),
                   ),
-                  TextButton.icon(
-                    onPressed: _reset,
-                    icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFB45309)),
-                    label: const Text('రీసెట్', style: TextStyle(color: Color(0xFFB45309), fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
+                ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // Mantra Selector Dropdown
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFFDE68A)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: _selectedMantraIdx,
-                isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFB45309)),
-                items: List.generate(_mantras.length, (idx) {
-                  return DropdownMenuItem<int>(
-                    value: idx,
-                    child: Text(
-                      _mantras[idx]['name']!,
-                      style: const TextStyle(
-                        fontSize: 13,
+          // Mantra Selector Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(_mantras.length, (i) {
+                final isSel = i == _selectedMantraIdx;
+                final item = _mantras[i];
+                final label = isTe ? item['nameTe']! : item['nameEn']!;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF78350F),
+                        color: isSel ? Colors.white : const Color(0xFF78350F),
                       ),
                     ),
-                  );
-                }),
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedMantraIdx = val);
-                },
-              ),
+                    selected: isSel,
+                    selectedColor: const Color(0xFFB45309),
+                    backgroundColor: const Color(0xFFFEF3C7),
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedMantraIdx = i);
+                    },
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Active Chanting Card
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFFCD34D)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  mantraName,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF92400E),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  m['sanskrit']!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: Color(0xFF78350F),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  mantraMeaning,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF92400E),
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 18),
@@ -3955,9 +4266,9 @@ class _SacredJapaMalaCounterWidgetState
                             height: 1.1,
                           ),
                         ),
-                        const Text(
-                          '/ 108 మణులు',
-                          style: TextStyle(
+                        Text(
+                          isTe ? '/ 108 మణులు' : '/ 108 Beads',
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF92400E),
@@ -3992,8 +4303,12 @@ class _SacredJapaMalaCounterWidgetState
           Center(
             child: Text(
               _count == _target
-                  ? '🎉 108 మణుల జపం పూర్తయింది! శాంతి శాంతి శాంతిః 🙏'
-                  : 'ఒక్కొక్క మణిని జపిస్తూ స్క్రీన్‌పై తాకండి (తాకినప్పుడు వేద గంట మ్రోగుతుంది 🔔)',
+                  ? (isTe
+                      ? '🎉 108 మణుల జపం పూర్తయింది! శాంతి శాంతి శాంతిః 🙏'
+                      : '🎉 108 Beads Japa Completed! Om Shanti Shanti Shanti 🙏')
+                  : (isTe
+                      ? 'ఒక్కొక్క మణిని జపిస్తూ స్క్రీన్‌పై తాకండి (తాకినప్పుడు వేద గంట మ్రోగుతుంది 🔔)'
+                      : 'Tap the screen as you chant each bead (a sacred bell rings on each tap 🔔)'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 12.5,
@@ -4017,6 +4332,9 @@ class AyurvedicTridoshaWheel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentLang = AppLanguageService.instance.currentLanguage;
+    final isTe = currentLang == AppLanguage.telugu;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -4034,16 +4352,18 @@ class AyurvedicTridoshaWheel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  Icon(Icons.eco_rounded, color: Color(0xFF047857), size: 22),
-                  SizedBox(width: 8),
+                  const Icon(Icons.eco_rounded, color: Color(0xFF047857), size: 22),
+                  const SizedBox(width: 8),
                   Text(
-                    'ఆయుర్వేద త్రిదోష సమతుల్యత (Tridosha Balance)',
-                    style: TextStyle(
+                    isTe
+                        ? 'ఆయుర్వేద త్రిదోష సమతుల్యత (Tridosha Balance)'
+                        : 'Ayurvedic Tridosha Vitality Balance',
+                    style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.bold,
                       color: AppColors.deepNavy,
@@ -4057,27 +4377,33 @@ class AyurvedicTridoshaWheel extends StatelessWidget {
 
           // 3 Dosha Bars
           _buildDoshaRow(
-            dosha: 'వాతం (Vata - Air & Space)',
+            dosha: isTe ? 'వాతం (Vata - Air & Space)' : 'Vata (Air & Space - Nervous System)',
             pct: 0.35,
             color: const Color(0xFF3B82F6),
-            balance: 'శాంతంగా ఉంది (Balanced)',
-            tip: 'కీళ్లకు నువ్వుల నూనె మర్దన & గోరువెచ్చని ఆహారం మేలు చేస్తుంది.',
+            balance: isTe ? 'శాంతంగా ఉంది (Balanced)' : 'Balanced & Calm',
+            tip: isTe
+                ? 'కీళ్లకు నువ్వుల నూనె మర్దన & గోరువెచ్చని ఆహారం మేలు చేస్తుంది.'
+                : 'Warm sesame oil joint massage & warm nourishing meals pacify Vata.',
           ),
           const SizedBox(height: 10),
           _buildDoshaRow(
-            dosha: 'పిత్తం (Pitta - Fire & Energy)',
+            dosha: isTe ? 'పిత్తం (Pitta - Fire & Energy)' : 'Pitta (Fire & Energy - Metabolism)',
             pct: 0.45,
             color: const Color(0xFFF59E0B),
-            balance: 'మధ్యస్థం (Optimal)',
-            tip: 'మధ్యాహ్నం నెయ్యి మరియు దానిమ్మ రసంతో అగ్నిని చల్లబరచండి.',
+            balance: isTe ? 'మధ్యస్థం (Optimal)' : 'Optimal & Vibrant',
+            tip: isTe
+                ? 'మధ్యాహ్నం నెయ్యి మరియు దానిమ్మ రసంతో అగ్నిని చల్లబరచండి.'
+                : 'Nourish digestive fire with cow ghee, sweet fruits, and pomegranate juice.',
           ),
           const SizedBox(height: 10),
           _buildDoshaRow(
-            dosha: 'కఫం (Kapha - Earth & Water)',
+            dosha: isTe ? 'కఫం (Kapha - Earth & Water)' : 'Kapha (Earth & Water - Immunity)',
             pct: 0.20,
             color: const Color(0xFF10B981),
-            balance: 'స్థిరంగా ఉంది (Steady)',
-            tip: 'ఉదయం నడకతో శ్వాసకోశాలను ఉత్తేజపరచండి.',
+            balance: isTe ? 'స్థిరంగా ఉంది (Steady)' : 'Steady & Grounded',
+            tip: isTe
+                ? 'ఉదయం నడకతో శ్వాసకోశాలను ఉత్తేజపరచండి.'
+                : 'Energize respiratory vitality with an active sunrise morning walk.',
           ),
         ],
       ),
@@ -4112,26 +4438,49 @@ class AyurvedicTridoshaWheel extends StatelessWidget {
                   color: color,
                 ),
               ),
-              Text(
-                balance,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  balance,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: pct,
-              minHeight: 6,
-              backgroundColor: Colors.black.withValues(alpha: 0.06),
+              minHeight: 8,
+              backgroundColor: color.withValues(alpha: 0.15),
               valueColor: AlwaysStoppedAnimation(color),
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            tip,
-            style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.3),
+          Row(
+            children: [
+              Icon(Icons.lightbulb_outline_rounded, size: 14, color: color),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  tip,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: AppColors.secondaryText,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

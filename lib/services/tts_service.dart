@@ -106,14 +106,14 @@ class TtsService extends ChangeNotifier {
   }
 
   /// Plays the authentic Vedic singing bowl chime and chants the sacred mantra.
-  Future<void> playSacredChant(String sanskrit, String telugu) async {
+  Future<void> playSacredChant(String sanskrit, [String translation = '']) async {
     if (kIsWeb) {
-      playSacredChantWeb(sanskrit, telugu);
+      playSacredChantWeb(sanskrit, translation);
       _isSpeaking = true;
       _currentlySpeakingText = sanskrit;
       notifyListeners();
     } else {
-      await speak('$sanskrit. $telugu', language: AppLanguage.telugu);
+      await speak(sanskrit, language: AppLanguage.english);
     }
   }
 
