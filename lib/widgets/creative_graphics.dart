@@ -4102,9 +4102,12 @@ class _SacredJapaMalaCounterWidgetState
   int _completedMalas = 0;
   static const int _target = 108;
   int _selectedMantraIdx = 0;
+  bool _isPlayingVoice = false;
+  String _malaTranslationChoice = 'auto'; // 'auto', 'en', 'te'
 
   static const List<Map<String, String>> _mantras = [
     {
+      'id': 'gayatri',
       'nameEn': 'Gayatri Maha Mantra',
       'nameTe': 'గాయత్రీ మహా మంత్రం',
       'sanskrit': 'Om Bhur Bhuvah Svah, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat.',
@@ -4112,6 +4115,7 @@ class _SacredJapaMalaCounterWidgetState
       'meaningTe': 'సవితృ సూర్య భగవానుని తేజస్సు మా బుద్ధిని సన్మార్గంలో నడిపించుగాక.',
     },
     {
+      'id': 'om_namah_shivaya',
       'nameEn': 'Om Namah Shivaya (Panchakshari)',
       'nameTe': 'ఓం నమః శివాయ (పంచాక్షరీ)',
       'sanskrit': 'Om Namah Shivaaya, Om Namah Shivaaya, Om Namah Shivaaya.',
@@ -4119,6 +4123,7 @@ class _SacredJapaMalaCounterWidgetState
       'meaningTe': 'మంగళకరుడైన పరమశివునికి ప్రణామాలు.',
     },
     {
+      'id': 'mrityunjaya',
       'nameEn': 'Maha Mrityunjaya Mantra',
       'nameTe': 'మహా మృత్యుంజయ మంత్రం',
       'sanskrit': 'Om Tryambakam Yajaamahe Sugandhim Pushtivardhanam, Urvaarukamiva Bandhanaan Mrityor Muksheeya Maamritaat.',
@@ -4126,6 +4131,7 @@ class _SacredJapaMalaCounterWidgetState
       'meaningTe': 'పరమశివుని కటాక్షంతో దీర్ఘాయుష్షు మరియు సంపూర్ణ ఆరోగ్యం కలుగుగాక.',
     },
     {
+      'id': 'om_namo_narayanaya',
       'nameEn': 'Om Namo Narayanaya (Ashtakshari)',
       'nameTe': 'ఓం నమో నారాయణాయ (అష్టాక్షరీ)',
       'sanskrit': 'Om Namo Naaraayanaaya, Om Namo Naaraayanaaya.',
@@ -4133,6 +4139,35 @@ class _SacredJapaMalaCounterWidgetState
       'meaningTe': 'జగద్రక్షకుడైన శ్రీమహావిష్ణువునకు ప్రణామాలు.',
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    AppLanguageService.instance.addListener(_handleLangChange);
+    TtsService.instance.addListener(_handleTtsChange);
+  }
+
+  void _handleLangChange() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _handleTtsChange() {
+    if (mounted) {
+      final isSpeaking = TtsService.instance.isSpeaking;
+      if (isSpeaking != _isPlayingVoice) {
+        setState(() => _isPlayingVoice = isSpeaking);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    AppLanguageService.instance.removeListener(_handleLangChange);
+    TtsService.instance.removeListener(_handleTtsChange);
+    super.dispose();
+  }
 
   void _increment() {
     TtsService.instance.playTempleBell();
@@ -4178,15 +4213,96 @@ class _SacredJapaMalaCounterWidgetState
     });
   }
 
+  void _toggleMalaVoice(String effectiveLang) {
+    if (_isPlayingVoice) {
+      TtsService.instance.stop();
+      setState(() => _isPlayingVoice = false);
+    } else {
+      final m = _mantras[_selectedMantraIdx];
+      final mantraKey = m['id']!;
+      final lang = effectiveLang == 'te' ? 'te' : 'en';
+      final textToSpeak = lang == 'te' ? m['meaningTe']! : m['meaningEn']!;
+
+      TtsService.instance.playTranslationVoice(
+        mantraKey: mantraKey,
+        langCode: lang,
+        fallbackText: textToSpeak,
+      );
+      setState(() => _isPlayingVoice = true);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                lang == 'te' ? Icons.translate_rounded : Icons.record_voice_over_rounded,
+                color: const Color(0xFFFDE68A),
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  lang == 'te'
+                      ? '🔊 జప మంత్ర భావాన్ని తెలుగు గొంతుతో వింటున్నారు (Telugu Voice)...'
+                      : '🔊 Reading Japa mantra meaning in English voice...',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF78350F),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Widget _buildChoiceChip(String label, String value, String activeValue) {
+    final isSelected = activeValue == value;
+    return GestureDetector(
+      onTap: () {
+        if (_isPlayingVoice) {
+          TtsService.instance.stop();
+        }
+        setState(() => _malaTranslationChoice = value);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFB45309) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF92400E) : const Color(0xFFFCD34D),
+            width: isSelected ? 1.4 : 1.0,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.white : const Color(0xFF78350F),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentLang = AppLanguageService.instance.currentLanguage;
     final isTe = currentLang == AppLanguage.telugu;
 
+    final effectiveMalaTranslation = _malaTranslationChoice == 'auto'
+        ? (isTe ? 'te' : 'en')
+        : _malaTranslationChoice;
+
     final double progress = _count / _target;
     final m = _mantras[_selectedMantraIdx];
     final mantraName = isTe ? m['nameTe']! : m['nameEn']!;
-    final mantraMeaning = isTe ? m['meaningTe']! : m['meaningEn']!;
+    final mantraMeaning = effectiveMalaTranslation == 'te' ? m['meaningTe']! : m['meaningEn']!;
 
     return Container(
       decoration: BoxDecoration(
@@ -4205,7 +4321,7 @@ class _SacredJapaMalaCounterWidgetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header with Mala Count
+          // Header with Mala Count & Quick Language Toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -4246,20 +4362,79 @@ class _SacredJapaMalaCounterWidgetState
                   ),
                 ],
               ),
-              if (_count > 0)
-                TextButton.icon(
-                  onPressed: _reset,
-                  icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFB45309)),
-                  label: Text(
-                    isTe ? 'రీసెట్' : 'Reset',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFFB45309)),
+              Row(
+                children: [
+                  // Language Switcher (EN / తెలుగు) directly on the Japa Mala card!
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFD97706), width: 1.2),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: () => AppLanguageService.instance.setLanguage(AppLanguage.english),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: currentLang == AppLanguage.english ? const Color(0xFFB45309) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'EN',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: currentLang == AppLanguage.english ? Colors.white : const Color(0xFF78350F),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        InkWell(
+                          onTap: () => AppLanguageService.instance.setLanguage(AppLanguage.telugu),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: currentLang == AppLanguage.telugu ? const Color(0xFFB45309) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'తెలుగు',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: currentLang == AppLanguage.telugu ? Colors.white : const Color(0xFF78350F),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  if (_count > 0) ...[
+                    const SizedBox(width: 6),
+                    TextButton.icon(
+                      onPressed: _reset,
+                      icon: const Icon(Icons.refresh_rounded, size: 15, color: Color(0xFFB45309)),
+                      label: Text(
+                        isTe ? 'రీసెట్' : 'Reset',
+                        style: const TextStyle(fontSize: 11.5, color: Color(0xFFB45309)),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 14),
 
-          // Mantra Selector Chips
+          // Mantra Selector Chips (Adapts to English or Telugu)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -4283,14 +4458,22 @@ class _SacredJapaMalaCounterWidgetState
                     selectedColor: const Color(0xFFB45309),
                     backgroundColor: const Color(0xFFFEF3C7),
                     onSelected: (val) {
-                      if (val) setState(() => _selectedMantraIdx = i);
+                      if (val) {
+                        setState(() {
+                          _selectedMantraIdx = i;
+                          if (_isPlayingVoice) {
+                            TtsService.instance.stop();
+                            _isPlayingVoice = false;
+                          }
+                        });
+                      }
                     },
                   ),
                 );
               }),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
           // Active Chanting Card
           Container(
@@ -4302,15 +4485,27 @@ class _SacredJapaMalaCounterWidgetState
             ),
             child: Column(
               children: [
-                Text(
-                  mantraName,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF92400E),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      mantraName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        _buildChoiceChip('English', 'en', effectiveMalaTranslation),
+                        const SizedBox(width: 4),
+                        _buildChoiceChip('తెలుగు', 'te', effectiveMalaTranslation),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   m['sanskrit']!,
                   textAlign: TextAlign.center,
@@ -4321,14 +4516,51 @@ class _SacredJapaMalaCounterWidgetState
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   mantraMeaning,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF92400E),
-                    height: 1.3,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Dedicated Voice Reading Button for Mala Mantra
+                InkWell(
+                  onTap: () => _toggleMalaVoice(effectiveMalaTranslation),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFCD34D)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isPlayingVoice ? Icons.stop_circle_rounded : Icons.record_voice_over_rounded,
+                          size: 15,
+                          color: const Color(0xFFB45309),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _isPlayingVoice
+                              ? (effectiveMalaTranslation == 'te' ? 'ఆపండి (Stop Voice)' : 'Stop Voice')
+                              : (effectiveMalaTranslation == 'te'
+                                  ? '🔊 తెలుగు భావాన్ని వినండి (Telugu Voice)'
+                                  : '🔊 Listen to Meaning (English Voice)'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF78350F),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -4440,90 +4672,144 @@ class _SacredJapaMalaCounterWidgetState
   }
 }
 
-// =============================================================================
-// 15. Senior Ayurvedic Tridosha Vitality Wheel
-// =============================================================================
-
 class AyurvedicTridoshaWheel extends StatelessWidget {
   const AyurvedicTridoshaWheel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final currentLang = AppLanguageService.instance.currentLanguage;
-    final isTe = currentLang == AppLanguage.telugu;
+    return ListenableBuilder(
+      listenable: AppLanguageService.instance,
+      builder: (context, _) {
+        final currentLang = AppLanguageService.instance.currentLanguage;
+        final isTe = currentLang == AppLanguage.telugu;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.eco_rounded, color: Color(0xFF047857), size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    isTe
-                        ? 'ఆయుర్వేద త్రిదోష సమతుల్యత (Tridosha Balance)'
-                        : 'Ayurvedic Tridosha Vitality Balance',
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.deepNavy,
+                  Row(
+                    children: [
+                      const Icon(Icons.eco_rounded, color: Color(0xFF047857), size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        isTe
+                            ? 'ఆయుర్వేద త్రిదోష సమతుల్యత (Tridosha Balance)'
+                            : 'Ayurvedic Tridosha Vitality Balance',
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.deepNavy,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Quick Language Toggle
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: () => AppLanguageService.instance.setLanguage(AppLanguage.english),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: currentLang == AppLanguage.english ? const Color(0xFF047857) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'EN',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: currentLang == AppLanguage.english ? Colors.white : AppColors.deepNavy,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        InkWell(
+                          onTap: () => AppLanguageService.instance.setLanguage(AppLanguage.telugu),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: currentLang == AppLanguage.telugu ? const Color(0xFF047857) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'తెలుగు',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: currentLang == AppLanguage.telugu ? Colors.white : AppColors.deepNavy,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 14),
+
+              // 3 Dosha Bars
+              _buildDoshaRow(
+                dosha: isTe ? 'వాతం (Vata - Air & Space)' : 'Vata (Air & Space - Nervous System)',
+                pct: 0.35,
+                color: const Color(0xFF3B82F6),
+                balance: isTe ? 'శాంతంగా ఉంది (Balanced)' : 'Balanced & Calm',
+                tip: isTe
+                    ? 'కీళ్లకు నువ్వుల నూనె మర్దన & గోరువెచ్చని ఆహారం మేలు చేస్తుంది.'
+                    : 'Warm sesame oil joint massage & warm nourishing meals pacify Vata.',
+              ),
+              const SizedBox(height: 10),
+              _buildDoshaRow(
+                dosha: isTe ? 'పిత్తం (Pitta - Fire & Energy)' : 'Pitta (Fire & Energy - Metabolism)',
+                pct: 0.45,
+                color: const Color(0xFFF59E0B),
+                balance: isTe ? 'మధ్యస్థం (Optimal)' : 'Optimal & Vibrant',
+                tip: isTe
+                    ? 'మధ్యాహ్నం నెయ్యి మరియు దానిమ్మ రసంతో అగ్నిని చల్లబరచండి.'
+                    : 'Nourish digestive fire with cow ghee, sweet fruits, and pomegranate juice.',
+              ),
+              const SizedBox(height: 10),
+              _buildDoshaRow(
+                dosha: isTe ? 'కఫం (Kapha - Earth & Water)' : 'Kapha (Earth & Water - Immunity)',
+                pct: 0.20,
+                color: const Color(0xFF10B981),
+                balance: isTe ? 'స్థిరంగా ఉంది (Steady)' : 'Steady & Grounded',
+                tip: isTe
+                    ? 'ఉదయం నడకతో శ్వాసకోశాలను ఉత్తేజపరచండి.'
+                    : 'Energize respiratory vitality with an active sunrise morning walk.',
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          // 3 Dosha Bars
-          _buildDoshaRow(
-            dosha: isTe ? 'వాతం (Vata - Air & Space)' : 'Vata (Air & Space - Nervous System)',
-            pct: 0.35,
-            color: const Color(0xFF3B82F6),
-            balance: isTe ? 'శాంతంగా ఉంది (Balanced)' : 'Balanced & Calm',
-            tip: isTe
-                ? 'కీళ్లకు నువ్వుల నూనె మర్దన & గోరువెచ్చని ఆహారం మేలు చేస్తుంది.'
-                : 'Warm sesame oil joint massage & warm nourishing meals pacify Vata.',
-          ),
-          const SizedBox(height: 10),
-          _buildDoshaRow(
-            dosha: isTe ? 'పిత్తం (Pitta - Fire & Energy)' : 'Pitta (Fire & Energy - Metabolism)',
-            pct: 0.45,
-            color: const Color(0xFFF59E0B),
-            balance: isTe ? 'మధ్యస్థం (Optimal)' : 'Optimal & Vibrant',
-            tip: isTe
-                ? 'మధ్యాహ్నం నెయ్యి మరియు దానిమ్మ రసంతో అగ్నిని చల్లబరచండి.'
-                : 'Nourish digestive fire with cow ghee, sweet fruits, and pomegranate juice.',
-          ),
-          const SizedBox(height: 10),
-          _buildDoshaRow(
-            dosha: isTe ? 'కఫం (Kapha - Earth & Water)' : 'Kapha (Earth & Water - Immunity)',
-            pct: 0.20,
-            color: const Color(0xFF10B981),
-            balance: isTe ? 'స్థిరంగా ఉంది (Steady)' : 'Steady & Grounded',
-            tip: isTe
-                ? 'ఉదయం నడకతో శ్వాసకోశాలను ఉత్తేజపరచండి.'
-                : 'Energize respiratory vitality with an active sunrise morning walk.',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
