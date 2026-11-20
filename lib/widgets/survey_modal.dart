@@ -168,9 +168,15 @@ class _SurveyModalState extends State<SurveyModal> {
             _optionTile(
               icon: Icons.school_rounded,
               title: 'Youth & Explorer (Under 22)',
-              subtitle: 'Modern energetic graphics • Studies, exams, passion & self-discovery',
+              subtitle: 'Modern energetic visuals • Studies, exams, passion & self-discovery',
               isSelected: _selectedAgeGroup == AgeGroup.youth,
-              onTap: () => setState(() => _selectedAgeGroup = AgeGroup.youth),
+              onTap: () {
+                setState(() {
+                  _selectedAgeGroup = AgeGroup.youth;
+                  _selectedFocus = AgeProfileService.instance.getSurveyFocusOptions(AgeGroup.youth).first.title;
+                  _selectedChallenge = AgeProfileService.instance.getSurveyChallengeOptions(AgeGroup.youth).first.title;
+                });
+              },
             ),
             const SizedBox(height: 10),
             _optionTile(
@@ -178,7 +184,13 @@ class _SurveyModalState extends State<SurveyModal> {
               title: 'Achiever & Professional (22 - 45)',
               subtitle: 'Sleek executive visuals • Career growth, financial mindfulness & balance',
               isSelected: _selectedAgeGroup == AgeGroup.adult,
-              onTap: () => setState(() => _selectedAgeGroup = AgeGroup.adult),
+              onTap: () {
+                setState(() {
+                  _selectedAgeGroup = AgeGroup.adult;
+                  _selectedFocus = AgeProfileService.instance.getSurveyFocusOptions(AgeGroup.adult).first.title;
+                  _selectedChallenge = AgeProfileService.instance.getSurveyChallengeOptions(AgeGroup.adult).first.title;
+                });
+              },
             ),
             const SizedBox(height: 10),
             _optionTile(
@@ -186,108 +198,85 @@ class _SurveyModalState extends State<SurveyModal> {
               title: 'Grace & Serenity (45+)',
               subtitle: 'Warm high-contrast sacred art • Inner peace, daily health & family harmony',
               isSelected: _selectedAgeGroup == AgeGroup.senior,
-              onTap: () => setState(() => _selectedAgeGroup = AgeGroup.senior),
+              onTap: () {
+                setState(() {
+                  _selectedAgeGroup = AgeGroup.senior;
+                  _selectedFocus = AgeProfileService.instance.getSurveyFocusOptions(AgeGroup.senior).first.title;
+                  _selectedChallenge = AgeProfileService.instance.getSurveyChallengeOptions(AgeGroup.senior).first.title;
+                });
+              },
             ),
           ],
         );
       case 1:
+        final focusOptions = AgeProfileService.instance.getSurveyFocusOptions(_selectedAgeGroup);
         return Column(
-          children: [
-            _optionTile(
-              icon: Icons.self_improvement_rounded,
-              title: 'Inner Peace & Mental Calm',
-              subtitle: 'Stress reduction, clarity, and daily mindfulness rituals',
-              isSelected: _selectedFocus == 'Inner Peace & Mental Calm',
-              onTap: () => setState(() => _selectedFocus = 'Inner Peace & Mental Calm'),
-            ),
-            const SizedBox(height: 10),
-            _optionTile(
-              icon: Icons.rocket_launch_rounded,
-              title: 'Career & Financial Growth',
-              subtitle: 'Right livelihood, productive focus, and mindful wealth building',
-              isSelected: _selectedFocus == 'Career & Financial Growth',
-              onTap: () => setState(() => _selectedFocus = 'Career & Financial Growth'),
-            ),
-            const SizedBox(height: 10),
-            _optionTile(
-              icon: Icons.favorite_rounded,
-              title: 'Love & Family Relationships',
-              subtitle: 'Harmony, compatibility, and deeper emotional understanding',
-              isSelected: _selectedFocus == 'Love & Family Relationships',
-              onTap: () => setState(() => _selectedFocus = 'Love & Family Relationships'),
-            ),
-            const SizedBox(height: 10),
-            _optionTile(
-              icon: Icons.track_changes_rounded,
-              title: 'Habit Mastery & Vitality',
-              subtitle: 'Healthy circadian routine, fitness, and daily consistency',
-              isSelected: _selectedFocus == 'Habit Mastery & Vitality',
-              onTap: () => setState(() => _selectedFocus = 'Habit Mastery & Vitality'),
-            ),
-          ],
+          children: focusOptions.map((opt) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _optionTile(
+                icon: opt.icon,
+                title: opt.title,
+                subtitle: opt.subtitle,
+                isSelected: _selectedFocus == opt.title,
+                onTap: () => setState(() => _selectedFocus = opt.title),
+              ),
+            );
+          }).toList(),
         );
       case 2:
+        final challengeOptions = AgeProfileService.instance.getSurveyChallengeOptions(_selectedAgeGroup);
         return Column(
-          children: [
-            _optionTile(
-              icon: Icons.timer_off_rounded,
-              title: 'Procrastination & Inconsistent Routine',
-              subtitle: 'Want to replace delays with steady, effortless daily execution',
-              isSelected: _selectedChallenge == 'Inconsistent Routine & Procrastination',
-              onTap: () => setState(() => _selectedChallenge = 'Inconsistent Routine & Procrastination'),
-            ),
-            const SizedBox(height: 10),
-            _optionTile(
-              icon: Icons.psychology_alt_rounded,
-              title: 'Overthinking & Restless Anxiety',
-              subtitle: 'Mind runs ahead with worry; need grounding breath & Vedic calm',
-              isSelected: _selectedChallenge == 'Overthinking & Restless Anxiety',
-              onTap: () => setState(() => _selectedChallenge = 'Overthinking & Restless Anxiety'),
-            ),
-            const SizedBox(height: 10),
-            _optionTile(
-              icon: Icons.bedtime_rounded,
-              title: 'Late Bedtimes & Low Morning Energy',
-              subtitle: 'Late night phone usage and waking up tired or sluggish',
-              isSelected: _selectedChallenge == 'Late Bedtimes & Low Morning Energy',
-              onTap: () => setState(() => _selectedChallenge = 'Late Bedtimes & Low Morning Energy'),
-            ),
-            const SizedBox(height: 10),
-            _optionTile(
-              icon: Icons.payments_rounded,
-              title: 'Impulsive Spending & Budget Stress',
-              subtitle: 'Want to build financial discipline and cut emotional purchases',
-              isSelected: _selectedChallenge == 'Impulsive Spending & Budget Stress',
-              onTap: () => setState(() => _selectedChallenge = 'Impulsive Spending & Budget Stress'),
-            ),
-          ],
+          children: challengeOptions.map((opt) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _optionTile(
+                icon: opt.icon,
+                title: opt.title,
+                subtitle: opt.subtitle,
+                isSelected: _selectedChallenge == opt.title,
+                onTap: () => setState(() => _selectedChallenge = opt.title),
+              ),
+            );
+          }).toList(),
         );
       case 3:
       default:
+        final toneTitle = _selectedAgeGroup == AgeGroup.youth
+            ? 'High-Energy & Gamified Streaks'
+            : (_selectedAgeGroup == AgeGroup.senior
+                ? 'Serene, Reverent & Peaceful'
+                : 'Action-Oriented & Executive Steps');
+        final toneSub = _selectedAgeGroup == AgeGroup.youth
+            ? 'Fast, encouraging prompts with level-ups and energetic motivation'
+            : (_selectedAgeGroup == AgeGroup.senior
+                ? 'Comforting Vedic wisdom with gentle warmth and spiritual calmness'
+                : 'Clear, structured milestones that fit a demanding daily routine');
+
         return Column(
           children: [
             _optionTile(
-              icon: Icons.checklist_rtl_rounded,
-              title: 'Practical & Action-Oriented Steps',
-              subtitle: 'Direct micro-habits, progress percentages, and behavioral science',
-              isSelected: _selectedStyle == 'Practical & Action-Oriented Steps',
-              onTap: () => setState(() => _selectedStyle = 'Practical & Action-Oriented Steps'),
+              icon: Icons.bolt_rounded,
+              title: toneTitle,
+              subtitle: toneSub,
+              isSelected: _selectedStyle == toneTitle || _selectedStyle == 'Practical & Action-Oriented Steps',
+              onTap: () => setState(() => _selectedStyle = toneTitle),
             ),
             const SizedBox(height: 10),
             _optionTile(
-              icon: Icons.auto_awesome,
-              title: 'Gentle Vedic & Spiritual Insights',
-              subtitle: 'Deeper planetary wisdom, timeless Vedic principles, and karma flow',
-              isSelected: _selectedStyle == 'Gentle Vedic & Spiritual Insights',
-              onTap: () => setState(() => _selectedStyle = 'Gentle Vedic & Spiritual Insights'),
+              icon: Icons.psychology_rounded,
+              title: 'Science & Behavioral Neuroscience',
+              subtitle: 'Explains dopamine, prefrontal focus, and neuroplasticity facts',
+              isSelected: _selectedStyle == 'Science & Behavioral Neuroscience',
+              onTap: () => setState(() => _selectedStyle = 'Science & Behavioral Neuroscience'),
             ),
             const SizedBox(height: 10),
             _optionTile(
-              icon: Icons.wb_sunny_rounded,
-              title: 'Balanced Holistic Companion',
-              subtitle: 'The best of both: ancient wisdom backed by everyday science',
-              isSelected: _selectedStyle == 'Balanced Holistic Companion',
-              onTap: () => setState(() => _selectedStyle = 'Balanced Holistic Companion'),
+              icon: Icons.self_improvement_rounded,
+              title: 'Timeless Vedic Wisdom',
+              subtitle: 'Anchored in Patanjali sutras, dosha balance, and planetary harmony',
+              isSelected: _selectedStyle == 'Timeless Vedic Wisdom',
+              onTap: () => setState(() => _selectedStyle = 'Timeless Vedic Wisdom'),
             ),
           ],
         );

@@ -1,4 +1,5 @@
 import 'package:avara_astrology_trial/models/habits_model.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/avara_api_client.dart';
 import 'package:avara_astrology_trial/services/habits_service.dart';
@@ -1187,44 +1188,103 @@ class _HabitOptimizerSheetState extends State<_HabitOptimizerSheet> {
   int _selectedPresetIndex = -1;
   int _selectedTier = 2;
 
-  static const List<Map<String, dynamic>> _presets = [
-    {
-      'struggle': 'Late night phone scrolling in bed',
-      'title': '10 PM Digital Sunset & Moon Breath',
-      'tier1': 'Put phone on table 10 min before sleep',
-      'tier2': 'Replace screen with 5 min gratitude & soft reading',
-      'tier3': '10 PM digital shutdown with 8 hours restorative sleep',
-      'fact': 'Cutting blue light 30 min before bed increases deep delta sleep by 38%.',
-      'neural': 70,
-    },
-    {
-      'struggle': 'Hitting snooze 3 times & morning fatigue',
-      'title': 'Morning Sun & Cellular Hydration',
-      'tier1': 'Place alarm across room so you must stand up',
-      'tier2': 'Drink 1 full glass of water & open curtains for sky light',
-      'tier3': 'Early dawn wakefulness with 15 min natural sunlight walk',
-      'fact': 'Photons hitting retinal ganglion cells trigger natural cortisol awakening without adrenaline spikes.',
-      'neural': 82,
-    },
-    {
-      'struggle': 'Procrastinating on study or deep work',
-      'title': '25-Min Deep Focus Sprint',
-      'tier1': 'Open book/file and work for just 5 minutes',
-      'tier2': 'Do a single 25-minute Pomodoro block with phone in another room',
-      'tier3': 'Two consecutive 50-minute deep work blocks every morning',
-      'fact': 'Cognitive load theory shows breaking work into 25 min sprints prevents prefrontal exhaustion.',
-      'neural': 64,
-    },
-    {
-      'struggle': 'Impulsive online spending when stressed',
-      'title': '24-Hour Mindful Pause',
-      'tier1': 'Add item to wishlist instead of instant checkout',
-      'tier2': 'Wait 24 hours and review your monthly savings goals',
-      'tier3': 'Conscious allocation: 15% automated investment on payday',
-      'fact': 'Delaying impulse purchases allows prefrontal executive control to cool dopamine cravings.',
-      'neural': 75,
-    },
-  ];
+  List<Map<String, dynamic>> get _presets {
+    final group = AgeProfileService.instance.ageGroup;
+    switch (group) {
+      case AgeGroup.youth:
+        return const [
+          {
+            'struggle': 'Endless phone scrolling & gaming till 1 AM',
+            'title': '10:30 PM Digital Sunset & Mind Reset',
+            'tier1': 'Charge phone away from the bedside table',
+            'tier2': 'Turn off notifications 30 min before bed with soft ambient sound',
+            'tier3': 'Complete 8 hours restorative sleep and wake up refreshed',
+            'fact': 'Prefrontal cortex myelination accelerates during unhindered deep sleep cycles.',
+            'neural': 75,
+          },
+          {
+            'struggle': 'Procrastinating on exam revision & study',
+            'title': '25-Min Pomodoro Study Sprint',
+            'tier1': 'Open study material and focus for just 5 minutes',
+            'tier2': 'Complete one 25-minute Pomodoro sprint with phone out of room',
+            'tier3': 'Two 45-minute deep focus study blocks with active recall',
+            'fact': 'Short interval bursts prevent cognitive fatigue and increase hippocampus retention by 40%.',
+            'neural': 84,
+          },
+          {
+            'struggle': 'Exam anxiety & morning panic',
+            'title': '5-Min Alpha Breath & Mental Calm',
+            'tier1': 'Take 3 deep belly breaths before touching study desk',
+            'tier2': 'Practice 5 min box breathing and recite 1 positive affirmation',
+            'tier3': 'Calm pre-exam morning routine with balanced hydration and focus',
+            'fact': 'Slow diaphragmatic exhalations stimulate the vagus nerve, reducing exam cortisol.',
+            'neural': 68,
+          },
+        ];
+
+      case AgeGroup.adult:
+        return const [
+          {
+            'struggle': 'Workplace stress & evening mental fatigue',
+            'title': 'Evening Mindful Decompression',
+            'tier1': 'Close work laptop and take 5 deep cleansing breaths',
+            'tier2': '15-minute screen-free transition walk after work hours',
+            'tier3': 'Total boundary between career execution and peaceful family recharge',
+            'fact': 'A clear shutdown ritual allows default mode network recovery and lowers burnout risk.',
+            'neural': 80,
+          },
+          {
+            'struggle': 'Impulsive online purchases & retail spending',
+            'title': '24-Hour Cooling Window',
+            'tier1': 'Move impulse items to wishlist instead of instant checkout',
+            'tier2': 'Wait 24 hours and review monthly investment targets first',
+            'tier3': 'Disciplined wealth growth: 20% automated investment on payday',
+            'fact': 'Delaying purchase gratification lets dopamine settle, cutting impulse spending by 68%.',
+            'neural': 74,
+          },
+          {
+            'struggle': 'Hitting snooze 3 times & morning brain fog',
+            'title': 'Brahma Muhurtha Solar Awakening',
+            'tier1': 'Place alarm across the room so you must stand up',
+            'tier2': 'Drink 500ml water and view natural morning sunlight for 10 min',
+            'tier3': 'Consistent 6 AM wakefulness with 20 min morning focus planning',
+            'fact': 'Sunlight hitting retinal ganglion cells synchronizes master circadian clock within 10 minutes.',
+            'neural': 86,
+          },
+        ];
+
+      case AgeGroup.senior:
+        return const [
+          {
+            'struggle': 'Restless sleep & waking up at odd hours',
+            'title': 'Ayurvedic Evening Warmth & Quietude',
+            'tier1': 'Sip warm water or herbal infusion 1 hour before sleeping',
+            'tier2': 'Gentle 10-minute quiet meditation or peaceful sloka chanting',
+            'tier3': 'Deep uninterrupted 7-hour peaceful sleep with calm mind',
+            'fact': 'Warm herbal hydration calms nervous system vata dosha, facilitating deep sleep.',
+            'neural': 78,
+          },
+          {
+            'struggle': 'Joint stiffness & sluggish daytime digestion',
+            'title': 'Brahma Muhurtha Gentle Stretch & Stride',
+            'tier1': 'Drink 1 glass of warm water upon waking seated comfortably',
+            'tier2': '15-minute gentle morning walk in pleasant fresh air',
+            'tier3': 'Daily 30-minute joint mobilization and mindful breathing routine',
+            'fact': 'Gentle morning movement lubricates synovial joint fluid and activates digestion.',
+            'neural': 88,
+          },
+          {
+            'struggle': 'Constant worrying about family & grandchildren',
+            'title': 'Santosha & Prayer Sanctuary',
+            'tier1': 'Pause and take 3 gentle conscious breaths when worry arises',
+            'tier2': 'Dedicate 10 minutes to peaceful prayer and sending loving blessings',
+            'tier3': 'Rooted contentment (Santosha), trusting divine timing and harmony',
+            'fact': 'Cultivating gratitude and blessings lowers resting heart rate and boosts emotional immunity.',
+            'neural': 82,
+          },
+        ];
+    }
+  }
 
   @override
   void dispose() {

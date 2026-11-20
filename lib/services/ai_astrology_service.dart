@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/astrology_intent_classifier.dart';
 import 'package:avara_astrology_trial/services/avara_geocoder.dart';
 import 'package:avara_astrology_trial/services/birth_details_parser.dart';
@@ -527,6 +528,15 @@ class AIAstrologyService {
 
     buffer.writeln(
       'RESPONSE STRUCTURE RULE: Whenever answering a chart-based question, you must ALWAYS start with a simple, direct 1-2 sentence summary of the situation in plain, non-astrological language. ONLY AFTER providing this simple summary should you list the astrological evidence (houses, planets, dashas) from the user\'s Kundli that supports your conclusion.\n',
+    );
+
+    // Dynamic Age-Adaptive Demographic Coaching Guideline
+    final ageGroup = AgeProfileService.instance.ageGroup;
+    final userAge = AgeProfileService.instance.age;
+    buffer.writeln(
+      'USER AGE PROFILE & TAILORED COMMUNICATION:\n'
+      '- Active Native Demographic: ${ageGroup.name.toUpperCase()} (Approx age: $userAge)\n'
+      '${AgeProfileService.instance.getSystemPromptGuideline(ageGroup)}\n',
     );
 
     buffer.writeln(

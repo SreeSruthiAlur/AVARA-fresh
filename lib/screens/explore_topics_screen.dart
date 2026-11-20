@@ -1,3 +1,4 @@
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/fact_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
@@ -41,116 +42,346 @@ class ExploreTopicsScreen extends StatefulWidget {
 }
 
 class _ExploreTopicsScreenState extends State<ExploreTopicsScreen> {
-  static const List<TopicBubbleItem> topics = [
-    TopicBubbleItem(
-      id: 'love',
-      title: 'Love & Relationships',
-      subtitle: 'Harmony, emotional compatibility & heart chakra',
-      icon: Icons.favorite_rounded,
-      accentColor: Color(0xFFE84393),
-      bgGradient: [Color(0xFFFD79A8), Color(0xFFE84393)],
-      vedicPrinciple:
-          'In Vedic wisdom, Venus (Shukra) rules harmony, mutual respect, and unconditional empathy. Relationships are viewed as mutual mirrors for spiritual and personal growth.',
-      scientificFact:
-          'Psychology research confirms that high emotional intelligence (EQ) and active listening release oxytocin, lowering relationship cortisol levels by 42%.',
-      dailySelfHelpActions: [
-        'Practice non-judgmental listening: Let your loved ones speak without interrupting.',
-        'Express 1 specific appreciation out loud every morning.',
-        'Apply the 5:1 ratio: Provide 5 positive interactions for every 1 constructive feedback.',
-      ],
-      affirmation: 'I bring patience, understanding, and warm empathy to every relationship in my life.',
-    ),
-    TopicBubbleItem(
-      id: 'education',
-      title: 'Education & Learning',
-      subtitle: 'Exam calm, laser focus, memory & Mercury intellect',
-      icon: Icons.school_rounded,
-      accentColor: Color(0xFF0984E3),
-      bgGradient: [Color(0xFF74B9FF), Color(0xFF0984E3)],
-      vedicPrinciple:
-          'Mercury (Budha) and Goddess Saraswati represent deep intellect (Buddhi) and discernment (Viveka). True learning harmonizes memory with calm mental absorption.',
-      scientificFact:
-          'Cognitive neuroscience reveals that 25-minute focused sprints (Pomodoro) followed by 5-minute visual resting periods accelerate synaptic consolidation in the hippocampus.',
-      dailySelfHelpActions: [
-        'Study in 25-minute distraction-free blocks with your phone outside the room.',
-        'Review difficult concepts within 24 hours to defeat the Ebbinghaus forgetting curve.',
-        'Take 5 deep abdominal breaths before exams to transition brainwaves to alpha state.',
-      ],
-      affirmation: 'My mind is clear, focused, and absorbs knowledge with effortless retention.',
-    ),
-    TopicBubbleItem(
-      id: 'career',
-      title: 'Career & Growth',
-      subtitle: 'Right livelihood, 10th house purpose, leadership & grit',
-      icon: Icons.rocket_launch_rounded,
-      accentColor: Color(0xFF6C5CE7),
-      bgGradient: [Color(0xFFA29BFE), Color(0xFF6C5CE7)],
-      vedicPrinciple:
-          'The 10th house (Karma Bhava) in Vedic astrology represents your duty (Dharma) to society. When your daily work serves others with integrity, career prosperity naturally follows.',
-      scientificFact:
-          'High performers are defined by "Grit" (Angela Duckworth, Penn University) — sustained passion and perseverance over long periods, beating raw IQ by 3.5x.',
-      dailySelfHelpActions: [
-        'Identify your single most important high-leverage task each morning and finish it first.',
-        'Build a "Wins & Learnings" journal to track weekly milestones.',
-        'Seek feedback proactively from peers and mentors to sharpen your professional craft.',
-      ],
-      affirmation: 'I act with purpose, diligence, and integrity, building lasting career excellence.',
-    ),
-    TopicBubbleItem(
-      id: 'health',
-      title: 'Health & Vitality',
-      subtitle: 'Ayurvedic dosha balance, energy & restorative wellness',
-      icon: Icons.spa_rounded,
-      accentColor: Color(0xFF00B894),
-      bgGradient: [Color(0xFF55EFC4), Color(0xFF00B894)],
-      vedicPrinciple:
-          'Ayurveda teaches that health (Swastha) is established when digestion (Agni) is strong, tissues are nourished, and the mind is serene.',
-      scientificFact:
-          'Over 90% of the body’s serotonin (the happy neurotransmitter) is produced in the gut microbiome, meaning mindful eating directly dictates emotional mood.',
-      dailySelfHelpActions: [
-        'Eat your meals seated, without digital screens, chewing thoroughly.',
-        'Drink a glass of warm water upon waking to activate internal organ peristalsis.',
-        'Aim for 15 minutes of natural morning sunlight to set your circadian clock.',
-      ],
-      affirmation: 'My body is healthy, energized, and vibrant with natural balance.',
-    ),
-    TopicBubbleItem(
-      id: 'wealth',
-      title: 'Mindful Wealth & Abundance',
-      subtitle: 'Financial discipline, Lakshmi principles & mindful savings',
-      icon: Icons.account_balance_wallet_rounded,
-      accentColor: Color(0xFFE17055),
-      bgGradient: [Color(0xFFFAB1A0), Color(0xFFE17055)],
-      vedicPrinciple:
-          'Lakshmi symbolizes auspicious, clean wealth. Vedic tradition teaches that financial prosperity stays where there is order, gratitude, and purposeful planning.',
-      scientificFact:
-          'Behavioral economics shows that automated savings (paying yourself first) increases annual wealth accumulation by 310% compared to saving whatever is left over.',
-      dailySelfHelpActions: [
-        'Follow the 24-hour pause rule before any impulsive online purchase.',
-        'Track every single rupee spent daily using AVARA’s voice finance logger.',
-        'Automate 15% of your income into long-term savings on payday.',
-      ],
-      affirmation: 'I manage my finances with wisdom, gratitude, and disciplined abundance.',
-    ),
-    TopicBubbleItem(
-      id: 'peace',
-      title: 'Inner Peace & Grounding',
-      subtitle: 'Mental equilibrium, meditation & emotional freedom',
-      icon: Icons.self_improvement_rounded,
-      accentColor: Color(0xFF00CEC9),
-      bgGradient: [Color(0xFF81ECEC), Color(0xFF00CEC9)],
-      vedicPrinciple:
-          'Patanjali declares "Yoga is the stilling of the fluctuations of the mind". Inner peace is not the absence of storms, but the anchor within them.',
-      scientificFact:
-          'Daily 10-minute mindfulness practice physically shrinks the amygdala (fear center) and thickens the prefrontal cortex within 8 weeks.',
-      dailySelfHelpActions: [
-        'Start your day with 5 minutes of mindful silence before checking your phone.',
-        'Do a 3-minute body scan when feeling rushed or stressed during the day.',
-        'Write down 3 things you are deeply thankful for before going to bed.',
-      ],
-      affirmation: 'I am rooted in quiet strength, deep calm, and unwavering inner peace.',
-    ),
-  ];
+  List<TopicBubbleItem> get topics {
+    final group = AgeProfileService.instance.ageGroup;
+    switch (group) {
+      case AgeGroup.youth:
+        return const [
+          TopicBubbleItem(
+            id: 'education',
+            title: 'Exams & Study Mastery',
+            subtitle: 'Exam calm, laser focus, memory & Mercury intellect',
+            icon: Icons.school_rounded,
+            accentColor: Color(0xFF0984E3),
+            bgGradient: [Color(0xFF74B9FF), Color(0xFF0984E3)],
+            vedicPrinciple:
+                'Mercury (Budha) and Goddess Saraswati represent deep intellect (Buddhi) and discernment (Viveka). True learning harmonizes memory with calm mental absorption.',
+            scientificFact:
+                'Cognitive neuroscience reveals that 25-minute focused sprints (Pomodoro) followed by 5-minute visual resting periods accelerate synaptic consolidation in the hippocampus.',
+            dailySelfHelpActions: [
+              'Study in 25-minute distraction-free blocks with your phone outside the room.',
+              'Review difficult concepts within 24 hours to defeat the Ebbinghaus forgetting curve.',
+              'Take 5 deep abdominal breaths before exams to transition brainwaves to alpha state.',
+            ],
+            affirmation: 'My mind is clear, focused, and absorbs knowledge with effortless retention.',
+          ),
+          TopicBubbleItem(
+            id: 'career',
+            title: 'Dream Careers & Passions',
+            subtitle: 'Finding courses, early jobs & planetary strengths',
+            icon: Icons.rocket_launch_rounded,
+            accentColor: Color(0xFF6C5CE7),
+            bgGradient: [Color(0xFFA29BFE), Color(0xFF6C5CE7)],
+            vedicPrinciple:
+                'The 10th house (Karma Bhava) in Vedic astrology represents your duty (Dharma) to society. When your daily work serves others with integrity, career prosperity naturally follows.',
+            scientificFact:
+                'High performers are defined by "Grit" (Penn University) — sustained passion and perseverance over long periods, beating raw IQ by 3.5x.',
+            dailySelfHelpActions: [
+              'Identify your natural talents and explore fields where your curiosity thrives.',
+              'Build a "Wins & Learnings" journal to track weekly milestones.',
+              'Seek advice from mentors to sharpen your confidence and skills.',
+            ],
+            affirmation: 'I act with purpose, diligence, and integrity, building an inspiring future.',
+          ),
+          TopicBubbleItem(
+            id: 'love',
+            title: 'Friendships & Social Calm',
+            subtitle: 'Confidence, true friends & beating peer comparison',
+            icon: Icons.people_rounded,
+            accentColor: Color(0xFFE84393),
+            bgGradient: [Color(0xFFFD79A8), Color(0xFFE84393)],
+            vedicPrinciple:
+                'In Vedic wisdom, Venus (Shukra) rules harmony, mutual respect, and empathy. Surround yourself with Sattvic friendships that uplift your spirit.',
+            scientificFact:
+                'Psychology research confirms that authentic peer connections release oxytocin, lowering adolescent social anxiety by 38%.',
+            dailySelfHelpActions: [
+              'Practice non-judgmental listening with friends.',
+              'Avoid comparing your behind-the-scenes life to others\' social media highlights.',
+              'Express genuine appreciation to 1 close friend today.',
+            ],
+            affirmation: 'I am confident, kind, and surround myself with genuine, uplifting friendships.',
+          ),
+          TopicBubbleItem(
+            id: 'health',
+            title: 'Energy & Athletic Vitality',
+            subtitle: 'Beating screen fatigue, sports & natural stamina',
+            icon: Icons.directions_run_rounded,
+            accentColor: Color(0xFF00B894),
+            bgGradient: [Color(0xFF55EFC4), Color(0xFF00B894)],
+            vedicPrinciple:
+                'Ayurveda teaches that physical movement (Vyayama) enhances internal fire (Agni), clearing sluggishness (Tamas).',
+            scientificFact:
+                'Physical exercise stimulates Brain-Derived Neurotrophic Factor (BDNF), literally growing new neurons in the memory center.',
+            dailySelfHelpActions: [
+              'Spend at least 30 minutes outdoors in natural sunlight and movement.',
+              'Drink a tall glass of water before looking at your morning phone.',
+              'Avoid screens during meals to protect metabolic digestion.',
+            ],
+            affirmation: 'My body is energized, strong, and bursting with vibrant health.',
+          ),
+          TopicBubbleItem(
+            id: 'wealth',
+            title: 'Smart Pocket Money & Savings',
+            subtitle: 'Early financial habits & beating impulse peer spending',
+            icon: Icons.savings_rounded,
+            accentColor: Color(0xFFE17055),
+            bgGradient: [Color(0xFFFAB1A0), Color(0xFFE17055)],
+            vedicPrinciple:
+                'Lakshmi principles teach that financial abundance starts with respect for resources and avoidance of wasteful cravings (Preyas).',
+            scientificFact:
+                'Compound interest math reveals that saving just \$50/month starting at age 19 yields 4x more wealth by age 40 than starting at age 30.',
+            dailySelfHelpActions: [
+              'Follow the 24-hour pause before buying trendy non-essential items.',
+              'Save 20% of every gift or allowance in a dedicated piggy bank or account.',
+              'Learn 1 financial concept (like compounding or index funds) this week.',
+            ],
+            affirmation: 'I treat money with wisdom and build disciplined abundance early.',
+          ),
+          TopicBubbleItem(
+            id: 'peace',
+            title: 'Confidence & Mental Peace',
+            subtitle: 'Silencing overthinking & building quiet inner power',
+            icon: Icons.self_improvement_rounded,
+            accentColor: Color(0xFF00CEC9),
+            bgGradient: [Color(0xFF81ECEC), Color(0xFF00CEC9)],
+            vedicPrinciple:
+                'Patanjali declares "Yoga is the stilling of the fluctuations of the mind". Inner peace is your natural birthright.',
+            scientificFact:
+                '5 minutes of slow vagus-nerve exhalations lowers amygdala threat responses, restoring executive calm instantly.',
+            dailySelfHelpActions: [
+              'Start your morning with 5 minutes of mindful silence before checking notifications.',
+              'When feeling anxious, do 3 slow deep breaths counting 4 in, 7 hold, 8 out.',
+              'Write down 3 things you love about yourself before bed.',
+            ],
+            affirmation: 'I am rooted in quiet confidence, clarity, and inner peace.',
+          ),
+        ];
+
+      case AgeGroup.adult:
+        return const [
+          TopicBubbleItem(
+            id: 'career',
+            title: 'Career & Executive Growth',
+            subtitle: 'Right livelihood, promotions, leadership & grit',
+            icon: Icons.rocket_launch_rounded,
+            accentColor: Color(0xFF6C5CE7),
+            bgGradient: [Color(0xFFA29BFE), Color(0xFF6C5CE7)],
+            vedicPrinciple:
+                'The 10th house (Karma Bhava) represents societal duty. When work aligns with integrity and service, career prosperity naturally follows.',
+            scientificFact:
+                'High performers exhibit sustained focus and emotional resilience, beating pure technical skill by 3.5x in senior leadership.',
+            dailySelfHelpActions: [
+              'Identify your #1 high-leverage task each morning and finish it before noon.',
+              'Build a "Wins & Learnings" journal to track quarterly milestones.',
+              'Proactively seek feedback from mentors to sharpen executive leadership.',
+            ],
+            affirmation: 'I lead with purpose, diligence, and clarity, building lasting excellence.',
+          ),
+          TopicBubbleItem(
+            id: 'wealth',
+            title: 'Mindful Wealth & Assets',
+            subtitle: 'Investment discipline, Lakshmi principles & freedom',
+            icon: Icons.account_balance_wallet_rounded,
+            accentColor: Color(0xFFE17055),
+            bgGradient: [Color(0xFFFAB1A0), Color(0xFFE17055)],
+            vedicPrinciple:
+                'Lakshmi stays where there is order, gratitude, and purpose. Vedic economics honors disciplined savings (Shreyas).',
+            scientificFact:
+                'Automated investing ("paying yourself first") increases lifetime net worth by 310% compared to saving residual income.',
+            dailySelfHelpActions: [
+              'Follow the 24-hour cooling window before any major discretionary expense.',
+              'Log all expenses daily using AVARA\'s voice logger.',
+              'Automate 20% of your earnings into diversified investments on payday.',
+            ],
+            affirmation: 'I manage my finances with wisdom, gratitude, and disciplined abundance.',
+          ),
+          TopicBubbleItem(
+            id: 'love',
+            title: 'Marriage & Relationship Peace',
+            subtitle: 'Mutual empathy, partner harmony & deep bonding',
+            icon: Icons.favorite_rounded,
+            accentColor: Color(0xFFE84393),
+            bgGradient: [Color(0xFFFD79A8), Color(0xFFE84393)],
+            vedicPrinciple:
+                'In Vedic tradition, Venus (Shukra) and Jupiter govern marital harmony and mutual respect. Relationships are mirrors for spiritual growth.',
+            scientificFact:
+                'Practicing active non-defensive listening releases oxytocin and reduces partner cortisol levels by 42%.',
+            dailySelfHelpActions: [
+              'Practice non-judgmental listening: let your partner speak without interrupting.',
+              'Express 1 specific appreciation out loud every morning.',
+              'Maintain the 5:1 positive-to-critical interaction ratio.',
+            ],
+            affirmation: 'I bring patience, understanding, and warm empathy to my home.',
+          ),
+          TopicBubbleItem(
+            id: 'health',
+            title: 'Work-Life Vitality & Health',
+            subtitle: 'Circadian rhythm, stress mitigation & stamina',
+            icon: Icons.spa_rounded,
+            accentColor: Color(0xFF00B894),
+            bgGradient: [Color(0xFF55EFC4), Color(0xFF00B894)],
+            vedicPrinciple:
+                'Swastha (health) is established when digestion (Agni) is steady and the mind is serene amidst demanding life responsibilities.',
+            scientificFact:
+                '90% of serotonin is synthesized in the gut; mindful nutrition directly protects against corporate burnout and mood swings.',
+            dailySelfHelpActions: [
+              'Eat lunch away from work screens, chewing thoroughly.',
+              'Take a 10-minute fresh air walk between work meetings.',
+              'Establish a firm 10:30 PM digital wind-down routine.',
+            ],
+            affirmation: 'My body is resilient, balanced, and energized for life.',
+          ),
+          TopicBubbleItem(
+            id: 'peace',
+            title: 'Inner Peace & Grounding',
+            subtitle: 'Stillness, mental equilibrium & emotional freedom',
+            icon: Icons.self_improvement_rounded,
+            accentColor: Color(0xFF00CEC9),
+            bgGradient: [Color(0xFF81ECEC), Color(0xFF00CEC9)],
+            vedicPrinciple:
+                'Patanjali declares inner peace is the steady anchor within life\'s storms. Still the mind\'s turbulent waves.',
+            scientificFact:
+                '10 minutes of daily mindfulness practice physically shrinks the stress-reactive amygdala within 8 weeks.',
+            dailySelfHelpActions: [
+              'Take 5 minutes of mindful silence upon waking before touching work email.',
+              'Perform a 3-minute breath decompression when transitioning from office to home.',
+              'Write down 3 gratitudes every night.',
+            ],
+            affirmation: 'I am anchored in quiet strength, deep calm, and unwavering clarity.',
+          ),
+          TopicBubbleItem(
+            id: 'education',
+            title: 'Continuous Wisdom & Skills',
+            subtitle: 'Strategic learning, mental sharpness & innovation',
+            icon: Icons.school_rounded,
+            accentColor: Color(0xFF0984E3),
+            bgGradient: [Color(0xFF74B9FF), Color(0xFF0984E3)],
+            vedicPrinciple:
+                'Mercury (Budha) represents discernment (Viveka). True professionals stay forever curious and mentally agile.',
+            scientificFact:
+                'Lifelong learning builds cognitive reserve, insulating against age-related executive decline.',
+            dailySelfHelpActions: [
+              'Read 15 minutes of thought-leadership or philosophical literature daily.',
+              'Learn 1 new industry tool or framework every month.',
+              'Reflect on weekly lessons learned in a dedicated journal.',
+            ],
+            affirmation: 'My intellect is sharp, adaptable, and expanding with timeless wisdom.',
+          ),
+        ];
+
+      case AgeGroup.senior:
+        return const [
+          TopicBubbleItem(
+            id: 'peace',
+            title: 'Inner Peace & Sadhana',
+            subtitle: 'Meditation, sacred mantra & spiritual tranquility',
+            icon: Icons.self_improvement_rounded,
+            accentColor: Color(0xFF00CEC9),
+            bgGradient: [Color(0xFF81ECEC), Color(0xFF00CEC9)],
+            vedicPrinciple:
+                'Patanjali declares that stillness reveals the true Self (Atman). Sadhana brings timeless joy untouched by worldly changes.',
+            scientificFact:
+                'Mindful meditation in seniors preserves gray matter density in the hippocampus and drastically improves sleep architecture.',
+            dailySelfHelpActions: [
+              'Dedicate 20 minutes every morning to silent meditation or gentle chanting.',
+              'Practice slow abdominal breathing during sunrise (Brahma Muhurtha).',
+              'End the day with peaceful reflection and gratitude.',
+            ],
+            affirmation: 'I am resting in sacred tranquility, deep peace, and divine contentment.',
+          ),
+          TopicBubbleItem(
+            id: 'health',
+            title: 'Ayurvedic Health & Longevity',
+            subtitle: 'Joint mobility, warm nutrition & restorative rest',
+            icon: Icons.spa_rounded,
+            accentColor: Color(0xFF00B894),
+            bgGradient: [Color(0xFF55EFC4), Color(0xFF00B894)],
+            vedicPrinciple:
+                'Ayurveda guides the senior years (Vanaprastha) with vata-soothing warm herbal oils, nourishing soups, and gentle mobility.',
+            scientificFact:
+                'Gentle daily walking and joint mobilization preserve synovial fluid, reducing stiffness by up to 55%.',
+            dailySelfHelpActions: [
+              'Drink a glass of warm water upon waking while seated.',
+              'Enjoy a pleasant 20-minute morning walk in fresh air and mild sunlight.',
+              'Consume warm, freshly prepared meals with digestive spices like ginger and cumin.',
+            ],
+            affirmation: 'My body is flexible, healthy, and nurtured by nature\'s wisdom.',
+          ),
+          TopicBubbleItem(
+            id: 'love',
+            title: 'Family Blessings & Well-being',
+            subtitle: 'Lineage protection, harmony & unconditional love',
+            icon: Icons.diversity_1_rounded,
+            accentColor: Color(0xFFE84393),
+            bgGradient: [Color(0xFFFD79A8), Color(0xFFE84393)],
+            vedicPrinciple:
+                'Elders in Vedic culture are the pillars of family grace. Your loving blessings (Ashirwad) shield children and grandchildren.',
+            scientificFact:
+                'Sending warm, compassionate intentions activates the brain\'s reward and empathy circuits, reducing loneliness and inflammation.',
+            dailySelfHelpActions: [
+              'Send silent mental blessings of peace to children and family members daily.',
+              'Share stories of values, courage, and family roots with younger generations.',
+              'Release family worries to divine protection, trusting life\'s natural unfolding.',
+            ],
+            affirmation: 'I shower my family with unconditional love, peace, and sacred blessings.',
+          ),
+          TopicBubbleItem(
+            id: 'wealth',
+            title: 'Contentment (Santosha)',
+            subtitle: 'Freedom from desire, gratitude & spiritual abundance',
+            icon: Icons.account_balance_wallet_rounded,
+            accentColor: Color(0xFFE17055),
+            bgGradient: [Color(0xFFFAB1A0), Color(0xFFE17055)],
+            vedicPrinciple:
+                'Santosha (supreme contentment) is described as the highest wealth. True richness is being complete within oneself.',
+            scientificFact:
+                'Contentment and gratitude trigger sustained parasympathetic tone, optimizing heart rate variability and immune function.',
+            dailySelfHelpActions: [
+              'Express thankfulness for the simple gifts of health, breath, and companionship.',
+              'Practice generosity through kind words, guidance, or quiet charity.',
+              'Recognize that your true security comes from inner peace.',
+            ],
+            affirmation: 'I am richly blessed, complete, and content in every moment.',
+          ),
+          TopicBubbleItem(
+            id: 'education',
+            title: 'Spiritual Wisdom & Scripture',
+            subtitle: 'Bhagavad Gita, Upanishadic insight & Self-knowledge',
+            icon: Icons.menu_book_rounded,
+            accentColor: Color(0xFF0984E3),
+            bgGradient: [Color(0xFF74B9FF), Color(0xFF0984E3)],
+            vedicPrinciple:
+                'Jnana Yoga (the path of knowledge) reveals our eternal nature. Reflecting on sacred verses brings radiant clarity.',
+            scientificFact:
+                'Philosophical reflection engages high-level neurocognitive integration, promoting psychological wholeness and peace.',
+            dailySelfHelpActions: [
+              'Read or listen to 1 chapter or commentary of spiritual philosophy daily.',
+              'Contemplate the deeper meaning of life and eternal truth.',
+              'Discuss wisdom and timeless life lessons with like-minded companions.',
+            ],
+            affirmation: 'My mind is illuminated with divine wisdom, understanding, and grace.',
+          ),
+          TopicBubbleItem(
+            id: 'career',
+            title: 'Mentorship & Selfless Service',
+            subtitle: 'Sharing life experience & guiding the next generation',
+            icon: Icons.handshake_rounded,
+            accentColor: Color(0xFF6C5CE7),
+            bgGradient: [Color(0xFFA29BFE), Color(0xFF6C5CE7)],
+            vedicPrinciple:
+                'Seva (selfless service) is the highest culmination of life. Sharing accumulated wisdom purifies the heart.',
+            scientificFact:
+                'Mentoring younger generations boosts social connectivity and releases neuroprotective dopamine and oxytocin.',
+            dailySelfHelpActions: [
+              'Offer encouragement and patience to someone facing life struggles.',
+              'Provide calm perspective when younger family members feel hurried or stressed.',
+              'Perform 1 small act of selfless kindness with no expectation in return.',
+            ],
+            affirmation: 'I share my life wisdom with patience, warmth, and generous service.',
+          ),
+        ];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

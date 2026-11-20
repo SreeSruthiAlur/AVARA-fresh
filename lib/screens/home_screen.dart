@@ -350,6 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildGreeting(BuildContext context) {
     final tr = AppLanguageService.instance.tr;
     final currentLang = AppLanguageService.instance.currentLanguage;
+    final activeTheme = AgeProfileService.instance.activeTheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -358,6 +359,29 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                    decoration: BoxDecoration(
+                      color: activeTheme.primaryAccent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(activeTheme.iconData, size: 12, color: activeTheme.primaryAccent),
+                        const SizedBox(width: 4),
+                        Text(
+                          activeTheme.greetingBadge,
+                          style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: activeTheme.primaryAccent),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
               Text(
                 _greetingPrefix(),
                 style: Theme.of(context)
@@ -439,13 +463,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return tr('greeting_evening');
   }
 
-  // -- Moment card ------------------------------------------------------------
+  // -- Moment card (Dynamically customized by user's age) ---------------------
 
   Widget _buildMomentCard(BuildContext context) {
-    final tr = AppLanguageService.instance.tr;
+    final activeTheme = AgeProfileService.instance.activeTheme;
 
-    return AvaraSurfaceCard(
-      backgroundColor: AppColors.lavender,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: activeTheme.cardBackground,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: activeTheme.primaryAccent.withValues(alpha: 0.28),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: activeTheme.primaryAccent.withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -453,28 +492,34 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(tr('moment_title'),
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  activeTheme.momentTitle,
+                  style: TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.bold,
+                    color: activeTheme.primaryAccent,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
-                  tr('moment_subtitle'),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppColors.secondaryText),
+                  activeTheme.momentSubtitle,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: AppColors.secondaryText,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: AppColors.white,
+            decoration: BoxDecoration(
+              color: activeTheme.primaryAccent.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.self_improvement,
-                color: AppColors.violet, size: 28),
+            child: Icon(activeTheme.iconData, color: activeTheme.primaryAccent, size: 28),
           ),
         ],
       ),

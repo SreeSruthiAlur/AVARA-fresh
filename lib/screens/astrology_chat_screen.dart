@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/ai_astrology_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
@@ -82,37 +83,9 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
   final ScrollController _scrollController = ScrollController();
   final FocusNode _inputFocusNode = FocusNode();
 
-  // Suggestion chips shown before the first message — relatable common people questions
-  static const List<String> _suggestions = [
-    'How can I stay calm, peaceful, and reduce stress today?',
-    'What career or job path aligns with my natural talents?',
-    'When will I find relationship harmony and life partner?',
-    'How can I improve my financial stability and savings habits?',
-    'What does my Moon sign say about my emotions?',
-  ];
-
-  List<String> get _currentSuggestions {
-    switch (AppLanguageService.instance.currentLanguage) {
-      case AppLanguage.telugu:
-        return const [
-          'ఈ రోజు నేను ప్రశాంతంగా ఉండటానికి మరియు ఒత్తిడి తగ్గించడానికి ఏమి చేయాలి?',
-          'నా సహజ ప్రతిభకు ఏ ఉద్యోగం లేదా కెరీర్ సరిపోతుంది?',
-          'నా జీవిత భాగస్వామి మరియు వివాహ సంబంధం గురించి వేద మార్గదర్శనం ఏమిటి?',
-          'నా ఆర్థిక స్థిరత్వం మరియు పొదుపు అలవాట్లను ఎలా మెరుగుపరుచుకోవాలి?',
-          'నా చంద్ర రాశి నా భావోద్వేగాల గురించి ఏమి చెబుతోంది?',
-        ];
-      case AppLanguage.tanglish:
-        return const [
-          'Ee roju nenu peaceful ga undadaniki em cheyali?',
-          'Naa natural talents ki ae career or job set avuthundi?',
-          'Life partner mariyu relationship harmony gurinchi em chepthondi?',
-          'Savings mariyu financial stability ela penchukovali?',
-          'Naa Moon sign emotions gurinchi em chepthondi?',
-        ];
-      case AppLanguage.english:
-        return _suggestions;
-    }
-  }
+  // Suggestion chips dynamically tailored to user's age and language
+  List<String> get _currentSuggestions =>
+      AgeProfileService.instance.getChatSuggestions();
 
   @override
   void initState() {
