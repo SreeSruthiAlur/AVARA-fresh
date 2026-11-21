@@ -1044,8 +1044,23 @@ class VoiceService extends ChangeNotifier {
   }
 
   static bool _matchesPattern(String input, List<String> patterns) {
+    final cleanInput = input.trim().toLowerCase();
     for (final p in patterns) {
-      if (input == p || input.contains(p)) return true;
+      final cleanP = p.trim().toLowerCase();
+      if (cleanInput == cleanP) return true;
+      if (cleanP.contains(' ')) {
+        if (cleanInput.contains(cleanP)) return true;
+      } else {
+        // Single words must match as whole word, not substring
+        final regex = RegExp(r'\b' + RegExp.escape(cleanP) + r'\b', caseSensitive: false);
+        if (regex.hasMatch(cleanInput)) {
+          // If input is a long sentence (> 4 words), avoid triggering short navigation words like "home"
+          final wordCount = cleanInput.split(RegExp(r'\s+')).length;
+          if (wordCount <= 4 || cleanP.length >= 6) {
+            return true;
+          }
+        }
+      }
     }
     return false;
   }

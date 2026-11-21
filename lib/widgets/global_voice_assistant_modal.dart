@@ -132,63 +132,64 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
           _statusMessage = 'Hearing: "$words"';
         });
 
-        // Check if command is recognized
-        final result = voice.parseCommandOnly(words);
-        if (result.isActionable && result.type != VoiceCommandType.dictateText) {
-          voice.stopListening();
-          setState(() {
-            _isListening = false;
-            _lastResult = result;
-            _statusMessage = result.feedbackMessage ?? 'Command executed!';
-          });
-          _pulseController.stop();
-          _pulseController.reset();
+        // Only execute actions when speech has paused / finalized, not while mid-sentence
+        if (isFinal && words.trim().isNotEmpty) {
+          final result = voice.parseCommandOnly(words);
+          if (result.isActionable && result.type != VoiceCommandType.dictateText) {
+            voice.stopListening();
+            setState(() {
+              _isListening = false;
+              _lastResult = result;
+              _statusMessage = result.feedbackMessage ?? 'Command executed!';
+            });
+            _pulseController.stop();
+            _pulseController.reset();
 
-          if (result.feedbackMessage != null) {
-            TtsService.instance.speak(
-              result.feedbackMessage!,
-              language: result.targetLanguage,
+            if (result.feedbackMessage != null) {
+              TtsService.instance.speak(
+                result.feedbackMessage!,
+                language: result.targetLanguage,
+              );
+            }
+
+            // Conversational queries stay open to read and listen to the answer
+            if (result.type == VoiceCommandType.conversational) {
+              return;
+            }
+
+            // Dismiss modal first, then dispatch action on the root screen
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                Navigator.of(context).pop();
+                voice.dispatchCommandResult(result);
+              }
+            });
+          } else {
+            // For general spoken questions or sentences: automatically send to AVARA AI!
+            final aiResult = VoiceCommandResult(
+              type: VoiceCommandType.askAstrology,
+              rawTranscript: words,
+              astrologyQuestion: words,
+              feedbackMessage: 'Opening AVARA AI for: "$words"',
             );
+            voice.stopListening();
+            setState(() {
+              _isListening = false;
+              _lastResult = aiResult;
+              _statusMessage = 'Asking AVARA AI: "$words"...';
+            });
+            _pulseController.stop();
+            _pulseController.reset();
+
+            TtsService.instance.speak('Asking AVARA: $words');
+
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                Navigator.of(context).pop();
+                voice.dispatchCommandResult(aiResult);
+              }
+            });
           }
-
-          // Conversational queries stay open to read and listen to the answer
-          if (result.type == VoiceCommandType.conversational) {
-            return;
-          }
-
-          // Dismiss modal first, then dispatch action on the root screen
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.of(context).pop();
-              voice.dispatchCommandResult(result);
-            }
-          });
-        } else if (isFinal && words.trim().isNotEmpty) {
-          // For non-typing users: any spoken question or sentence that isn't a direct
-          // system command is automatically dispatched to the AI Assistant!
-          final aiResult = VoiceCommandResult(
-            type: VoiceCommandType.askAstrology,
-            rawTranscript: words,
-            astrologyQuestion: words,
-            feedbackMessage: 'Opening AVARA AI for: "$words"',
-          );
-          voice.stopListening();
-          setState(() {
-            _isListening = false;
-            _lastResult = aiResult;
-            _statusMessage = 'Asking AVARA AI: "$words"...';
-          });
-          _pulseController.stop();
-          _pulseController.reset();
-
-          TtsService.instance.speak('Asking AVARA: $words');
-
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              Navigator.of(context).pop();
-              voice.dispatchCommandResult(aiResult);
-            }
-          });
         }
       },
     );

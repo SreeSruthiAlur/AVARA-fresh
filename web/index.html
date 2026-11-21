@@ -34,29 +34,6 @@
 </head>
 <body>
   <script>
-    // Proactively request microphone access on user gesture to avoid Web Speech API permission blocks
-    (function() {
-      var requested = false;
-      function ensureMicrophone() {
-        if (requested) return;
-        requested = true;
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(function(stream) {
-              console.log('🎤 [AVARA Web]: Microphone permission successfully granted.');
-              // Stop tracks immediately so hardware mic is released for SpeechRecognition
-              stream.getTracks().forEach(function(track) { track.stop(); });
-            })
-            .catch(function(err) {
-              console.warn('🎤 [AVARA Web]: Microphone permission not granted yet:', err);
-            });
-        }
-      }
-      window.ensureMicrophone = ensureMicrophone;
-      window.addEventListener('click', ensureMicrophone, { once: true });
-      window.addEventListener('touchstart', ensureMicrophone, { once: true });
-    })();
-
     // =========================================================================
     // AVARA Native Web Speech Recognition Engine
     // Direct Chrome webkitSpeechRecognition bridge for real-time dictation & actions
@@ -106,7 +83,7 @@
           recognition.lang = lang || 'en-IN';
 
           recognition.onstart = function() {
-            console.log('🎤 [AVARA Web Speech]: Listening started in', recognition.lang);
+            console.log('🎤 [AVARA Web Speech]: Voice detection active in', recognition.lang);
           };
 
           recognition.onresult = function(event) {
@@ -129,27 +106,28 @@
             fullTranscript = fullTranscript.trim();
             if (fullTranscript.length > 0) {
               lastTranscript = fullTranscript;
-              console.log('🎤 [AVARA Web Speech]: Recognized:', fullTranscript, '(hasFinal:', hasFinal, ')');
+              console.log('🎤 [AVARA Web Speech]: Heard words ->', fullTranscript, '(isFinal:', hasFinal, ')');
               if (activeOnResult) {
+                // Immediately stream live spoken words to Flutter UI so it types in real-time
                 activeOnResult(fullTranscript, false);
               }
 
-              // Silence debounce timer: 1200ms after user pauses speaking, auto-finalize and trigger action
+              // Auto-finalize action 1400ms after user pauses speaking
               if (silenceTimer) clearTimeout(silenceTimer);
               silenceTimer = setTimeout(function() {
-                console.log('🎤 [AVARA Web Speech]: Silence detected — auto-finalizing:', lastTranscript);
+                console.log('🎤 [AVARA Web Speech]: Pause detected -> Auto-finalizing and executing:', lastTranscript);
                 if (activeOnResult && lastTranscript.length > 0) {
                   activeOnResult(lastTranscript, true);
                 }
                 window.stopWebSpeechRecognition();
-              }, 1200);
+              }, 1400);
             }
           };
 
           recognition.onerror = function(event) {
             console.warn('🎤 [AVARA Web Speech Error]:', event.error);
             if (event.error === 'no-speech') {
-              // Ignore transient browser silence — keep session alive
+              // Silence while listening is expected — do not abort
               return;
             }
             if (activeOnError) {

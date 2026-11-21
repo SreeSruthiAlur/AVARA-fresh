@@ -234,29 +234,14 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
       onResult: (text, isFinal) {
         if (!mounted) return;
 
+        // 1. In real-time while listening: immediately type what the user is saying into the text field
         if (text.trim().isNotEmpty) {
-          // Check if user spoke a command like "Change to Telugu"
-          final commandResult = voice.tryExecuteCommand(text);
-          if (commandResult != null &&
-              (commandResult.type == VoiceCommandType.changeLanguage ||
-                  (widget.onSpeechComplete == null &&
-                      commandResult.type != VoiceCommandType.dictateText))) {
-            _stopListening();
-            _showFloatingStatusOverlay(
-              text: '✅ ${commandResult.feedbackMessage ?? "Command executed!"}',
-              isListening: false,
-              isSuccess: true,
-            );
-            return;
-          }
-
-          // Otherwise update text controller
           if (widget.append && initialText.isNotEmpty) {
             widget.controller.text = '$initialText $text';
           } else {
             widget.controller.text = text;
           }
-          // Move cursor to end
+          // Move cursor to end so user sees typing progression
           widget.controller.selection = TextSelection.fromPosition(
             TextPosition(offset: widget.controller.text.length),
           );
@@ -265,19 +250,45 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
           _showFloatingStatusOverlay(text: '🎙️ Heard: "$text"');
         }
 
+        // 2. When speech is finalized (after speaking or natural pause): do what the user asked
         if (isFinal) {
           setState(() => _isListening = false);
           _pulseController.stop();
           _pulseController.reset();
-          widget.onSpeechComplete?.call();
 
-          _showFloatingStatusOverlay(
-            text: text.isNotEmpty
-                ? '✅ Captured: "$text"'
-                : 'No words detected. Try again.',
-            isListening: false,
-            isSuccess: text.isNotEmpty,
-          );
+          if (text.trim().isNotEmpty) {
+            // First check if the finalized statement is an app command (e.g. "change to telugu")
+            final commandResult = voice.tryExecuteCommand(text);
+            if (commandResult != null &&
+                (commandResult.type == VoiceCommandType.changeLanguage ||
+                    (widget.onSpeechComplete == null &&
+                        commandResult.type != VoiceCommandType.dictateText))) {
+              _showFloatingStatusOverlay(
+                text: '✅ ${commandResult.feedbackMessage ?? "Command executed!"}',
+                isListening: false,
+                isSuccess: true,
+              );
+              Future.delayed(const Duration(seconds: 2), _removeOverlay);
+              return;
+            }
+
+            // Automatically execute the action (e.g. submit question in Chat screen)
+            if (widget.onSpeechComplete != null) {
+              widget.onSpeechComplete!();
+            }
+
+            _showFloatingStatusOverlay(
+              text: '✅ Captured: "$text"',
+              isListening: false,
+              isSuccess: true,
+            );
+          } else {
+            _showFloatingStatusOverlay(
+              text: 'No words detected. Try again.',
+              isListening: false,
+              isSuccess: false,
+            );
+          }
           Future.delayed(const Duration(seconds: 2), _removeOverlay);
         }
       },
