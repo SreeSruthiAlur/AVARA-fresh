@@ -186,6 +186,8 @@ class _GlossaryCardSheet extends StatelessWidget {
       case AppLanguage.tanglish:
         explanation = term.simpleTanglishExplanation;
         break;
+      case AppLanguage.malayalam:
+      case AppLanguage.manglish:
       case AppLanguage.english:
         explanation = term.simpleEnglishExplanation;
         break;

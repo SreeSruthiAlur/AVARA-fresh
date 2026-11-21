@@ -554,6 +554,22 @@ class _FallbackDictationSheet extends StatelessWidget {
           'Snacks 150',
           'Morning walk chesanu',
         ];
+      case AppLanguage.malayalam:
+        return [
+          'എന്റെ ചന്ദ്ര രാശി ഏതാണ്?',
+          'എന്റെ തൊഴിൽ സാധ്യതകൾ പറയൂ',
+          'തിരുവനന്തപുരം',
+          'ചായ ചിലവ് 150',
+          'രാവിലെ നടത്തം',
+        ];
+      case AppLanguage.manglish:
+        return [
+          'Ente Moon sign enthanu?',
+          'Ente career patti parayu',
+          'Kochi',
+          'Chaya 150 rupika',
+          'Morning walk cheythu',
+        ];
     }
   }
 }

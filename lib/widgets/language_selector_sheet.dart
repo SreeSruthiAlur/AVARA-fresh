@@ -211,7 +211,7 @@ class _LanguageSelectorSheetState extends State<LanguageSelectorSheet> {
           ),
           const SizedBox(height: 20),
 
-          // 3 Language Cards
+          // 5 Language Cards
           _buildLanguageCard(
             context: context,
             language: AppLanguage.english,
@@ -237,6 +237,24 @@ class _LanguageSelectorSheetState extends State<LanguageSelectorSheet> {
             nativeTitle: 'Telugu in English Letters',
             sampleText: 'AVARA Jathakam mariyu guidance loki swagatham',
             isSelected: currentLang == AppLanguage.tanglish,
+          ),
+          const SizedBox(height: 12),
+          _buildLanguageCard(
+            context: context,
+            language: AppLanguage.malayalam,
+            title: 'മലയാളം (Malayalam)',
+            nativeTitle: 'പൂർണ്ണ മലയാളം ലിപി',
+            sampleText: 'AVARA ജ്യോതിഷത്തിലേക്കും മാർഗ്ഗനിർദ്ദേശത്തിലേക്കും സ്വാഗതം',
+            isSelected: currentLang == AppLanguage.malayalam,
+          ),
+          const SizedBox(height: 12),
+          _buildLanguageCard(
+            context: context,
+            language: AppLanguage.manglish,
+            title: 'Manglish',
+            nativeTitle: 'Malayalam in English Letters',
+            sampleText: 'AVARA Jyothisham matrum guidance lekku swagatham',
+            isSelected: currentLang == AppLanguage.manglish,
           ),
         ],
       ),

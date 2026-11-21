@@ -73,6 +73,8 @@ class TtsService extends ChangeNotifier {
       // Configure locale
       if (lang == AppLanguage.telugu) {
         await _tts.setLanguage('te-IN');
+      } else if (lang == AppLanguage.malayalam) {
+        await _tts.setLanguage('ml-IN');
       } else {
         await _tts.setLanguage('en-IN');
       }

@@ -201,6 +201,28 @@ class _SurveyModalState extends State<SurveyModal> {
                 AppLanguageService.instance.setLanguage(AppLanguage.tanglish);
               },
             ),
+            const SizedBox(height: 10),
+            _optionTile(
+              icon: Icons.auto_awesome_rounded,
+              title: 'മലയാളം (Malayalam)',
+              subtitle: 'സമ്പൂർണ്ണ മലയാളം ഇന്റർഫേസും വേദ ജ്യോതിഷ വ്യാഖ്യാനങ്ങളും',
+              isSelected: _selectedLanguage == AppLanguage.malayalam,
+              onTap: () {
+                setState(() => _selectedLanguage = AppLanguage.malayalam);
+                AppLanguageService.instance.setLanguage(AppLanguage.malayalam);
+              },
+            ),
+            const SizedBox(height: 10),
+            _optionTile(
+              icon: Icons.forum_outlined,
+              title: 'Manglish (Malayalam in English)',
+              subtitle: 'Conversational blend of Malayalam written in English letters',
+              isSelected: _selectedLanguage == AppLanguage.manglish,
+              onTap: () {
+                setState(() => _selectedLanguage = AppLanguage.manglish);
+                AppLanguageService.instance.setLanguage(AppLanguage.manglish);
+              },
+            ),
           ],
         );
       case 1:

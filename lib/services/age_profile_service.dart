@@ -162,6 +162,22 @@ class AgeProfileService extends ChangeNotifier {
               'Self-confidence penchadaniki daily habits emiti?',
               'Naa Moon sign emotions and energy gurinchi em chepthondi?',
             ];
+          case AppLanguage.malayalam:
+            return const [
+              'പരീക്ഷാ സമ്മർദ്ദം കുറച്ച് പഠനത്തിൽ എങ്ങനെ ശ്രദ്ധ കേന്ദ്രീകരിക്കാം?',
+              'എന്റെ കഴിവുകൾക്ക് അനുയോജ്യമായ കോഴ്സ് അല്ലെങ്കിൽ ജോലി ഏതാണ്?',
+              'സോഷ്യൽ മീഡിയ ശ്രദ്ധതിരിക്കൽ ഒഴിവാക്കി സമയം എങ്ങനെ ഉപയോഗിക്കാം?',
+              'ആത്മവിശ്വാസം കൂട്ടാൻ സഹായിക്കുന്ന ദിനചര്യകൾ എന്തൊക്കെയാണ്?',
+              'എന്റെ ചന്ദ്ര രാശി എന്റെ മാനസികാവസ്ഥയെക്കുറിച്ച് എന്ത് പറയുന്നു?',
+            ];
+          case AppLanguage.manglish:
+            return const [
+              'Exam stress kurachu, study focus engane koottam?',
+              'Ente talents-inu pattiya course or career ethaanu?',
+              'Mobile distraction ozhivaakki time engane use cheyyaam?',
+              'Self-confidence koottan ulla daily habits enthaanu?',
+              'Ente Moon sign manasikaavasthaye patti enthanu parayunnathu?',
+            ];
           case AppLanguage.english:
             return const [
               'How can I improve my study focus and beat exam anxiety?',
@@ -190,6 +206,22 @@ class AgeProfileService extends ChangeNotifier {
               'Financial growth and wealth creation ki best guidance enti?',
               'Daily stress tagginchi mind active ga ela unchali?',
             ];
+          case AppLanguage.malayalam:
+            return const [
+              'തൊഴിൽ മാറ്റത്തിനും സ്ഥാനക്കയറ്റത്തിനും ഉചിതമായ സമയം എപ്പോഴാണ്?',
+              'ജോലി സമ്മർദ്ദവും കുടുംബ ഉത്തരവാദിത്തങ്ങളും എങ്ങനെ ബാലൻസ് ചെയ്യാം?',
+              'വിവാഹത്തെയും ദാമ്പത്യ പൊരുത്തത്തെയും കുറിച്ച് ജാതകം എന്ത് പറയുന്നു?',
+              'സാമ്പത്തിക ഭദ്രതയ്ക്കും നിക്ഷേപ വളർച്ചയ്ക്കും ഉള്ള നിർദ്ദേശങ്ങൾ എന്തൊക്കെയാണ്?',
+              'മാനസിക പിരിമുറുക്കം കുറച്ച് സമാധാനം നിലനിർത്താൻ എന്ത് ചെയ്യണം?',
+            ];
+          case AppLanguage.manglish:
+            return const [
+              'Career growth or job switch-inu pattiya samayam eppozhaanu?',
+              'Work pressure-um family balance-um engane manage cheyyaam?',
+              'Vivahavum relationship harmony-yum patti chart enthaanu parayunnathu?',
+              'Financial growth-num investment-num ulla guidance enthaanu?',
+              'Daily stress kurachu manassamaadhaanam engane nedaam?',
+            ];
           case AppLanguage.english:
             return const [
               'When is the best astrological timing for career transition or promotion?',
@@ -217,6 +249,22 @@ class AgeProfileService extends ChangeNotifier {
               'Pillala and family kshemam kosam best remedies enti?',
               'Inner peace mariyu spiritual happiness ela labhisthundi?',
               'Naa current Mahadasha health and spiritual growth gurinchi em chepthondi?',
+            ];
+          case AppLanguage.malayalam:
+            return const [
+              'മനസ്സമാധാനം തരുന്ന ദിനചര്യകളും പ്രാർത്ഥനകളും എന്തൊക്കെയാണ്?',
+              'ആയുർവേദ പ്രകാരം വാർദ്ധക്യകാല ആരോഗ്യവും ദഹനവും എങ്ങനെ നിലനിർത്താം?',
+              'മക്കളുടെയും കുടുംബത്തിന്റെയും ഐശ്വര്യത്തിനായി എന്ത് പരിഹാരങ്ങൾ ചെയ്യണം?',
+              'ആത്മീയ സംതൃപ്തിയും ആനന്ദവും എങ്ങനെ അനുഭവിക്കാം?',
+              'നിലവിലെ മഹാദശ ആരോഗ്യത്തെയും ആത്മീയ യാത്രയെയും കുറിച്ച് എന്ത് സൂചിപ്പിക്കുന്നു?',
+            ];
+          case AppLanguage.manglish:
+            return const [
+              'Deep mental peace labhikkaan ulla daily prarthanakal enthaanu?',
+              'Ayurveda prakaram health, digestion, joint pain engane manage cheyyaam?',
+              'Makkaludeyum family-udeyum aishwaryathinu ulla pariharangal enthaanu?',
+              'Inner peace-um spiritual happiness-um engane nedaam?',
+              'Current Mahadasha aarogyathe patti enthaanu parayunnathu?',
             ];
           case AppLanguage.english:
             return const [

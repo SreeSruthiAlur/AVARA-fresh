@@ -116,6 +116,16 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
           ? 'Namaskaram 🙏 Nenu AVARA, mee Jyotisha Intelligence engine.\n\n'
             'Mee Janma Kundali load ayyindi. Graha sthanalu, Nakshatra qualities, or life guidance gurinchi emaina adagandi.'
           : 'Namaskaram 🙏 Nenu AVARA, mee Vedic Astrology guide ni. Ee roju meeku ela guide cheyali?';
+    } else if (lang == AppLanguage.malayalam) {
+      greeting = widget.chartJson != null
+          ? 'നമസ്കാരം 🙏 ഞാൻ AVARA, നിങ്ങളുടെ വേദ ജ്യോതിഷ ഇന്റലിജൻസ് സഹായി.\n\n'
+            'നിങ്ങളുടെ ജനന ജാതകം ലോഡ് ചെയ്തിരിക്കുന്നു. ഗ്രഹനിലകൾ, നക്ഷത്ര ഫലങ്ങൾ, ദശാ കാലങ്ങൾ എന്നിവയെക്കുറിച്ച് എന്തും ചോദിക്കാം.'
+          : 'നമസ്കാരം 🙏 ഞാൻ AVARA, നിങ്ങളുടെ വേദ ജ്യോതിഷ വഴികാട്ടി. ഇന്ന് നിങ്ങൾക്ക് എന്ത് മാർഗ്ഗനിർദ്ദേശമാണ് വേണ്ടത്?';
+    } else if (lang == AppLanguage.manglish) {
+      greeting = widget.chartJson != null
+          ? 'Namaskaram 🙏 Njan AVARA, ningalude Vedic Jyothisha Intelligence sahayi aanu.\n\n'
+            'Ningalude Janma Jathakam load cheythu. Grahanilakal, Nakshathra phalangal, or Dasha kaalangale patti enthum chodikkam.'
+          : 'Namaskaram 🙏 Njan AVARA, ningalude Vedic Astrology vazhikaatti. Innu ningalkku enthanu ariyendathu?';
     } else {
       greeting = widget.chartJson != null
           ? 'Namaste 🙏  I am AVARA, your Jyotisha Intelligence engine.\n\n'

@@ -59,6 +59,32 @@ void main() {
       expect(service.tr('mod_finance_title'), equals('Kharchulu'));
     });
 
+    test('Switches to Malayalam and updates visuals in native script', () async {
+      final service = AppLanguageService.instance;
+      await service.setLanguage(AppLanguage.malayalam);
+
+      expect(service.currentLanguage, equals(AppLanguage.malayalam));
+      expect(service.tr('tab_home'), equals('ഹോം'));
+      expect(service.tr('tab_astrology'), equals('ജ്യോതിഷം'));
+      expect(service.tr('tab_finance'), equals('ധനകാര്യം'));
+      expect(service.tr('tab_health'), equals('ആരോഗ്യം'));
+      expect(service.tr('tab_track'), equals('ശീലങ്ങൾ'));
+      expect(service.tr('greeting_morning'), equals('സുപ്രഭാതം'));
+      expect(service.tr('explore_avara'), equals('AVARA പര്യവേക്ഷണം ചെയ്യുക'));
+    });
+
+    test('Switches to Manglish (Malayalam in English script) and updates visuals', () async {
+      final service = AppLanguageService.instance;
+      await service.setLanguage(AppLanguage.manglish);
+
+      expect(service.currentLanguage, equals(AppLanguage.manglish));
+      expect(service.tr('tab_finance'), equals('Dhanakaryam'));
+      expect(service.tr('tab_health'), equals('Aarogyam'));
+      expect(service.tr('tab_track'), equals('Sheelangal'));
+      expect(service.tr('greeting_morning'), equals('Suprabhatham'));
+      expect(service.tr('explore_avara'), equals('AVARA Explore Cheyyuka'));
+    });
+
     test('Persists language in SharedPreferences across sessions', () async {
       final service = AppLanguageService.instance;
       await service.setLanguage(AppLanguage.telugu);
@@ -89,6 +115,24 @@ void main() {
       expect(result.type, equals(VoiceCommandType.changeLanguage));
       expect(result.targetLanguage, equals(AppLanguage.tanglish));
       expect(AppLanguageService.instance.currentLanguage, equals(AppLanguage.tanglish));
+    });
+
+    test('Voice command switches language to Malayalam', () {
+      final voice = VoiceService.instance;
+      final result = voice.parseAndExecuteCommand('Change to Malayalam', speakFeedback: false);
+
+      expect(result.type, equals(VoiceCommandType.changeLanguage));
+      expect(result.targetLanguage, equals(AppLanguage.malayalam));
+      expect(AppLanguageService.instance.currentLanguage, equals(AppLanguage.malayalam));
+    });
+
+    test('Voice command switches language to Manglish', () {
+      final voice = VoiceService.instance;
+      final result = voice.parseAndExecuteCommand('Change to Manglish', speakFeedback: false);
+
+      expect(result.type, equals(VoiceCommandType.changeLanguage));
+      expect(result.targetLanguage, equals(AppLanguage.manglish));
+      expect(AppLanguageService.instance.currentLanguage, equals(AppLanguage.manglish));
     });
 
     test('Voice command switches language to English', () {

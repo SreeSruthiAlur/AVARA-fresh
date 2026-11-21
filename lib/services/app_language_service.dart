@@ -6,6 +6,8 @@ enum AppLanguage {
   english,
   telugu,
   tanglish,
+  malayalam,
+  manglish,
 }
 
 extension AppLanguageExtension on AppLanguage {
@@ -18,6 +20,10 @@ extension AppLanguageExtension on AppLanguage {
         return 'te';
       case AppLanguage.tanglish:
         return 'tanglish';
+      case AppLanguage.malayalam:
+        return 'ml';
+      case AppLanguage.manglish:
+        return 'manglish';
     }
   }
 
@@ -30,6 +36,10 @@ extension AppLanguageExtension on AppLanguage {
         return 'తెలుగు (Telugu)';
       case AppLanguage.tanglish:
         return 'Tanglish (Telugu in English)';
+      case AppLanguage.malayalam:
+        return 'മലയാളം (Malayalam)';
+      case AppLanguage.manglish:
+        return 'Manglish (Malayalam in English)';
     }
   }
 
@@ -42,6 +52,10 @@ extension AppLanguageExtension on AppLanguage {
         return 'తెలుగు';
       case AppLanguage.tanglish:
         return 'Tanglish';
+      case AppLanguage.malayalam:
+        return 'മലയാളം';
+      case AppLanguage.manglish:
+        return 'Manglish';
     }
   }
 
@@ -54,6 +68,10 @@ extension AppLanguageExtension on AppLanguage {
         return 'te-IN';
       case AppLanguage.tanglish:
         return 'en-IN'; // Latin phonetics for Tanglish
+      case AppLanguage.malayalam:
+        return 'ml-IN';
+      case AppLanguage.manglish:
+        return 'en-IN'; // Latin phonetics for Manglish
     }
   }
 }
@@ -85,6 +103,10 @@ class AppLanguageService extends ChangeNotifier {
           _currentLanguage = AppLanguage.telugu;
         } else if (saved == 'tanglish') {
           _currentLanguage = AppLanguage.tanglish;
+        } else if (saved == 'ml' || saved == 'malayalam') {
+          _currentLanguage = AppLanguage.malayalam;
+        } else if (saved == 'manglish') {
+          _currentLanguage = AppLanguage.manglish;
         } else {
           _currentLanguage = AppLanguage.english;
         }
@@ -550,6 +572,296 @@ class AppLanguageService extends ChangeNotifier {
       'profile_preferences': 'Preferences & Language',
       'profile_history': 'Consultation History',
       'profile_my_data': 'Naa Data',
+      'profile_help': 'Help & Support',
+      'profile_privacy': 'Privacy & Security',
+    },
+
+    // =========================================================================
+    // MALAYALAM (മലയാളം)
+    // =========================================================================
+    AppLanguage.malayalam: {
+      // Navigation Tabs
+      'tab_home': 'ഹോം',
+      'tab_astrology': 'ജ്യോതിഷം',
+      'tab_finance': 'ധനകാര്യം',
+      'tab_health': 'ആരോഗ്യം',
+      'tab_track': 'ശീലങ്ങൾ',
+      'tab_insights': 'വിവരങ്ങൾ',
+
+      // Greetings
+      'greeting_morning': 'സുപ്രഭാതം',
+      'greeting_afternoon': 'ശുഭദിനം',
+      'greeting_evening': 'ശുഭസായാഹ്നം',
+      'moment_title': 'നിങ്ങൾക്കായി ഒരു നിമിഷം നീക്കിവെക്കൂ',
+      'moment_subtitle': 'നിങ്ങളുടെ ദിവസം ശാന്തമായും ലക്ഷ്യബോധത്തോടെയും ആരംഭിക്കാൻ ഒരു ആചാരം.',
+      'explore_avara': 'AVARA പര്യവേക്ഷണം ചെയ്യുക',
+
+      // Explore Modules
+      'mod_astrology_title': 'ജ്യോതിഷം',
+      'mod_astrology_sub': 'മാർഗ്ഗനിർദ്ദേശം കണ്ടെത്തൂ',
+      'mod_finance_title': 'ധനകാര്യം',
+      'mod_finance_sub': 'ചിലവുകൾ പരിശോധിക്കൂ',
+      'mod_habits_title': 'ശീലങ്ങൾ',
+      'mod_habits_sub': 'സ്ഥിരത വളർത്തൂ',
+      'mod_health_title': 'ആരോഗ്യം',
+      'mod_health_sub': 'ക്ഷേമം വിലയിരുത്തൂ',
+      'mod_insights_title': 'സ്ഥിതിവിവരങ്ങൾ',
+      'mod_insights_sub': 'പുരോഗതി കാണൂ',
+
+      // Actions & Common
+      'btn_add': 'ചേർക്കുക',
+      'btn_save': 'സംരക്ഷിക്കുക',
+      'btn_cancel': 'റദ്ദാക്കുക',
+      'btn_submit': 'സമർപ്പിക്കുക',
+      'btn_delete': 'നീക്കം ചെയ്യുക',
+      'btn_edit': 'തിരുത്തുക',
+      'btn_back': 'പിന്നോട്ട്',
+      'btn_logout': 'ലോഗ് ഔട്ട്',
+      'btn_done': 'പൂർത്തിയായി',
+      'btn_close': 'അടയ്ക്കുക',
+      'coming_soon': 'ഉടൻ ലഭ്യമാകും!',
+
+      // Language Switcher
+      'lang_switch_title': 'ഭാഷ തിരഞ്ഞെടുക്കുക',
+      'lang_switch_subtitle': 'ആപ്പിലെ വിവരങ്ങൾ ഉടൻ തന്നെ മാറും',
+      'lang_english': 'English',
+      'lang_telugu': 'తెలుగు (Telugu)',
+      'lang_tanglish': 'Tanglish (Telugu in English)',
+      'lang_malayalam': 'മലയാളം (Malayalam)',
+      'lang_manglish': 'Manglish (Malayalam in English)',
+
+      // Voice
+      'voice_assistant_title': 'AVARA വോയ്സ് അസിസ്റ്റന്റ്',
+      'voice_speak_prompt': 'കേൾക്കുന്നു... സംസാരിക്കൂ',
+      'voice_tap_to_speak': 'സംസാരിക്കാൻ മൈക്കിൽ തൊടൂ',
+      'voice_listening': 'ശ്രദ്ധിക്കുന്നു...',
+      'voice_stop_listening': 'കേൾക്കുന്നത് നിർത്തൂ',
+      'voice_recognized_text': 'തിരിച്ചറിഞ്ഞ വാക്കുകൾ:',
+      'voice_command_applied': 'വോയ്സ് കമാൻഡ് നടപ്പിലാക്കി',
+      'voice_lang_switched': 'ഭാഷ വിജയകരമായി മാറ്റി',
+      'voice_try_saying': 'ഇങ്ങനെ പറയൂ: "Change to Malayalam", "Manglish aakkuka", "Open Astrology", "Go to Finance"',
+
+      // Astrology
+      'astrology_title': 'ജ്യോതിഷ കേന്ദ്രം',
+      'astrology_hero_title': 'AVARA ജ്യോതിഷം',
+      'astrology_hero_tagline': 'ചോദ്യങ്ങൾ ചോദിക്കൂ. ദിശാബോധം നേടൂ.',
+      'astrology_hero_sub': 'ജീവിതയാത്രയ്ക്ക് ശരിയായ മാർഗ്ഗനിർദ്ദേശം',
+      'astrology_tile_ask': 'ഒരു ചോദ്യം ചോദിക്കൂ',
+      'astrology_tile_topics': 'വിഷയങ്ങൾ പരിശോധിക്കൂ',
+      'astrology_tile_astrologer': 'ജ്യോതിഷിയുമായി സംസാരിക്കൂ',
+      'astrology_disclaimer': 'ജ്യോതിഷം പരമ്പരാഗത വ്യാഖ്യാനങ്ങളാണ് നൽകുന്നത്, നിശ്ചിത ഫലങ്ങൾ ഉറപ്പ് നൽകുന്നില്ല.',
+      'astrology_chat_title': 'AVARA ജ്യോതിഷം',
+      'astrology_chat_subtitle': 'വേദ ജ്യോതിഷ വഴികാട്ടി • Gemini Powered',
+      'astrology_input_hint': 'ജാതകത്തെക്കുറിച്ച് ചോദിക്കൂ… (മൈക്ക് അമർത്തൂ)',
+      'astrology_birth_profile_title': 'ജനന വിവരങ്ങളും ജാതക തെളിവും',
+      'astrology_dob': 'ജനന തീയതി',
+      'astrology_tob': 'ജനന സമയം',
+      'astrology_pob': 'ജനിച്ച സ്ഥലം',
+      'astrology_pob_hint': 'നഗരം അല്ലെങ്കിൽ ഗ്രാമം (ഉദാ: കൊച്ചി)',
+      'astrology_ayanamsa': 'അയനാംശം',
+      'astrology_generate_btn': 'ജാതക ചാർട്ട് തയ്യാറാക്കൂ',
+      'astrology_calculating': 'ജാതകം കണക്കാക്കുന്നു…',
+
+      // Finance
+      'finance_title': 'ധനകാര്യം',
+      'finance_total_spend': 'ആകെ ചിലവ്',
+      'finance_this_month': 'ഈ മാസത്തെ ചിലവ്',
+      'finance_spending_cats': 'ചിലവ് വിഭാഗങ്ങൾ',
+      'finance_recent_expenses': 'സമീപകാല ഇടപാടുകൾ',
+      'finance_total_label': 'ആകെ',
+      'finance_add_expense_btn': 'ചിലവ് ചേർക്കുക',
+      'finance_amount': 'തുക (₹)',
+      'finance_amount_hint': 'ഉദാ: 250',
+      'finance_category': 'വിഭാഗം',
+      'finance_payment_method': 'പണമിടപാട് രീതി',
+      'finance_description': 'വിവരണം',
+      'finance_description_hint': 'എന്തിനാണ് ഈ ചിലവ്?',
+      'finance_date': 'തീയതി',
+
+      // Health
+      'health_title': 'ആരോഗ്യവും ക്ഷേമവും',
+      'health_today_status': 'ഇന്നത്തെ അവസ്ഥ',
+      'health_add_entry_btn': 'ഇന്നത്തെ രേഖപ്പെടുത്തൂ',
+      'health_streak': 'തുടർച്ചയായ ദിവസങ്ങൾ',
+      'health_days_logged': 'ദിവസങ്ങൾ രേഖപ്പെടുത്തി',
+      'health_avg_mood': 'ശരാശരി മാനസികാവസ്ഥ',
+      'health_avg_sleep': 'ശരാശരി ഉറക്കം',
+      'health_activity_label': 'വ്യായാമം',
+      'health_checkin_history': 'ചെക്ക്-ഇൻ ചരിത്രം',
+      'health_mood': 'മാനസികാവസ്ഥ',
+      'health_energy': 'ഊർജ്ജ നില',
+      'health_sleep': 'ഉറക്കം (മണിക്കൂറുകൾ)',
+      'health_activity': 'വ്യായാമം (മിനിറ്റുകൾ)',
+      'health_water': 'വെള്ളം കുടിച്ചത് (ലിറ്റർ)',
+      'health_notes': 'കുറിപ്പുകൾ',
+      'health_notes_hint': 'ഇന്ന് എങ്ങനെയുണ്ടായിരുന്നു?',
+
+      // Habits
+      'habits_title': 'ശീലങ്ങളും ലക്ഷ്യങ്ങളും',
+      'habits_tab_today': 'ഇന്ന്',
+      'habits_tab_week': 'ഈ ആഴ്ച',
+      'habits_tab_goals': 'ലക്ഷ്യങ്ങൾ',
+      'habits_add_btn': 'പുതിയ ശീലം ചേർക്കൂ',
+      'habits_name': 'ശീലത്തിന്റെ പേര്',
+      'habits_name_hint': 'ഉദാ: രാവിലെ ധ്യാനം അല്ലെങ്കിൽ നടത്തം',
+      'habits_frequency': 'ആവർത്തനം',
+      'habits_daily': 'ദിവസേന',
+      'habits_weekly': 'ആഴ്ചയിൽ',
+      'habits_no_habits': 'ശീലങ്ങൾ ഒന്നും ചേർത്തിട്ടില്ല',
+      'habits_empty_hint': '"പുതിയ ശീലം ചേർക്കൂ" അമർത്തി ആരംഭിക്കൂ.',
+
+      // Profile
+      'profile_title': 'പ്രൊഫൈൽ',
+      'profile_personal_info': 'വ്യക്തിഗത വിവരങ്ങൾ',
+      'profile_birth_details': 'ജനന വിവരങ്ങൾ',
+      'profile_preferences': 'മുൻഗണനകളും ഭാഷയും',
+      'profile_history': 'കൺസൾട്ടേഷൻ ചരിത്രം',
+      'profile_my_data': 'എന്റെ വിവരങ്ങൾ',
+      'profile_help': 'സഹായവും പിന്തുണയും',
+      'profile_privacy': 'സ്വകാര്യതയും സുരക്ഷയും',
+    },
+
+    // =========================================================================
+    // MANGLISH (Malayalam in English / Latin script)
+    // =========================================================================
+    AppLanguage.manglish: {
+      // Navigation Tabs
+      'tab_home': 'Home',
+      'tab_astrology': 'Jyothisham',
+      'tab_finance': 'Dhanakaryam',
+      'tab_health': 'Aarogyam',
+      'tab_track': 'Sheelangal',
+      'tab_insights': 'Insights',
+
+      // Greetings
+      'greeting_morning': 'Suprabhatham',
+      'greeting_afternoon': 'Shubhadinam',
+      'greeting_evening': 'Shubhasayahnam',
+      'moment_title': 'Ningalkkayi oru nimisham maatti vekkoo',
+      'moment_subtitle': 'Ningalude divasam shanthamayi, intention-ode thudanganulla oru ritual.',
+      'explore_avara': 'AVARA Explore Cheyyuka',
+
+      // Explore Modules
+      'mod_astrology_title': 'Jyothisham',
+      'mod_astrology_sub': 'Guidance kandethoo',
+      'mod_finance_title': 'Dhanakaryam',
+      'mod_finance_sub': 'Expenses track cheyyoo',
+      'mod_habits_title': 'Sheelangal',
+      'mod_habits_sub': 'Consistency valarthoo',
+      'mod_health_title': 'Aarogyam',
+      'mod_health_sub': 'Wellness track cheyyoo',
+      'mod_insights_title': 'Insights',
+      'mod_insights_sub': 'Progress kaanoo',
+
+      // Actions & Common
+      'btn_add': 'Add Cheyyuka',
+      'btn_save': 'Save Cheyyuka',
+      'btn_cancel': 'Cancel',
+      'btn_submit': 'Submit',
+      'btn_delete': 'Delete Cheyyuka',
+      'btn_edit': 'Edit Cheyyuka',
+      'btn_back': 'Pinnottu / Back',
+      'btn_logout': 'Log out',
+      'btn_done': 'Aayi / Done',
+      'btn_close': 'Close',
+      'coming_soon': 'Udane varunnu!',
+
+      // Language Switcher
+      'lang_switch_title': 'Display Language Select Cheyyuka',
+      'lang_switch_subtitle': 'App visuals udane update aavum',
+      'lang_english': 'English',
+      'lang_telugu': 'తెలుగు (Telugu)',
+      'lang_tanglish': 'Tanglish (Telugu in English)',
+      'lang_malayalam': 'മലയാളം (Malayalam)',
+      'lang_manglish': 'Manglish (Malayalam in English)',
+
+      // Voice
+      'voice_assistant_title': 'AVARA Voice Assistant',
+      'voice_speak_prompt': 'Kekkunnu... Samsarikkoo',
+      'voice_tap_to_speak': 'Samsarikkan mic tap cheyyuka',
+      'voice_listening': 'Kekkunnu...',
+      'voice_stop_listening': 'Stop Cheyyuka',
+      'voice_recognized_text': 'Recognized Words:',
+      'voice_command_applied': 'Voice command execute cheythu',
+      'voice_lang_switched': 'Language change cheythu',
+      'voice_try_saying': 'Try cheyyuka: "Change to Malayalam", "Manglish aakkuka", "Open Astrology", "Go to Finance"',
+
+      // Astrology
+      'astrology_title': 'Jyothisha Hub',
+      'astrology_hero_title': 'AVARA Jyothisham',
+      'astrology_hero_tagline': 'Chodyangal Chodikkoo. Perspectives Nedoo.',
+      'astrology_hero_sub': 'Life journey-kku nalla guidance',
+      'astrology_tile_ask': 'Chodyam Chodikkoo',
+      'astrology_tile_topics': 'Topics Explore Cheyyoo',
+      'astrology_tile_astrologer': 'Astrologer-odu Samsarikkoo',
+      'astrology_disclaimer': 'Astrology traditional interpretations nalkunnu, guaranteed outcomes alla.',
+      'astrology_chat_title': 'AVARA Jyothisham',
+      'astrology_chat_subtitle': 'Gemini Powered • Vedic Astrology',
+      'astrology_input_hint': 'Jathakathe patti chodikkoo… (mic tap cheyyoo)',
+      'astrology_birth_profile_title': 'Birth Profile & Kundali Evidence',
+      'astrology_dob': 'Janana Theeyathi (DOB)',
+      'astrology_tob': 'Janana Samayam (Time)',
+      'astrology_pob': 'Janicha Sthalam (Place)',
+      'astrology_pob_hint': 'City or Town (e.g. Kochi)',
+      'astrology_ayanamsa': 'Ayanamsa',
+      'astrology_generate_btn': 'Chart Calculate Cheyyuka',
+      'astrology_calculating': 'Kundali calculate cheyyunnu…',
+
+      // Finance
+      'finance_title': 'Dhanakaryam (Finance)',
+      'finance_total_spend': 'Aake Chilavu',
+      'finance_this_month': 'Ee Masathe Chilavu',
+      'finance_spending_cats': 'Chilavukalude Categories',
+      'finance_recent_expenses': 'Recent Transactions',
+      'finance_total_label': 'total',
+      'finance_add_expense_btn': 'Chilavu Add Cheyyuka',
+      'finance_amount': 'Thuka / Amount (₹)',
+      'finance_amount_hint': 'e.g. 250',
+      'finance_category': 'Category',
+      'finance_payment_method': 'Payment Mode',
+      'finance_description': 'Description',
+      'finance_description_hint': 'Enthinaanu ee chilavu?',
+      'finance_date': 'Date',
+
+      // Health
+      'health_title': 'Aarogyam & Wellness',
+      'health_today_status': 'Innathe Status',
+      'health_add_entry_btn': 'Innathe Log Cheyyuka',
+      'health_streak': 'Streak',
+      'health_days_logged': 'days logged',
+      'health_avg_mood': 'Avg Mood',
+      'health_avg_sleep': 'Avg Sleep',
+      'health_activity_label': 'Activity',
+      'health_checkin_history': 'Check-in History',
+      'health_mood': 'Mood',
+      'health_energy': 'Energy Level',
+      'health_sleep': 'Urakkam (Hours)',
+      'health_activity': 'Activity / Walk (Minutes)',
+      'health_water': 'Vellam (Liters)',
+      'health_notes': 'Notes',
+      'health_notes_hint': 'Innu enganeyundarunnu?',
+
+      // Habits
+      'habits_title': 'Sheelangalum Goals-um',
+      'habits_tab_today': 'Innu',
+      'habits_tab_week': 'Ee Aazhcha',
+      'habits_tab_goals': 'Goals',
+      'habits_add_btn': 'Sheelam Add Cheyyuka',
+      'habits_name': 'Sheelathinte Peru',
+      'habits_name_hint': 'e.g. Ravile Walk / Meditation',
+      'habits_frequency': 'Frequency',
+      'habits_daily': 'Daily',
+      'habits_weekly': 'Weekly',
+      'habits_no_habits': 'Sheelangal onnum illa',
+      'habits_empty_hint': '"Sheelam Add Cheyyuka" tap cheythu start cheyyoo.',
+
+      // Profile
+      'profile_title': 'Profile',
+      'profile_personal_info': 'Personal Information',
+      'profile_birth_details': 'Birth Details',
+      'profile_preferences': 'Preferences & Language',
+      'profile_history': 'Consultation History',
+      'profile_my_data': 'Ente Data',
       'profile_help': 'Help & Support',
       'profile_privacy': 'Privacy & Security',
     },

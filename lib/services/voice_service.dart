@@ -569,6 +569,47 @@ class VoiceService extends ChangeNotifier {
       );
     }
 
+    // Malayalam triggers:
+    if (_matchesPattern(clean, [
+      'change to malayalam',
+      'switch to malayalam',
+      'set to malayalam',
+      'malayalam aakkuka',
+      'malayalathil aakkuka',
+      'malayalam bhasha',
+      'malayalathil',
+      'malayalam',
+      'മലയാളം',
+    ])) {
+      AppLanguageService.instance.setLanguage(AppLanguage.malayalam);
+      return VoiceCommandResult(
+        type: VoiceCommandType.changeLanguage,
+        rawTranscript: spokenText,
+        targetLanguage: AppLanguage.malayalam,
+        feedbackMessage: 'ഭാഷ മലയാളത്തിലേക്ക് മാറ്റി (Changed to Malayalam)',
+      );
+    }
+
+    // Manglish triggers:
+    if (_matchesPattern(clean, [
+      'change to manglish',
+      'switch to manglish',
+      'set to manglish',
+      'manglish aakkuka',
+      'manglish bhasha',
+      'manglish',
+      'malayalam in english',
+      'malayalam english mixed',
+    ])) {
+      AppLanguageService.instance.setLanguage(AppLanguage.manglish);
+      return VoiceCommandResult(
+        type: VoiceCommandType.changeLanguage,
+        rawTranscript: spokenText,
+        targetLanguage: AppLanguage.manglish,
+        feedbackMessage: 'Language changed to Manglish (Malayalam in English)',
+      );
+    }
+
     // English triggers:
     if (_matchesPattern(clean, [
       'change to english',
