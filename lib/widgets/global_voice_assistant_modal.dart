@@ -479,6 +479,28 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
                             : AppColors.deepNavy,
                       ),
                     ),
+                    if (_lastResult == null) ...[
+                      const SizedBox(height: 10),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          _stopListening();
+                          _executeCommand(_liveTranscript);
+                        },
+                        icon: const Icon(Icons.send_rounded, size: 16),
+                        label: const Text(
+                          '🚀 Do It Now (Ask AVARA / Execute)',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.blue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

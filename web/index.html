@@ -58,6 +58,144 @@
     })();
 
     // =========================================================================
+    // AVARA Native Web Speech Recognition Engine
+    // Direct Chrome webkitSpeechRecognition bridge for real-time dictation & actions
+    // =========================================================================
+    (function() {
+      var recognition = null;
+      var activeOnResult = null;
+      var activeOnEnd = null;
+      var activeOnError = null;
+      var silenceTimer = null;
+      var lastTranscript = '';
+      var isExplicitlyStopped = false;
+
+      window.isWebSpeechAvailable = function() {
+        return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      };
+
+      window.startWebSpeechRecognition = function(lang, onResult, onEnd, onError) {
+        var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) {
+          console.warn('🎤 [AVARA Web Speech]: SpeechRecognition not available in browser');
+          if (onError) onError('browser-not-supported');
+          return false;
+        }
+
+        try {
+          if (recognition) {
+            try { recognition.abort(); } catch(e){}
+            recognition = null;
+          }
+
+          if (silenceTimer) {
+            clearTimeout(silenceTimer);
+            silenceTimer = null;
+          }
+
+          activeOnResult = onResult;
+          activeOnEnd = onEnd;
+          activeOnError = onError;
+          lastTranscript = '';
+          isExplicitlyStopped = false;
+
+          recognition = new SpeechRec();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.maxAlternatives = 1;
+          recognition.lang = lang || 'en-IN';
+
+          recognition.onstart = function() {
+            console.log('🎤 [AVARA Web Speech]: Listening started in', recognition.lang);
+          };
+
+          recognition.onresult = function(event) {
+            var fullTranscript = '';
+            var hasFinal = false;
+
+            for (var i = 0; i < event.results.length; i++) {
+              var res = event.results[i];
+              if (res && res[0] && res[0].transcript) {
+                var piece = res[0].transcript.trim();
+                if (piece.length > 0) {
+                  fullTranscript += (fullTranscript.length > 0 ? ' ' : '') + piece;
+                }
+              }
+              if (res && res.isFinal) {
+                hasFinal = true;
+              }
+            }
+
+            fullTranscript = fullTranscript.trim();
+            if (fullTranscript.length > 0) {
+              lastTranscript = fullTranscript;
+              console.log('🎤 [AVARA Web Speech]: Recognized:', fullTranscript, '(hasFinal:', hasFinal, ')');
+              if (activeOnResult) {
+                activeOnResult(fullTranscript, false);
+              }
+
+              // Silence debounce timer: 1200ms after user pauses speaking, auto-finalize and trigger action
+              if (silenceTimer) clearTimeout(silenceTimer);
+              silenceTimer = setTimeout(function() {
+                console.log('🎤 [AVARA Web Speech]: Silence detected — auto-finalizing:', lastTranscript);
+                if (activeOnResult && lastTranscript.length > 0) {
+                  activeOnResult(lastTranscript, true);
+                }
+                window.stopWebSpeechRecognition();
+              }, 1200);
+            }
+          };
+
+          recognition.onerror = function(event) {
+            console.warn('🎤 [AVARA Web Speech Error]:', event.error);
+            if (event.error === 'no-speech') {
+              // Ignore transient browser silence — keep session alive
+              return;
+            }
+            if (activeOnError) {
+              activeOnError(event.error || 'speech-error');
+            }
+          };
+
+          recognition.onend = function() {
+            console.log('🎤 [AVARA Web Speech]: Session ended. Explicit:', isExplicitlyStopped);
+            if (silenceTimer) {
+              clearTimeout(silenceTimer);
+              silenceTimer = null;
+            }
+            if (!isExplicitlyStopped && lastTranscript.length > 0 && activeOnResult) {
+              activeOnResult(lastTranscript, true);
+            }
+            if (activeOnEnd) {
+              activeOnEnd();
+            }
+          };
+
+          recognition.start();
+          return true;
+        } catch(err) {
+          console.error('🎤 [AVARA Web Speech Start Error]:', err);
+          if (onError) onError(err.toString());
+          return false;
+        }
+      };
+
+      window.stopWebSpeechRecognition = function() {
+        isExplicitlyStopped = true;
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+          silenceTimer = null;
+        }
+        if (recognition) {
+          try {
+            recognition.stop();
+          } catch(e) {}
+          recognition = null;
+        }
+      };
+    })();
+
+    // =========================================================================
     // AVARA Sacred Vedic Audio & Authentic Chanting Engine
     // (432Hz Harmonic Singing Bowl + Pure Indian Sanskrit Recitation Audio)
     // =========================================================================

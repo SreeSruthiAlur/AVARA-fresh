@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
+import 'package:avara_astrology_trial/services/web_audio_stub.dart'
+    if (dart.library.js) 'package:avara_astrology_trial/services/web_audio_web.dart';
 
 /// Categories of voice commands supported by AVARA.
 enum VoiceCommandType {
@@ -110,6 +112,14 @@ class VoiceService extends ChangeNotifier {
   /// Prepares the speech recognition engine.
   Future<bool> initialize() async {
     if (_isInitialized) return true;
+
+    if (kIsWeb && isWebSpeechRecognitionSupported()) {
+      _isInitialized = true;
+      _hasPermissionError = false;
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    }
 
     try {
       _hasPermissionError = false;
@@ -221,6 +231,53 @@ class VoiceService extends ChangeNotifier {
     // Ensure BCP-47 hyphens for web browsers (e.g. en-IN instead of en_IN)
     final localeId = rawLocale.replaceAll('_', '-');
 
+    // First priority on Web: Native Chrome SpeechRecognition
+    if (kIsWeb && isWebSpeechRecognitionSupported()) {
+      _isListening = true;
+      notifyListeners();
+
+      final started = startWebSpeechRecognition(
+        lang: localeId,
+        onResult: (text, isFinal) {
+          _lastWords = text;
+          if (isFinal) {
+            _hasFinalized = true;
+            _isListening = false;
+            _soundLevel = 0.0;
+            onResult(text, true);
+            notifyListeners();
+          } else {
+            _soundLevel = 0.75;
+            onResult(text, false);
+            notifyListeners();
+          }
+        },
+        onEnd: () {
+          _isListening = false;
+          _soundLevel = 0.0;
+          notifyListeners();
+        },
+        onError: (err) {
+          debugPrint('🎤 [AVARA Web Speech Error]: $err');
+          final lower = err.toLowerCase();
+          if (lower.contains('not-allowed') ||
+              lower.contains('denied') ||
+              lower.contains('permission')) {
+            _hasPermissionError = true;
+            _errorMessage =
+                'Microphone permission blocked. Click the 🔒 lock icon in the Chrome URL bar and select "Allow" for Microphone.';
+          } else if (!lower.contains('no-speech')) {
+            _errorMessage = 'Voice status: $err';
+          }
+          _isListening = false;
+          _soundLevel = 0.0;
+          notifyListeners();
+        },
+      );
+
+      if (started) return;
+    }
+
     try {
       _isListening = true;
       notifyListeners();
@@ -302,6 +359,9 @@ class VoiceService extends ChangeNotifier {
   Future<void> stopListening() async {
     _silenceTimer?.cancel();
     _silenceTimer = null;
+    if (kIsWeb) {
+      stopWebSpeechRecognition();
+    }
     try {
       if (!_hasFinalized && _lastWords.trim().isNotEmpty) {
         _hasFinalized = true;
