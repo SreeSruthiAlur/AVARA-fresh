@@ -280,6 +280,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildYouthDashboard(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final conn1 = switch (lang) {
+      AppLanguage.telugu => '⚡ ఖగోళ హోరా ➔ రోజువారీ క్వెస్ట్ శక్తి ⚡',
+      AppLanguage.tanglish => '⚡ Cosmic Hora Feeds Daily Quest Energy ⚡',
+      AppLanguage.malayalam => '⚡ ജ്യോതിഷ ഹോര ➔ ദൈനംദിന ക്വസ്റ്റ് ഊർജ്ജം ⚡',
+      AppLanguage.manglish => '⚡ Jyothisha Hora ➔ Daily Quest Oorjjam ⚡',
+      AppLanguage.english => '⚡ Cosmic Hora Feeds Daily Energy & Quests ⚡',
+    };
+    final conn2 = switch (lang) {
+      AppLanguage.telugu => '🎯 సాధించిన క్వెస్టులు ➔ 5 స్తంభాల సమతుల్యత 🎯',
+      AppLanguage.tanglish => '🎯 Quests Discipline ➔ 5-Pillar Equilibrium 🎯',
+      AppLanguage.malayalam => '🎯 ക്വസ്റ്റ് അച്ചടക്കം ➔ 5 തൂണുകളുടെ സന്തുലിതാവസ്ഥ 🎯',
+      AppLanguage.manglish => '🎯 Quest Discipline ➔ 5 Pillars Equilibrium 🎯',
+      AppLanguage.english => '🎯 Gamified Quests Fuel 5-Pillar Equilibrium 🎯',
+    };
+    final conn3 = switch (lang) {
+      AppLanguage.telugu => '🔗 5 స్తంభాల అఖండ జీవన ప్రవాహం & సమన్వయం 🔗',
+      AppLanguage.tanglish => '🔗 5-Pillar Interconnected Life Flow 🔗',
+      AppLanguage.malayalam => '🔗 5 തൂണുകളുടെ അഖണ്ഡ ജീവന പ്രവാഹം 🔗',
+      AppLanguage.manglish => '🔗 5 Pillars Interconnected Jeevana Pravaham 🔗',
+      AppLanguage.english => '🔗 5-Pillar Connected Life Flow & Synergy 🔗',
+    };
+    final conn4 = switch (lang) {
+      AppLanguage.telugu => '📈 నిరంతర దైనందిన జీవన ప్రవాహం 📈',
+      AppLanguage.tanglish => '📈 Daily Continuous Life Stream 📈',
+      AppLanguage.malayalam => '📈 തുടർച്ചയായ ദൈനംദിന ജീവിത പ്രവാഹം 📈',
+      AppLanguage.manglish => '📈 Thudarchayaaya Daily Jeevitha Stream 📈',
+      AppLanguage.english => '📈 Continuous Chronological Life Stream 📈',
+    };
+    final conn5 = switch (lang) {
+      AppLanguage.telugu => '📊 సమగ్ర విశ్లేషణలు & దైనందిన నివేదికలు 📊',
+      AppLanguage.tanglish => '📊 Holistic Insights & Daily Reports 📊',
+      AppLanguage.malayalam => '📊 സമഗ്ര ഉൾക്കാഴ്ചകളും ദൈനംദിന റിപ്പോർട്ടുകളും 📊',
+      AppLanguage.manglish => '📊 Holistic Insights & Daily Reports 📊',
+      AppLanguage.english => '📊 Synergy Insights & Multi-Graphic Analytics 📊',
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -293,23 +330,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           onOpenDetox: () => _showYouthDetoxModal(context),
         ),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn1),
 
         // 2. Interactive Mind Quests & XP Task Tracker
         const YouthCyberQuestEngine(),
-        const SizedBox(height: 22),
+        FlowConduitConnector(title: conn2),
 
         // 3. 5-Pillar Synergy Spider Radar (Gamified Life Harmony)
         const HolisticRadarSynergyChart(),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn3),
 
         // 4. Cybernetic Nexus Graph (Astrology, Health, Habits, Finance, Insights)
         ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
-        const SizedBox(height: 18),
+        FlowConduitConnector(title: conn4),
 
         // 5. Chronological Daily Synergy Stream
         UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
-        const SizedBox(height: 22),
+        FlowConduitConnector(title: conn5),
 
         // 6. Daily Self-Help Multi-Graphic Reports
         _buildDailyReportsSection(context),
@@ -318,6 +355,50 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAdultDashboard(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final conn1 = switch (lang) {
+      AppLanguage.telugu => '⚡ ఎగ్జిక్యూటివ్ సామర్థ్యం ➔ సర్కాడియన్ జీవ లయ ⚡',
+      AppLanguage.tanglish => '⚡ Executive Performance ➔ Circadian Rhythm ⚡',
+      AppLanguage.malayalam => '⚡ ഉന്നത പ്രകടനം ➔ സർക്കാഡിയൻ ജൈവ താളം ⚡',
+      AppLanguage.manglish => '⚡ High Performance ➔ Circadian Bio-Rhythm ⚡',
+      AppLanguage.english => '⚡ High Performance ➔ Circadian Bio-Rhythm ⚡',
+    };
+    final conn2 = switch (lang) {
+      AppLanguage.telugu => '💼 అత్యున్నత ఏకాగ్రతా సమయం ➔ వివేక నిర్ణయాలు 💼',
+      AppLanguage.tanglish => '💼 Peak Energy Hours ➔ Clear Decision Making 💼',
+      AppLanguage.malayalam => '💼 ഊർജ്ജസ്വല നിമിഷങ്ങൾ ➔ വിവേകപൂർണ്ണമായ തീരുമാനങ്ങൾ 💼',
+      AppLanguage.manglish => '💼 Peak Hours ➔ Clear Decisions 💼',
+      AppLanguage.english => '💼 Peak Cognitive Hours Drive Mindful Decisions 💼',
+    };
+    final conn3 = switch (lang) {
+      AppLanguage.telugu => '⚖️ వివేక నిర్ణయాలు ➔ జీవన సమతుల్యత ⚖️',
+      AppLanguage.tanglish => '⚖️ Mindful Choices ➔ Life Radar Balance ⚖️',
+      AppLanguage.malayalam => '⚖️ വിവേകപരമായ തീരുമാനങ്ങൾ ➔ ജീവിത സന്തുലിതാവസ്ഥ ⚖️',
+      AppLanguage.manglish => '⚖️ Mindful Choices ➔ Life Balance ⚖️',
+      AppLanguage.english => '⚖️ Mindful Choices Balance Life Radar ⚖️',
+    };
+    final conn4 = switch (lang) {
+      AppLanguage.telugu => '🔗 5 స్తంభాల అనుసంధానం: క్రమశిక్షణ సంపదను కాపాడుతుంది 🔗',
+      AppLanguage.tanglish => '🔗 5-Pillars Connected: Habits Protect Wealth 🔗',
+      AppLanguage.malayalam => '🔗 5 സ്തംഭ ശൃംഖല: അച്ചടക്കം സമ്പത്ത് സംരക്ഷിക്കുന്നു 🔗',
+      AppLanguage.manglish => '🔗 5 Pillars Connected: Discipline Protects Wealth 🔗',
+      AppLanguage.english => '🔗 5-Pillar Ecosystem: Discipline Protects Wealth 🔗',
+    };
+    final conn5 = switch (lang) {
+      AppLanguage.telugu => '📈 అనుసంధాన ఎగ్జిక్యూటివ్ జీవన ప్రవాహం 📈',
+      AppLanguage.tanglish => '📈 Integrated Executive Life Stream 📈',
+      AppLanguage.malayalam => '📈 സമഗ്ര എക്സിക്യൂട്ടീവ് ജീവിത പ്രവാഹം 📈',
+      AppLanguage.manglish => '📈 Integrated Executive Life Stream 📈',
+      AppLanguage.english => '📈 Integrated Executive Life Stream 📈',
+    };
+    final conn6 = switch (lang) {
+      AppLanguage.telugu => '📊 ఆరోగ్యం, సంపద, అలవాట్ల సమగ్ర నివేదికలు 📊',
+      AppLanguage.tanglish => '📊 Health, Wealth & Habit Reports 📊',
+      AppLanguage.malayalam => '📊 ആരോഗ്യം, സമ്പത്ത്, ശീലം സമഗ്ര റിപ്പോർട്ടുകൾ 📊',
+      AppLanguage.manglish => '📊 Health, Wealth & Habit Reports 📊',
+      AppLanguage.english => '📊 Multi-Metric Health, Wealth & Habit Reports 📊',
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -326,27 +407,27 @@ class _HomeScreenState extends State<HomeScreen> {
           userName: widget.userName,
           onOpenPillar: _navigateToPillar,
         ),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn1),
 
         // 2. Executive Circadian Energy Flow & Peak Hours
         const ExecutiveCircadianFlowCard(),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn2),
 
         // 3. Executive Moment Card (Circadian Peak & Decision Making)
         _buildMomentCard(context),
-        const SizedBox(height: 22),
+        FlowConduitConnector(title: conn3),
 
         // 4. 5-Pillar Executive Radar
         const HolisticRadarSynergyChart(),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn4),
 
         // 5. Connected Pillars Nexus Widget
         ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
-        const SizedBox(height: 18),
+        FlowConduitConnector(title: conn5),
 
         // 6. Daily Executive Circadian Stream
         UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
-        const SizedBox(height: 22),
+        FlowConduitConnector(title: conn6),
 
         // 7. Multi-Graphic Daily Reports
         _buildDailyReportsSection(context),
@@ -355,6 +436,50 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSeniorDashboard(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final conn1 = switch (lang) {
+      AppLanguage.telugu => '📿 ఉదయపు శ్లోకాలు ➔ 108 వేద జపమాల సాధన 📿',
+      AppLanguage.tanglish => '📿 Morning Slokas Flow into 108 Japa Mala 📿',
+      AppLanguage.malayalam => '📿 പ്രഭാത ശ്ലോകങ്ങൾ ➔ 108 ജപമാല സാധന 📿',
+      AppLanguage.manglish => '📿 Morning Slokas ➔ 108 Japa Mala Sadhana 📿',
+      AppLanguage.english => '📿 Morning Slokas Flow into 108 Japa Chanting 📿',
+    };
+    final conn2 = switch (lang) {
+      AppLanguage.telugu => '🌿 జప కంపనాలు ➔ ఆయుర్వేద త్రిదోష సమతుల్యత 🌿',
+      AppLanguage.tanglish => '🌿 Sacred Japa Vibrations Balance Tridoshas 🌿',
+      AppLanguage.malayalam => '🌿 ജപ പ്രകമ്പനങ്ങൾ ➔ ആയുർവേദ ത്രിദോഷ സന്തുലനം 🌿',
+      AppLanguage.manglish => '🌿 Japa Vibrations Balance Ayurvedic Doshas 🌿',
+      AppLanguage.english => '🌿 Sacred Japa Vibrations Balance Ayurvedic Doshas 🌿',
+    };
+    final conn3 = switch (lang) {
+      AppLanguage.telugu => '🔗 5 స్తంభాల పవిత్ర జీవన సమన్వయ మండలం 🔗',
+      AppLanguage.tanglish => '🔗 Sacred 5-Pillar Mandala of Harmony 🔗',
+      AppLanguage.malayalam => '🔗 5 സ്തംഭ പവിത്ര ജീവിത സമന്വയ മണ്ഡലം 🔗',
+      AppLanguage.manglish => '🔗 Sacred 5 Pillars Mandala of Harmony 🔗',
+      AppLanguage.english => '🔗 Sacred 5-Pillar Mandala of Life Harmony 🔗',
+    };
+    final conn4 = switch (lang) {
+      AppLanguage.telugu => '🌸 సమగ్ర దైనందిన వేద జీవన ప్రవాహం 🌸',
+      AppLanguage.tanglish => '🌸 Daily Vedic Routine Stream 🌸',
+      AppLanguage.malayalam => '🌸 സമഗ്ര ദൈനംദിന വേദ ജീവിത പ്രവാഹം 🌸',
+      AppLanguage.manglish => '🌸 Daily Vedic Routine Stream 🌸',
+      AppLanguage.english => '🌸 Integrated Daily Vedic Routine Stream 🌸',
+    };
+    final conn5 = switch (lang) {
+      AppLanguage.telugu => '✨ ప్రశాంత మనస్సు ➔ ఆత్మ సమతుల్యత ✨',
+      AppLanguage.tanglish => '✨ Peaceful Mind ➔ Soul Equilibrium ✨',
+      AppLanguage.malayalam => '✨ പ്രശാന്ത മനസ്സ് ➔ ആത്മീയ സന്തുലിതാവസ്ഥ ✨',
+      AppLanguage.manglish => '✨ Peaceful Mind ➔ Soul Equilibrium ✨',
+      AppLanguage.english => '✨ Peaceful Mind Shapes Soul Equilibrium ✨',
+    };
+    final conn6 = switch (lang) {
+      AppLanguage.telugu => '📊 దైనందిన ఆరోగ్య & ఆధ్యాత్మిక ప్రగతి నివేదికలు 📊',
+      AppLanguage.tanglish => '📊 Daily Wellness & Spiritual Growth Reports 📊',
+      AppLanguage.malayalam => '📊 ദൈനംദിന ആരോഗ്യ & ആത്മീയ പുരോഗതി റിപ്പോർട്ടുകൾ 📊',
+      AppLanguage.manglish => '📊 Daily Wellness & Spiritual Growth Reports 📊',
+      AppLanguage.english => '📊 Daily Wellness & Spiritual Growth Reports 📊',
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,27 +490,27 @@ class _HomeScreenState extends State<HomeScreen> {
           onOpenWalk: () => _navigateToPillar(2), // Habits
           onOpenBlessings: () => _navigateToPillar(0), // Astrology
         ),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn1),
 
         // 2. 108-Bead Sacred Japa Mala Counter (Tap to chant)
         const SacredJapaMalaCounterWidget(),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn2),
 
         // 3. Ayurvedic Tridosha Vitality Wheel (Vata, Pitta, Kapha)
         const AyurvedicTridoshaWheel(),
-        const SizedBox(height: 22),
+        FlowConduitConnector(title: conn3),
 
         // 4. Sacred 5-Pillar Mandala of Life Harmony
         ConnectedPillarsNexusWidget(onOpenPillar: _navigateToPillar),
-        const SizedBox(height: 18),
+        FlowConduitConnector(title: conn4),
 
         // 5. Chronological Spiritual Daily Routine
         UnifiedHolisticSynergyStream(onOpenPillar: _navigateToPillar),
-        const SizedBox(height: 22),
+        FlowConduitConnector(title: conn5),
 
         // 6. Holistic Life Radar
         const HolisticRadarSynergyChart(),
-        const SizedBox(height: 20),
+        FlowConduitConnector(title: conn6),
 
         // 7. Daily Reports
         _buildDailyReportsSection(context),

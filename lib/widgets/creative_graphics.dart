@@ -1,4 +1,9 @@
 import 'dart:math' as math;
+import 'package:avara_astrology_trial/screens/astrology_hub_screen.dart';
+import 'package:avara_astrology_trial/screens/finance_screen.dart';
+import 'package:avara_astrology_trial/screens/habits_screen.dart';
+import 'package:avara_astrology_trial/screens/health_screen.dart';
+import 'package:avara_astrology_trial/screens/insights_screen.dart';
 import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
@@ -1542,11 +1547,164 @@ class Spherical3DBubblePainter extends CustomPainter {
 }
 
 // =============================================================================
+// 6B. Living Visual Energy Conduit Connector (Eliminating Disjointed Blocks)
+// =============================================================================
+
+/// An animated glowing energy conduit that runs vertically between dashboard
+/// sections, visually connecting them so they do not feel like separate blocks,
+/// but rather a unified, continuous living life-flow pipeline.
+class FlowConduitConnector extends StatefulWidget {
+  const FlowConduitConnector({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.accentColor,
+    this.height = 44,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Color? accentColor;
+  final double height;
+
+  @override
+  State<FlowConduitConnector> createState() => _FlowConduitConnectorState();
+}
+
+class _FlowConduitConnectorState extends State<FlowConduitConnector>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ageGroup = AgeProfileService.instance.ageGroup;
+    final color = widget.accentColor ??
+        switch (ageGroup) {
+          AgeGroup.youth => const Color(0xFF00CEC9),
+          AgeGroup.adult => const Color(0xFF2563EB),
+          AgeGroup.senior => const Color(0xFFD97706),
+        };
+
+    return SizedBox(
+      height: widget.height,
+      child: AnimatedBuilder(
+        animation: _animController,
+        builder: (context, _) {
+          return CustomPaint(
+            painter: _ConduitLinePainter(
+              color: color,
+              animValue: _animController.value,
+            ),
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4.5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: color.withValues(alpha: 0.45), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.16),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.keyboard_double_arrow_down_rounded, size: 13, color: color),
+                    const SizedBox(width: 5),
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Icon(Icons.keyboard_double_arrow_down_rounded, size: 13, color: color),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ConduitLinePainter extends CustomPainter {
+  _ConduitLinePainter({
+    required this.color,
+    required this.animValue,
+  });
+
+  final Color color;
+  final double animValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final h = size.height;
+
+    // Glowing background line
+    final linePaint = Paint()
+      ..color = color.withValues(alpha: 0.22)
+      ..strokeWidth = 2.4
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(cx, 0), Offset(cx, h), linePaint);
+
+    // Glowing travelling energy pulse particles
+    final particlePaint = Paint()..style = PaintingStyle.fill;
+    for (int i = 0; i < 3; i++) {
+      final t = (animValue + (i * 0.33)) % 1.0;
+      final y = t * h;
+      final alpha = (math.sin(t * math.pi) * 0.9).clamp(0.2, 0.95);
+      particlePaint.color = color.withValues(alpha: alpha);
+      canvas.drawCircle(Offset(cx, y), 3.0, particlePaint);
+
+      // Soft halo glow
+      canvas.drawCircle(
+        Offset(cx, y),
+        6.0,
+        Paint()
+          ..color = color.withValues(alpha: alpha * 0.35)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConduitLinePainter oldDelegate) =>
+      oldDelegate.animValue != animValue || oldDelegate.color != color;
+}
+
+// =============================================================================
 // 7. Connected Pillars Nexus Widget (Interconnected Holistic Ecosystem)
 // =============================================================================
 
 /// Interactive interconnected pentagonal nexus showing how Astrology, Health,
-/// Habits, Finance, and Insights are interconnected in daily life.
+/// Habits, Finance, and Insights are interconnected in daily life as a continuous
+/// life flow, eliminating isolated blocks and making the holistic cycle clear.
 class ConnectedPillarsNexusWidget extends StatefulWidget {
   const ConnectedPillarsNexusWidget({
     super.key,
@@ -1566,49 +1724,6 @@ class _ConnectedPillarsNexusWidgetState
   late final AnimationController _pulseController;
   int _selectedPillar = 0; // 0: Astrology, 1: Health, 2: Habits, 3: Finance, 4: Insights
 
-  static const List<Map<String, dynamic>> _pillars = [
-    {
-      'name': 'Astrology',
-      'role': 'Circadian & Cosmic Clock',
-      'color': Color(0xFF6C5CE7),
-      'icon': Icons.nightlight_round,
-      'synergy': 'Guides peak mental energy windows (10 AM - 1 PM) and lunar emotional cycles.',
-      'connectsTo': 'Feeds optimal waking and nutrition timing directly into Health & Habits.',
-    },
-    {
-      'name': 'Health',
-      'role': 'Vital Body & Rest',
-      'color': Color(0xFF00CEC9),
-      'icon': Icons.favorite_rounded,
-      'synergy': 'Provides physiological energy, deep sleep, and low stress cortisol.',
-      'connectsTo': 'Gives physical willpower needed to maintain consistent daily Habits.',
-    },
-    {
-      'name': 'Habits',
-      'role': 'Daily Execution',
-      'color': Color(0xFFE17055),
-      'icon': Icons.track_changes_rounded,
-      'synergy': 'Builds myelinated neural pathways through 25m focus & evening wind-downs.',
-      'connectsTo': 'Eliminates impulsive stress-spending and protects Mindful Finance.',
-    },
-    {
-      'name': 'Finance',
-      'role': 'Mindful Wealth',
-      'color': Color(0xFF00B894),
-      'icon': Icons.account_balance_wallet_rounded,
-      'synergy': 'Disciplined budgeting and 24-hr cooling pauses preserve freedom.',
-      'connectsTo': 'Removes financial anxiety, allowing deep peace for Insights & Meditation.',
-    },
-    {
-      'name': 'Insights',
-      'role': 'Holistic Synthesis',
-      'color': Color(0xFFE84393),
-      'icon': Icons.auto_graph_rounded,
-      'synergy': 'Synthesizes all 4 components into a unified 88% Holistic Life Index.',
-      'connectsTo': 'Reveals cross-pillar patterns so you continuously grow better.',
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -1624,21 +1739,484 @@ class _ConnectedPillarsNexusWidgetState
     super.dispose();
   }
 
+  List<Map<String, dynamic>> _getPillars(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.telugu:
+        return [
+          {
+            'name': 'జ్యోతిషం',
+            'role': 'కాస్మిక్ & సర్కాడియన్ క్లాక్',
+            'color': const Color(0xFF6C5CE7),
+            'icon': Icons.nightlight_round,
+            'fedFrom': 'విశ్లేషణలు (ఆత్మ సంకల్పం & కర్మ సమతుల్యత)',
+            'feedsInto': 'ఆరోగ్యం (నిద్ర & జీవన లయ సమయాలు)',
+            'synergy': 'సూర్య, చంద్ర గ్రహ స్థానాల ఆధారంగా ఉదయపు ఏకాగ్రతా వేళలను (10:00 AM - 1:30 PM) నిర్దేశిస్తుంది.',
+            'connectsTo': 'ఆరోగ్యానికి సరైన నిద్ర వేళలు, జీర్ణక్రియ సమయాలను అందిస్తుంది.',
+            'practicalImpact': 'కాస్మిక్ వేళల్లో జీవించడం వల్ల మెదడు అలసట 35% తగ్గి సహజ శక్తి పెరుగుతుంది.',
+            'nextName': 'ఆరోగ్యం',
+          },
+          {
+            'name': 'ఆరోగ్యం',
+            'role': 'శరీర శక్తి & ఆయుర్వేదం',
+            'color': const Color(0xFF00CEC9),
+            'icon': Icons.favorite_rounded,
+            'fedFrom': 'జ్యోతిషం (సర్కాడియన్ నిద్ర వేళలు)',
+            'feedsInto': 'అలవాట్లు (సాధన & ఏకాగ్రత సంకల్పం)',
+            'synergy': 'పిత్త-కఫ సమతుల్యత, గాఢ నిద్ర మరియు సమతుల్య పోషణ ద్వారా శరీర రోగనిరోధక శక్తిని ఇస్తుంది.',
+            'connectsTo': 'రోజువారీ అలవాట్లను క్రమశిక్షణతో ఆచరించడానికి అవసరమైన దృఢ సంకల్ప శక్తిని ఇస్తుంది.',
+            'practicalImpact': 'గాఢ నిద్ర మరియు హైడ్రేషన్ ఉదయం 25 నిమిషాల డీప్ వర్క్ స్ప్రింట్‌లకు అపార శక్తినిస్తాయి.',
+            'nextName': 'అలవాట్లు',
+          },
+          {
+            'name': 'అలవాట్లు',
+            'role': 'రోజువారీ సాధన & లక్ష్యాలు',
+            'color': const Color(0xFFE17055),
+            'icon': Icons.track_changes_rounded,
+            'fedFrom': 'ఆరోగ్యం (శారీరక శక్తి & నిశ్చల మనస్సు)',
+            'feedsInto': 'ఆర్థికం (క్రమశిక్షణ & స్పృహతో కూడిన వ్యయం)',
+            'synergy': '25 నిమిషాల ఏకాగ్రత మరియు రోజూ స్థిరమైన దినచర్యల ద్వారా న్యూరల్ మార్గాలను బలపరుస్తుంది.',
+            'connectsTo': 'ఒత్తిడితో కూడిన అనవసర ఖర్చులను నియంత్రించి ఆర్థిక ప్రశాంతతను కాపాడుతుంది.',
+            'practicalImpact': 'స్థిరమైన అలవాట్లు డోపమైన్ కోసం చేసే అనవసర కొనుగోళ్లను అరికట్టి ₹12,000+ ఆదా చేస్తాయి.',
+            'nextName': 'ఆర్థికం',
+          },
+          {
+            'name': 'ఆర్థికం',
+            'role': 'స్పృహతో కూడిన సంపద & బడ్జెట్',
+            'color': const Color(0xFF00B894),
+            'icon': Icons.account_balance_wallet_rounded,
+            'fedFrom': 'అలవాట్లు (క్రమశిక్షణ & సంతృప్తి భావన)',
+            'feedsInto': 'విశ్లేషణలు (మానసిక ప్రశాంతత & సమగ్ర జీవన సూచిక)',
+            'synergy': 'క్రమశిక్షణతో కూడిన బడ్జెట్ మరియు 24-గంటల ఆలోచనా వ్యవధి ఆర్థిక స్వేచ్ఛను ఇస్తాయి.',
+            'connectsTo': 'డబ్బు ఆందోళనలను తొలగించి, ప్రశాంత ధ్యానం మరియు విశ్లేషణలకు మనస్సును స్వేచ్ఛ చేస్తుంది.',
+            'practicalImpact': 'అప్పులు, అనవసర ఖర్చులు లేకపోవడం వల్ల నిద్ర నాణ్యత మరియు మానసిక ప్రశాంతత పెరుగుతాయి.',
+            'nextName': 'విశ్లేషణలు',
+          },
+          {
+            'name': 'విశ్లేషణలు',
+            'role': 'జీవిత సమగ్ర సమతుల్యత',
+            'color': const Color(0xFFE84393),
+            'icon': Icons.auto_graph_rounded,
+            'fedFrom': 'ఆర్థికం (ఆర్థిక భద్రత & మనశ్శాంతి)',
+            'feedsInto': 'జ్యోతిషం (ఆత్మ కర్మ చక్ర సమలేఖనం)',
+            'synergy': 'అన్ని 4 విభాగాలను సంశ్లేషణ చేసి 88% సంపూర్ణ జీవన సూచికను లెక్కిస్తుంది.',
+            'connectsTo': 'జీవిత సమగ్ర వృద్ధిని మీ ఆత్మ కర్మ వికాసంతో తిరిగి జోడించి చక్రం పూర్తి చేస్తుంది.',
+            'practicalImpact': 'వారం వారం మీ సమగ్ర సమతుల్యత పెరిగేకొద్దీ జీవితంలో స్థిరత్వం, ఆనందం సాధ్యమవుతాయి.',
+            'nextName': 'జ్యోతిషం',
+          },
+        ];
+      case AppLanguage.tanglish:
+        return [
+          {
+            'name': 'Astrology',
+            'role': 'Cosmic & Circadian Clock',
+            'color': const Color(0xFF6C5CE7),
+            'icon': Icons.nightlight_round,
+            'fedFrom': 'Insights (Soul Alignment & Balance)',
+            'feedsInto': 'Health (Sleep & Nutrition Hours)',
+            'synergy': 'Sun & Moon positions base chesukuni peak focus time (10 AM - 1:30 PM) ni guide chestundi.',
+            'connectsTo': 'Health ki correct sleep timings and nutrition rhythm istundi.',
+            'practicalImpact': 'Cosmic hours lo unte mental fatigue taggi naturally active ga untaru.',
+            'nextName': 'Health',
+          },
+          {
+            'name': 'Health',
+            'role': 'Body Energy & Ayurveda',
+            'color': const Color(0xFF00CEC9),
+            'icon': Icons.favorite_rounded,
+            'fedFrom': 'Astrology (Circadian Sleep Cycles)',
+            'feedsInto': 'Habits (Willpower & Routine Energy)',
+            'synergy': 'Pitta-Kapha balance, deep rest and hydration tho body vitality ni boost chestundi.',
+            'connectsTo': 'Daily habits consistent ga cheyadaniki solid physical willpower istundi.',
+            'practicalImpact': 'Good sleep valla morning study and work blocks lo 100% focus untundi.',
+            'nextName': 'Habits',
+          },
+          {
+            'name': 'Habits',
+            'role': 'Daily Sadhana & Focus',
+            'color': const Color(0xFFE17055),
+            'icon': Icons.track_changes_rounded,
+            'fedFrom': 'Health (High Energy & Mental Rest)',
+            'feedsInto': 'Finance (Self-Control & Mindful Spending)',
+            'synergy': '25-minute Pomodoro focus sprints and evening routines tho mind ni train chestundi.',
+            'connectsTo': 'Stress-spending ni stop chesi financial peace ni protect chestundi.',
+            'practicalImpact': 'Mindful routines valla impulsive online shopping aagi money save avtundi.',
+            'nextName': 'Finance',
+          },
+          {
+            'name': 'Finance',
+            'role': 'Mindful Wealth & Budget',
+            'color': const Color(0xFF00B894),
+            'icon': Icons.account_balance_wallet_rounded,
+            'fedFrom': 'Habits (Discipline & Contentment)',
+            'feedsInto': 'Insights (Peace of Mind & Life Score)',
+            'synergy': 'Disciplined monthly budgeting and 24-hr cooling pause financial freedom istundi.',
+            'connectsTo': 'Money tension teesesi peaceful meditation and self-insights ki scope istundi.',
+            'practicalImpact': 'No financial worry leads to deeper restful sleep and anxiety-free life.',
+            'nextName': 'Insights',
+          },
+          {
+            'name': 'Insights',
+            'role': 'Holistic Life Synthesis',
+            'color': const Color(0xFFE84393),
+            'icon': Icons.auto_graph_rounded,
+            'fedFrom': 'Finance (Financial Stability & Peace)',
+            'feedsInto': 'Astrology (Full Karmic Alignment)',
+            'synergy': 'Anni 4 pillars data ni analyze chesi 88% Life Harmony Index generate chestundi.',
+            'connectsTo': 'Life growth ni karmic evolution tho re-align chesi circle complete chestundi.',
+            'practicalImpact': 'Tracking your overall harmony keeps you peaceful and balanced every single day.',
+            'nextName': 'Astrology',
+          },
+        ];
+      case AppLanguage.malayalam:
+        return [
+          {
+            'name': 'ജ്യോതിഷം',
+            'role': 'കോസ്മിക് & സർക്കാഡിയൻ ക്ലോക്ക്',
+            'color': const Color(0xFF6C5CE7),
+            'icon': Icons.nightlight_round,
+            'fedFrom': 'സ്ഥിതിവിവരക്കണക്കുകൾ (ആത്മീയ സമനില)',
+            'feedsInto': 'ആരോഗ്യം (ഉറക്കവും ജീവനരീതിയും)',
+            'synergy': 'സൂര്യ-ചന്ദ്ര സ്ഥാനങ്ങളെ അടിസ്ഥാനമാക്കി ഏകാഗ്രതയുള്ള സമയം (10 AM - 1:30 PM) നിർണ്ണയിക്കുന്നു.',
+            'connectsTo': 'ആരോഗ്യത്തിന് അനുയോജ്യമായ ഉറക്ക സമയവും ഭക്ഷണ സമയവും നൽകുന്നു.',
+            'practicalImpact': 'പ്രകൃതി നിയമങ്ങളോടൊപ്പം ജീവിക്കുമ്പോൾ മാനസിക ഉന്മേഷം 35% വർദ്ധിക്കുന്നു.',
+            'nextName': 'ആരോഗ്യം',
+          },
+          {
+            'name': 'ആരോഗ്യം',
+            'role': 'ശരീര ഊർജ്ജവും ആയുർവേദവും',
+            'color': const Color(0xFF00CEC9),
+            'icon': Icons.favorite_rounded,
+            'fedFrom': 'ജ്യോതിഷം (സർക്കാഡിയൻ ഉറക്ക സമയം)',
+            'feedsInto': 'ശീലങ്ങൾ (ദൈനംദിന ഇച്ഛാശക്തി)',
+            'synergy': 'പിത്ത-കഫ സന്തുലിതാവസ്ഥയും ഗാഢനിദ്രയും നൽകി ശരീരത്തിന് പ്രതിരോധശേഷി നൽകുന്നു.',
+            'connectsTo': 'ദൈനംദിന ശീലങ്ങൾ കൃത്യമായി പാലിക്കാൻ ആവശ്യമായ മനക്കരുത്ത് നൽകുന്നു.',
+            'practicalImpact': 'നല്ല ഉറക്കവും ശുദ്ധജലവും രാവിലെ പഠനത്തിനും ജോലിക്കും അപാര ഊർജ്ജം നൽകുന്നു.',
+            'nextName': 'ശീലങ്ങൾ',
+          },
+          {
+            'name': 'ശീലങ്ങൾ',
+            'role': 'ദൈനംദിന സാധനയും ലക്ഷ്യങ്ങളും',
+            'color': const Color(0xFFE17055),
+            'icon': Icons.track_changes_rounded,
+            'fedFrom': 'ആരോഗ്യം (ശാരീരിക കരുത്തും പ്രശാന്തതയും)',
+            'feedsInto': 'ധനകാര്യം (സാമ്പത്തിക നിയന്ത്രണം)',
+            'synergy': '25 മിനിറ്റ് ഏകാഗ്രതയും സ്ഥിരമായ ദിനചര്യകളും തലച്ചോറിനെ ശക്തിപ്പെടുത്തുന്നു.',
+            'connectsTo': 'അനാവശ്യ ചെലവുകൾ ഒഴിവാക്കി സാമ്പത്തിക ഭദ്രത സംരക്ഷിക്കുന്നു.',
+            'practicalImpact': 'അനാവശ്യ ഓൺലൈൻ പർച്ചേസുകൾ ഒഴിവാക്കി സാമ്പത്തിക സ്വാതന്ത്ര്യം നൽകുന്നു.',
+            'nextName': 'ധനകാര്യം',
+          },
+          {
+            'name': 'ധനകാര്യം',
+            'role': 'ബജറ്റും സമ്പത്തും',
+            'color': const Color(0xFF00B894),
+            'icon': Icons.account_balance_wallet_rounded,
+            'fedFrom': 'ശീലങ്ങൾ (ആത്മനിയന്ത്രണവും സംതൃപ്തിയും)',
+            'feedsInto': 'സ്ഥിതിവിവരക്കണക്കുകൾ (മനസ്സമാധാനം)',
+            'synergy': 'കൃത്യമായ ബജറ്റും ചെലവ് നിയന്ത്രണവും സാമ്പത്തിക സുരക്ഷിതത്വം ഉറപ്പാക്കുന്നു.',
+            'connectsTo': 'സാമ്പത്തിക ഉത്കണ്ഠകൾ ഒഴിവാക്കി പ്രശാന്തമായ ധ്യാനത്തിന് വഴി നൽകുന്നു.',
+            'practicalImpact': 'സാമ്പത്തിക സമാധാനം ഉറക്കത്തിന്റെ ഗുണനിലവാരവും സന്തോഷവും വർദ്ധിപ്പിക്കുന്നു.',
+            'nextName': 'സ്ഥിതിവിവരക്കണക്കുകൾ',
+          },
+          {
+            'name': 'സ്ഥിതിവിവരക്കണക്കുകൾ',
+            'role': 'ജീവിത സന്തുലിതാവസ്ഥ',
+            'color': const Color(0xFFE84393),
+            'icon': Icons.auto_graph_rounded,
+            'fedFrom': 'ധനകാര്യം (സാമ്പത്തിക സമാധാനം)',
+            'feedsInto': 'ജ്യോതിഷം (ആത്മീയ കർമ്മ ചക്രം)',
+            'synergy': 'നാല് ഘടകങ്ങളെയും സംയോജിപ്പിച്ച് 88% സമഗ്ര ജീവിത സൂചിക കണക്കാക്കുന്നു.',
+            'connectsTo': 'ജീവിത വിജയത്തെ ആത്മീയ വളർച്ചയുമായി വീണ്ടും ബന്ധിപ്പിച്ച് ചക്രം പൂർത്തിയാക്കുന്നു.',
+            'practicalImpact': 'ദിവസേന നിങ്ങളുടെ ജീവിത സന്തുലിതാവസ്ഥ വിലയിരുത്തി സമാധാനത്തോടെ മുന്നേറുക.',
+            'nextName': 'ജ്യോതിഷം',
+          },
+        ];
+      case AppLanguage.manglish:
+      case AppLanguage.english:
+        return [
+          {
+            'name': 'Astrology',
+            'role': 'Cosmic & Circadian Clock',
+            'color': const Color(0xFF6C5CE7),
+            'icon': Icons.nightlight_round,
+            'fedFrom': 'Insights (Soul Alignment & Balance)',
+            'feedsInto': 'Health (Circadian Wake & Sleep Hours)',
+            'synergy': 'Aligns daily mental focus windows (10:00 AM - 1:30 PM) using planetary hora and lunar cycles.',
+            'connectsTo': 'Feeds biological wake times, Agni digestive cycles, and melatonin rhythm into Health.',
+            'practicalImpact': 'Living in circadian sync drops brain fog by 35% and boosts natural morning vitality.',
+            'nextName': 'Health',
+          },
+          {
+            'name': 'Health',
+            'role': 'Vital Body, Rest & Ayurveda',
+            'color': const Color(0xFF00CEC9),
+            'icon': Icons.favorite_rounded,
+            'fedFrom': 'Astrology (Circadian Rhythm)',
+            'feedsInto': 'Habits (Willpower & Routine Energy)',
+            'synergy': 'Maintains Pitta-Kapha balance, deep restorative sleep, and low stress cortisol levels.',
+            'connectsTo': 'Supplies the physiological willpower needed to maintain disciplined daily Habits.',
+            'practicalImpact': 'Deep restorative sleep directly powers your 25m deep-focus study blocks without burnout.',
+            'nextName': 'Habits',
+          },
+          {
+            'name': 'Habits',
+            'role': 'Daily Sadhana & Execution',
+            'color': const Color(0xFFE17055),
+            'icon': Icons.track_changes_rounded,
+            'fedFrom': 'Health (Physical Energy & Rested Mind)',
+            'feedsInto': 'Finance (Conscious Spending Discipline)',
+            'synergy': 'Builds strong neural pathways through 25m Pomodoro sprints and mindful evening wind-downs.',
+            'connectsTo': 'Prevents dopamine-seeking impulse spending, guarding Mindful Finance.',
+            'practicalImpact': 'Consistent daily routines stop impulsive online shopping, saving ₹12,000+ monthly.',
+            'nextName': 'Finance',
+          },
+          {
+            'name': 'Finance',
+            'role': 'Mindful Wealth & Artha Harmony',
+            'color': const Color(0xFF00B894),
+            'icon': Icons.account_balance_wallet_rounded,
+            'fedFrom': 'Habits (Self-Control & Contentment)',
+            'feedsInto': 'Insights (Mental Peace & Harmony Score)',
+            'synergy': 'Disciplined budgeting and 24-hr cooling pauses remove financial insecurity.',
+            'connectsTo': 'Removes financial anxiety, creating mental stillness for Insights and meditation.',
+            'practicalImpact': 'Zero money stress leads directly to restful sleep and anxiety-free self-reflection.',
+            'nextName': 'Insights',
+          },
+          {
+            'name': 'Insights',
+            'role': 'Holistic Life Synthesis',
+            'color': const Color(0xFFE84393),
+            'icon': Icons.auto_graph_rounded,
+            'fedFrom': 'Finance (Financial Freedom & Peace)',
+            'feedsInto': 'Astrology (Completing the Karmic Loop)',
+            'synergy': 'Synthesizes all 4 components into a unified 88% Holistic Life Index.',
+            'connectsTo': 'Closes the sacred loop by aligning ongoing life growth with your soul\'s karmic destiny.',
+            'practicalImpact': 'Seeing your unified harmony score gives you crystal-clear clarity on where to grow.',
+            'nextName': 'Astrology',
+          },
+        ];
+    }
+  }
+
+  void _showFlowExplanationDialog(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final pillars = _getPillars(lang);
+
+    final title = switch (lang) {
+      AppLanguage.telugu => '🔗 5 విభాగాల సంపూర్ణ అనుసంధానం',
+      AppLanguage.tanglish => '🔗 5 Pillars Connected Life Flow',
+      AppLanguage.malayalam => '🔗 5 ഘടകങ്ങളുടെ പരസ്പര ബന്ധം',
+      AppLanguage.manglish => '🔗 5 Pillars Connected Life Flow',
+      AppLanguage.english => '🔗 How All 5 Life Pillars Connect as One Flow',
+    };
+
+    final subtitle = switch (lang) {
+      AppLanguage.telugu => 'AVARA ప్రత్యేకత: ఇవి వేర్వేరు భాగాలు కావు — ఒకదానితో ఒకటి అనుసంధానమైన ఏకైక జీవన ప్రవాహం.',
+      AppLanguage.tanglish => 'AVARA uniqueness: These are not separate blocks — they form one continuous connected life loop.',
+      AppLanguage.malayalam => 'ഇവ വെവ്വേറെ ബ്ലോക്കുകളല്ല — പരസ്പരം ബന്ധിതമായ ഒരു സമ്പൂർണ്ണ ജീവിത പ്രവാഹമാണ്.',
+      AppLanguage.manglish => 'These are not separate blocks — they form one continuous connected life loop.',
+      AppLanguage.english => 'AVARA philosophy: These are not separate apps — they form one unbreakable cause-and-effect life loop.',
+    };
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.blue.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.all_inclusive_rounded, color: AppColors.blue, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.deepNavy),
+                        ),
+                        Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.secondaryText, height: 1.3)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              const Divider(),
+              const SizedBox(height: 12),
+              for (int i = 0; i < 5; i++) ...[
+                _buildFlowLoopStepCard(
+                  stepNum: i + 1,
+                  current: pillars[i],
+                  next: pillars[(i + 1) % 5],
+                  isLast: i == 4,
+                ),
+                if (i < 4) ...[
+                  Center(
+                    child: Container(
+                      height: 22,
+                      width: 2,
+                      color: (pillars[i]['color'] as Color).withValues(alpha: 0.35),
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                    ),
+                  ),
+                ],
+              ],
+              const SizedBox(height: 18),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  icon: const Icon(Icons.check_circle_rounded, size: 18),
+                  label: const Text('Got It! I Understand the Flow', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFlowLoopStepCard({
+    required int stepNum,
+    required Map<String, dynamic> current,
+    required Map<String, dynamic> next,
+    required bool isLast,
+  }) {
+    final color = current['color'] as Color;
+    final nextColor = next['color'] as Color;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                    child: Center(
+                      child: Text(
+                        '$stepNum',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(current['icon'] as IconData, size: 18, color: color),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${current['name']} (${current['role']})',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: color),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Feeds ➔',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: nextColor),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(next['icon'] as IconData, size: 14, color: nextColor),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '⚡ How it functions: ${current['synergy']}',
+            style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.35),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.link_rounded, size: 15, color: nextColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${current['name']} ──► ${next['name']}: ${current['connectsTo']}',
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: nextColor, height: 1.3),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final activePillar = _pillars[_selectedPillar];
+    final lang = AppLanguageService.instance.currentLanguage;
+    final pillars = _getPillars(lang);
+    final activePillar = pillars[_selectedPillar];
     final activeColor = activePillar['color'] as Color;
+    final nextIdx = (_selectedPillar + 1) % 5;
+    final nextPillar = pillars[nextIdx];
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: activeColor.withValues(alpha: 0.35), width: 1.5),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: activeColor.withValues(alpha: 0.35), width: 1.8),
         boxShadow: [
           BoxShadow(
-            color: activeColor.withValues(alpha: 0.1),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+            color: activeColor.withValues(alpha: 0.12),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -1646,45 +2224,58 @@ class _ConnectedPillarsNexusWidgetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
+          // Header: Ecosystem title + 88% In Sync badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(7),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: activeColor.withValues(alpha: 0.12),
+                      color: activeColor.withValues(alpha: 0.14),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.hub_rounded, color: activeColor, size: 20),
+                    child: Icon(Icons.all_inclusive_rounded, color: activeColor, size: 22),
                   ),
                   const SizedBox(width: 10),
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Unified Life Ecosystem',
-                        style: TextStyle(
+                        switch (lang) {
+                          AppLanguage.telugu => 'జీవన సమగ్ర ప్రవాహం',
+                          AppLanguage.tanglish => 'Unified Life Ecosystem',
+                          AppLanguage.malayalam => 'സമഗ്ര ജീവിത പ്രവാഹം',
+                          AppLanguage.manglish => 'Unified Life Ecosystem',
+                          AppLanguage.english => 'Unified Life Ecosystem',
+                        },
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                          fontSize: 15.5,
                           color: AppColors.deepNavy,
                         ),
                       ),
                       Text(
-                        'All 5 pillars connected as one life flow',
-                        style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                        switch (lang) {
+                          AppLanguage.telugu => '5 విభాగాలు అనుసంధానమై నిరంతరం ప్రవహిస్తాయి',
+                          AppLanguage.tanglish => '5 pillars connected as one seamless life flow',
+                          AppLanguage.malayalam => '5 ഘടകങ്ങളും പരസ്പരം ബന്ധിതമായ ഒരു പ്രവാഹം',
+                          AppLanguage.manglish => '5 pillars connected as one seamless life flow',
+                          AppLanguage.english => 'All 5 pillars connected as one continuous life flow',
+                        },
+                        style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
                       ),
                     ],
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: const Color(0xFF00B894).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF00B894).withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1704,9 +2295,95 @@ class _ConnectedPillarsNexusWidgetState
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // Nexus Interactive Canvas Graph
+          // 1. Horizontal Connected Flow Ribbon (Shows sequential 1 -> 2 -> 3 -> 4 -> 5 -> 1)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (int i = 0; i < 5; i++) ...[
+                    GestureDetector(
+                      onTap: () => setState(() => _selectedPillar = i),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _selectedPillar == i ? (pillars[i]['color'] as Color) : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: pillars[i]['color'] as Color,
+                            width: _selectedPillar == i ? 1.8 : 1.0,
+                          ),
+                          boxShadow: _selectedPillar == i
+                              ? [
+                                  BoxShadow(
+                                    color: (pillars[i]['color'] as Color).withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              pillars[i]['icon'] as IconData,
+                              size: 14,
+                              color: _selectedPillar == i ? Colors.white : (pillars[i]['color'] as Color),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${i + 1}. ${pillars[i]['name']}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: _selectedPillar == i ? Colors.white : AppColors.deepNavy,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (i < 4) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: _selectedPillar == i
+                              ? (pillars[i]['color'] as Color)
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                    ] else ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Icon(
+                          Icons.replay_rounded,
+                          size: 14,
+                          color: _selectedPillar == 4
+                              ? (pillars[4]['color'] as Color)
+                              : Colors.grey.shade400,
+                        ),
+                      ),
+                    ],
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 2. Nexus Interactive Canvas Graph (Central pulsing hub with directed closed energy loop)
           SizedBox(
             height: 230,
             child: AnimatedBuilder(
@@ -1722,8 +2399,8 @@ class _ConnectedPillarsNexusWidgetState
                       // Center AVARA Core Hub
                       Center(
                         child: Container(
-                          width: 68,
-                          height: 68,
+                          width: 72,
+                          height: 72,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [activeColor, activeColor.withValues(alpha: 0.75)],
@@ -1743,20 +2420,19 @@ class _ConnectedPillarsNexusWidgetState
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('AVARA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.8)),
-                                Text('Nexus', style: TextStyle(color: Colors.white70, fontSize: 8.5)),
+                                Text('AVARA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10.5, letterSpacing: 0.8)),
+                                Text('Life Nexus', style: TextStyle(color: Colors.white70, fontSize: 8.5)),
                               ],
                             ),
                           ),
                         ),
                       ),
 
-                      // Surrounding 5 Interactive Pillar Buttons
+                      // Surrounding 5 Interactive Pillar Nodes
                       ...List.generate(5, (index) {
-                        final p = _pillars[index];
+                        final p = pillars[index];
                         final pColor = p['color'] as Color;
                         final angle = (index * 72 - 90) * math.pi / 180;
-                        const radius = 86.0;
 
                         return Align(
                           alignment: Alignment(
@@ -1774,11 +2450,11 @@ class _ConnectedPillarsNexusWidgetState
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: pColor,
-                                  width: _selectedPillar == index ? 2.5 : 1.5,
+                                  width: _selectedPillar == index ? 2.8 : 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: pColor.withValues(alpha: _selectedPillar == index ? 0.35 : 0.15),
+                                    color: pColor.withValues(alpha: _selectedPillar == index ? 0.4 : 0.15),
                                     blurRadius: _selectedPillar == index ? 12 : 6,
                                     offset: const Offset(0, 3),
                                   ),
@@ -1803,24 +2479,35 @@ class _ConnectedPillarsNexusWidgetState
           ),
           const SizedBox(height: 14),
 
-          // Interconnection Detail Card
+          // 3. Interconnection Detail Card (Explains Incoming & Outgoing Life Flow)
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: activeColor.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: activeColor.withValues(alpha: 0.2)),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: activeColor.withValues(alpha: 0.25), width: 1.2),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Top: Step indicator & Open Pillar link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Icon(activePillar['icon'] as IconData, size: 16, color: activeColor),
-                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: activeColor,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Step ${_selectedPillar + 1} of 5',
+                            style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           '${activePillar['name']} • ${activePillar['role']}',
                           style: TextStyle(
@@ -1847,15 +2534,109 @@ class _ConnectedPillarsNexusWidgetState
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '⚡ How it functions: ${activePillar['synergy']}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.3),
+                const SizedBox(height: 10),
+
+                // Connected Inflow & Outflow Badges
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: activeColor.withValues(alpha: 0.18)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFF64748B)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.3),
+                                children: [
+                                  const TextSpan(text: 'Incoming Energy: ', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+                                  TextSpan(text: activePillar['fedFrom'] as String),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.arrow_forward_rounded, size: 14, color: activeColor),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: const TextStyle(fontSize: 11, color: AppColors.deepNavy, height: 1.3),
+                                children: [
+                                  TextSpan(text: 'Direct Outflow: ', style: TextStyle(fontWeight: FontWeight.bold, color: activeColor)),
+                                  TextSpan(text: activePillar['feedsInto'] as String),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
+
+                // Daily Impact
                 Text(
-                  '🔗 Interconnection: ${activePillar['connectsTo']}',
-                  style: TextStyle(fontSize: 11, color: activeColor, fontWeight: FontWeight.w600, height: 1.3),
+                  '⚡ Daily Life Impact: ${activePillar['practicalImpact']}',
+                  style: TextStyle(fontSize: 11, color: activeColor.withValues(alpha: 0.95), fontWeight: FontWeight.w600, height: 1.35),
+                ),
+                const SizedBox(height: 12),
+
+                // Actions: Advance to Next Step + Understand Complete Loop
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showFlowExplanationDialog(context),
+                        icon: const Icon(Icons.lightbulb_rounded, size: 15),
+                        label: const Text(
+                          '💡 How It Connects',
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: activeColor,
+                          side: BorderSide(color: activeColor.withValues(alpha: 0.5)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _selectedPillar = nextIdx;
+                          });
+                        },
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 15),
+                        label: Text(
+                          'Next Flow: ${nextPillar['name']} ➔',
+                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: activeColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1906,6 +2687,14 @@ class _NexusPainter extends CustomPainter {
     }
     loopPath.close();
     canvas.drawPath(loopPath, loopPaint);
+
+    // Draw active flow glow between selected pillar and the next pillar
+    final nextIdx = (selectedPillar + 1) % 5;
+    final activeEdgePaint = Paint()
+      ..color = pillarColors[selectedPillar].withValues(alpha: 0.75)
+      ..strokeWidth = 3.6
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(nodePoints[selectedPillar], nodePoints[nextIdx], activeEdgePaint);
 
     // Draw lines connecting each pillar to the central AVARA hub
     for (int i = 0; i < 5; i++) {
@@ -2536,144 +3325,240 @@ class HolisticCrossPillarBridge extends StatelessWidget {
   final int currentPillarIndex;
   final void Function(int targetIndex)? onNavigateToPillar;
 
-  static const List<Map<String, dynamic>> _pillarMeta = [
-    {'name': 'Astrology', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
-    {'name': 'Health', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
-    {'name': 'Habits', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
-    {'name': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
-    {'name': 'Insights', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
-  ];
+  void _navigateToPillar(BuildContext context, int targetIndex) {
+    if (onNavigateToPillar != null) {
+      onNavigateToPillar!(targetIndex);
+      return;
+    }
+    switch (targetIndex) {
+      case 0:
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AstrologyHubScreen()));
+        break;
+      case 1:
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const HealthScreen()));
+        break;
+      case 2:
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const HabitsScreen()));
+        break;
+      case 3:
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const FinanceScreen()));
+        break;
+      case 4:
+        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const InsightsScreen()));
+        break;
+    }
+  }
 
-  List<Map<String, dynamic>> _getCrossConnections() {
+  static List<Map<String, dynamic>> _getPillarMeta(AppLanguage lang) {
+    switch (lang) {
+      case AppLanguage.telugu:
+        return const [
+          {'name': 'జ్యోతిషం', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
+          {'name': 'ఆరోగ్యం', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
+          {'name': 'అలవాట్లు', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
+          {'name': 'ఆర్థికం', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
+          {'name': 'విశ్లేషణలు', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
+        ];
+      case AppLanguage.malayalam:
+        return const [
+          {'name': 'ജ്യോതിഷം', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
+          {'name': 'ആരോഗ്യം', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
+          {'name': 'ശീലങ്ങൾ', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
+          {'name': 'ധനകാര്യം', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
+          {'name': 'ഉൾക്കാഴ്ചകൾ', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
+        ];
+      case AppLanguage.tanglish:
+        return const [
+          {'name': 'Astrology', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
+          {'name': 'Health', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
+          {'name': 'Habits', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
+          {'name': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
+          {'name': 'Insights', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
+        ];
+      case AppLanguage.manglish:
+        return const [
+          {'name': 'Astrology', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
+          {'name': 'Health', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
+          {'name': 'Habits', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
+          {'name': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
+          {'name': 'Insights', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
+        ];
+      case AppLanguage.english:
+        return const [
+          {'name': 'Astrology', 'icon': Icons.nightlight_round, 'color': Color(0xFF6C5CE7)},
+          {'name': 'Health', 'icon': Icons.favorite_rounded, 'color': Color(0xFF00CEC9)},
+          {'name': 'Habits', 'icon': Icons.track_changes_rounded, 'color': Color(0xFFE17055)},
+          {'name': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': Color(0xFF00B894)},
+          {'name': 'Insights', 'icon': Icons.auto_graph_rounded, 'color': Color(0xFFE84393)},
+        ];
+    }
+  }
+
+  List<Map<String, dynamic>> _getCrossConnections(AppLanguage lang) {
     switch (currentPillarIndex) {
       case 0: // From Astrology
-        return [
-          {
-            'targetIndex': 1,
-            'title': 'Health & Body Vitals',
-            'desc': 'Pitta-pacifying cooling nutrition & 10 PM sleep align with current lunar cycle.',
-          },
-          {
-            'targetIndex': 2,
-            'title': 'Daily Habits Execution',
-            'desc': 'Surya Hora (Solar hour) favors your hardest 25m cognitive focus sprint.',
-          },
-          {
-            'targetIndex': 3,
-            'title': 'Mindful Wealth & Finance',
-            'desc': 'Mercury aspect advises strategic budgeting over impulsive speculative investments.',
-          },
-          {
-            'targetIndex': 4,
-            'title': 'Holistic Insights',
-            'desc': 'Vedic planetary archetypes provide compassionate context to your emotional patterns.',
-          },
-        ];
+        switch (lang) {
+          case AppLanguage.telugu:
+            return [
+              {'targetIndex': 1, 'title': 'శరీర ఆరోగ్యం & జీవశక్తి', 'desc': 'పిత్త-శాంత్ పోషణ & రాత్రి 10 గంటల నిద్ర ప్రస్తుత చంద్ర లయతో సరిపోలుతాయి.'},
+              {'targetIndex': 2, 'title': 'దైనందిన సాధన & అలవాట్లు', 'desc': 'సూర్య హోరా వేళల్లో మీ కఠినమైన 25 నిమిషాల ఏకాగ్రతా సాధన అత్యుత్తమ ఫలితాన్నిస్తుంది.'},
+              {'targetIndex': 3, 'title': 'స్పృహతో కూడిన సంపద & ఆర్థికం', 'desc': 'బుధ గ్రహ స్థితి తొందరపాటు ఖర్చుల కంటే వ్యూహాత్మక పొదుపును సూచిస్తుంది.'},
+              {'targetIndex': 4, 'title': 'సమగ్ర జీవన విశ్లేషణలు', 'desc': 'వేద గ్రహ లయలు మీ భావోద్వేగ స్థితికి లోతైన ఆధ్యాత్మిక కారణాలను వివరిస్తాయి.'},
+            ];
+          case AppLanguage.malayalam:
+            return [
+              {'targetIndex': 1, 'title': 'ശരീര ആരോഗ്യവും ഊർജ്ജവും', 'desc': 'പിത്ത ശാന്തി ഭക്ഷണവും രാത്രി 10 മണി ഉറക്കവും ചന്ദ്ര താളവുമായി യോജിക്കുന്നു.'},
+              {'targetIndex': 2, 'title': 'ദൈനംദിന ശീലങ്ങളുടെ അച്ചടക്കം', 'desc': 'സൂര്യ ഹോര നിങ്ങളുടെ 25 മിനിറ്റ് ഏകാഗ്രത പഠനത്തിന് ഏറ്റവും അനുകൂലമാണ്.'},
+              {'targetIndex': 3, 'title': 'വിവേകപൂർണ്ണമായ ധനകാര്യം', 'desc': 'ബുധന്റെ സ്വാധീനം അനാവശ്യ ചിലവുകൾ ഒഴിവാക്കി ബുദ്ധിപരമായ ബജറ്റിംഗ് നിർദ്ദേശിക്കുന്നു.'},
+              {'targetIndex': 4, 'title': 'സമഗ്ര ഉൾക്കാഴ്ചകൾ', 'desc': 'ഗ്രഹ സ്വാധീനങ്ങൾ നിങ്ങളുടെ മാനസികാവസ്ഥകൾക്ക് ആത്മീയ ഉൾക്കാഴ്ച നൽകുന്നു.'},
+            ];
+          default:
+            return [
+              {'targetIndex': 1, 'title': 'Health & Body Vitals', 'desc': 'Pitta-pacifying cooling nutrition & 10 PM sleep align with current lunar cycle.'},
+              {'targetIndex': 2, 'title': 'Daily Habits Execution', 'desc': 'Surya Hora (Solar hour) favors your hardest 25m cognitive focus sprint.'},
+              {'targetIndex': 3, 'title': 'Mindful Wealth & Finance', 'desc': 'Mercury aspect advises strategic budgeting over impulsive speculative investments.'},
+              {'targetIndex': 4, 'title': 'Holistic Insights', 'desc': 'Vedic planetary archetypes provide compassionate context to your emotional patterns.'},
+            ];
+        }
 
       case 1: // From Health
-        return [
-          {
-            'targetIndex': 0,
-            'title': 'Cosmic & Circadian Clock',
-            'desc': 'Syncing sleep with lunar circadian rhythms deepens restorative REM by 34%.',
-          },
-          {
-            'targetIndex': 2,
-            'title': 'Neural Habit Streaks',
-            'desc': 'High physiological energy gives the prefrontal willpower to sustain hard habit streaks.',
-          },
-          {
-            'targetIndex': 3,
-            'title': 'Impulse Spend Protection',
-            'desc': 'Low cortisol stress levels reduce emotional retail and comfort spending by 42%.',
-          },
-          {
-            'targetIndex': 4,
-            'title': 'Holistic Insights',
-            'desc': '7+ hours of quality sleep directly predicts your calmest, high-clarity days.',
-          },
-        ];
+        switch (lang) {
+          case AppLanguage.telugu:
+            return [
+              {'targetIndex': 0, 'title': 'ఖగోళ & సర్కాడియన్ క్లాక్', 'desc': 'చంద్ర లయలతో నిద్రను అనుసంధానించడం వల్ల గాఢ నిద్ర నాణ్యత 34% పెరుగుతుంది.'},
+              {'targetIndex': 2, 'title': 'అలవాట్ల సంకల్ప బలం', 'desc': 'శారీరక శక్తి పుష్కలంగా ఉన్నప్పుడు కఠినమైన అలవాట్లను కొనసాగించే మనోబలం లభిస్తుంది.'},
+              {'targetIndex': 3, 'title': 'అనవసర ఖర్చుల నియంత్రణ', 'desc': 'తక్కువ కార్టిసాల్ ఒత్తిడి డోపమైన్ కోసం చేసే భావోద్వేగ కొనుగోళ్లను 42% తగ్గిస్తుంది.'},
+              {'targetIndex': 4, 'title': 'సమగ్ర జీవన సూచిక', 'desc': '7+ గంటల నాణ్యమైన నిద్ర ప్రశాంతమైన, అత్యున్నత ఉత్పాదక దినాన్ని నిర్దేశిస్తుంది.'},
+            ];
+          case AppLanguage.malayalam:
+            return [
+              {'targetIndex': 0, 'title': 'സർക്കാഡിയൻ ജൈവ താളം', 'desc': 'ചന്ദ്ര ചക്രവുമായി ഉറക്കം യോജിപ്പിക്കുന്നത് ശാന്തമായ ഉറക്കം 34% വർദ്ധിപ്പിക്കുന്നു.'},
+              {'targetIndex': 2, 'title': 'ശീലങ്ങളുടെ മനോധൈര്യം', 'desc': 'ശാരീരിക ഊർജ്ജം മികച്ച ശീലങ്ങൾ മുടങ്ങാതെ പാലിക്കാൻ മനോധൈര്യം നൽകുന്നു.'},
+              {'targetIndex': 3, 'title': 'അനാവശ്യ ചിലവ് നിയന്ത്രണം', 'desc': 'കുറഞ്ഞ മാനസിക സമ്മർദ്ദം അനാവശ്യ ഷോപ്പിംഗ് 42% കുറയ്ക്കുന്നു.'},
+              {'targetIndex': 4, 'title': 'സമഗ്ര ഉൾക്കാഴ്ചകൾ', 'desc': '7+ മണിക്കൂർ ഗാഢനിദ്ര ശാന്തവും വ്യക്തവുമായ ദിവസങ്ങൾ ഉറപ്പാക്കുന്നു.'},
+            ];
+          default:
+            return [
+              {'targetIndex': 0, 'title': 'Cosmic & Circadian Clock', 'desc': 'Syncing sleep with lunar circadian rhythms deepens restorative REM by 34%.'},
+              {'targetIndex': 2, 'title': 'Neural Habit Streaks', 'desc': 'High physiological energy gives the prefrontal willpower to sustain hard habit streaks.'},
+              {'targetIndex': 3, 'title': 'Impulse Spend Protection', 'desc': 'Low cortisol stress levels reduce emotional retail and comfort spending by 42%.'},
+              {'targetIndex': 4, 'title': 'Holistic Insights', 'desc': '7+ hours of quality sleep directly predicts your calmest, high-clarity days.'},
+            ];
+        }
 
       case 2: // From Habits
-        return [
-          {
-            'targetIndex': 0,
-            'title': 'Astrological Energy Peak',
-            'desc': 'Completing morning habits at 7:30 AM catches the peak solar prana window.',
-          },
-          {
-            'targetIndex': 1,
-            'title': 'Physical Health Vitality',
-            'desc': 'Morning sunlight & hydration habit boosts dopamine and resets nighttime melatonin.',
-          },
-          {
-            'targetIndex': 3,
-            'title': 'Financial Freedom',
-            'desc': 'The 24-hr shopping cooling pause habit has prevented ₹1,850 in impulse buys.',
-          },
-          {
-            'targetIndex': 4,
-            'title': 'Holistic Life Score',
-            'desc': 'Active 6-day habit streaks correlate with a 91% life harmony rating.',
-          },
-        ];
+        switch (lang) {
+          case AppLanguage.telugu:
+            return [
+              {'targetIndex': 0, 'title': 'ఖగోళ శక్తి సమన్వయం', 'desc': 'ఉదయం 7:30 గంటల అలవాట్లు సూర్య ప్రాణశక్తిని సంపూర్ణంగా ఒడిసిపడతాయి.'},
+              {'targetIndex': 1, 'title': 'శారీరక ఆరోగ్య పుష్టి', 'desc': 'ఉదయపు సూర్యరశ్మి మరియు నీరు త్రాగే అలవాటు రాత్రి మెలటోనిన్ ఉత్పత్తిని పునరుద్ధరిస్తాయి.'},
+              {'targetIndex': 3, 'title': 'ఆర్థిక స్వాతంత్ర్యం', 'desc': '24 గంటల ఆలోచనా విరామ అలవాటు అనవసర ఖర్చుల నుండి ₹1,850+ ఆదా చేసింది.'},
+              {'targetIndex': 4, 'title': 'సంపూర్ణ జీవన సూచిక', 'desc': 'స్థిరమైన 6 రోజుల అలవాట్ల రికార్డు 91% జీవిత సామరస్య రేటింగ్‌ను అందిస్తుంది.'},
+            ];
+          case AppLanguage.malayalam:
+            return [
+              {'targetIndex': 0, 'title': 'ജ്യോതിഷ ഊർജ്ജ കൊടുമുടി', 'desc': 'രാവിലെ 7:30 നുള്ള ശീലങ്ങൾ സൗരോർജ്ജ പ്രാണൻ പൂർണ്ണമായി സ്വീകരിക്കുന്നു.'},
+              {'targetIndex': 1, 'title': 'ശാരീരിക ആരോഗ്യ ചൈതന്യം', 'desc': 'പ്രഭാത വെയിലും ജലപാന ശീലവും ഉന്മേഷവും രാത്രിക്കാല ഉറക്കവും നൽകുന്നു.'},
+              {'targetIndex': 3, 'title': 'സാമ്പത്തിക സ്വാതന്ത്ര്യം', 'desc': '24 മണിക്കൂർ ഷോപ്പിംഗ് ചിന്താ ശീലം ₹1,850 ലാഭിക്കാൻ സഹായിച്ചു.'},
+              {'targetIndex': 4, 'title': 'സമഗ്ര ജീവിത സ്കോർ', 'desc': 'സ്ഥിരമായ 6 ദിവസത്തെ ശീലങ്ങൾ 91% ജീവിത സന്തുലിതാവസ്ഥ നൽകുന്നു.'},
+            ];
+          default:
+            return [
+              {'targetIndex': 0, 'title': 'Astrological Energy Peak', 'desc': 'Completing morning habits at 7:30 AM catches the peak solar prana window.'},
+              {'targetIndex': 1, 'title': 'Physical Health Vitality', 'desc': 'Morning sunlight & hydration habit boosts dopamine and resets nighttime melatonin.'},
+              {'targetIndex': 3, 'title': 'Financial Freedom', 'desc': 'The 24-hr shopping cooling pause habit has prevented ₹1,850 in impulse buys.'},
+              {'targetIndex': 4, 'title': 'Holistic Life Score', 'desc': 'Active 6-day habit streaks correlate with a 91% life harmony rating.'},
+            ];
+        }
 
       case 3: // From Finance
-        return [
-          {
-            'targetIndex': 0,
-            'title': 'Astrological Wisdom',
-            'desc': 'Align long-term asset allocation with auspicious Jupiter transit phases.',
-          },
-          {
-            'targetIndex': 1,
-            'title': 'Preventative Health',
-            'desc': 'Removing financial uncertainty lowers chronic cardiovascular stress and anxiety.',
-          },
-          {
-            'targetIndex': 2,
-            'title': 'Daily Habit Streaks',
-            'desc': 'Daily 2-minute expense logging habit builds lifelong wealth discipline.',
-          },
-          {
-            'targetIndex': 4,
-            'title': 'Holistic Reflections',
-            'desc': 'Financial peace of mind contributes 30% to your overall weekly life satisfaction.',
-          },
-        ];
+        switch (lang) {
+          case AppLanguage.telugu:
+            return [
+              {'targetIndex': 0, 'title': 'ఖగోళ విజ్ఞానం & కాలజ్ఞానం', 'desc': 'దీర్ఘకాలిక పెట్టుబడులను శుభ గురు సంచార దశలతో సమలేఖనం చేసుకోండి.'},
+              {'targetIndex': 1, 'title': 'నివారణాత్మక ఆరోగ్యం', 'desc': 'ఆర్థిక అనిశ్చితి తొలగడం గుండెపై ఒత్తిడిని మరియు ఆందోళనను తగ్గిస్తుంది.'},
+              {'targetIndex': 2, 'title': 'రోజువారీ అలవాట్ల క్రమశిక్షణ', 'desc': 'రోజూ 2 నిమిషాల ఖర్చుల నమోదు అలవాటు జీవితాంతం నిలిచే సంపద క్రమశిక్షణను ఇస్తుంది.'},
+              {'targetIndex': 4, 'title': 'సమగ్ర జీవన తృప్తి', 'desc': 'ఆర్థిక ప్రశాంతత మీ వారపు సమగ్ర జీవిత సంతృప్తికి 30% దోహదం చేస్తుంది.'},
+            ];
+          case AppLanguage.malayalam:
+            return [
+              {'targetIndex': 0, 'title': 'ജ്യോതിഷ ജ്ഞാനം', 'desc': 'ദീർഘകാല നിക്ഷേപങ്ങൾ വ്യാഴ ഗ്രഹ മാറ്റങ്ങളുമായി യോജിപ്പിക്കുക.'},
+              {'targetIndex': 1, 'title': 'ആരോഗ്യ സുരക്ഷ', 'desc': 'സാമ്പത്തിക സുരക്ഷിതത്വം മാനസിക സമ്മർദ്ദവും ഹൃദയാഘാത സാധ്യതയും കുറയ്ക്കുന്നു.'},
+              {'targetIndex': 2, 'title': 'ദൈനംദിന ശീലങ്ങൾ', 'desc': 'ദിവസേന 2 മിനിറ്റ് ചിലവുകൾ കുറിക്കുന്ന ശീലം ദീർഘകാല സമ്പത്ത് വളർത്തുന്നു.'},
+              {'targetIndex': 4, 'title': 'സമഗ്ര സന്തോഷം', 'desc': 'സാമ്പത്തിക സമാധാനം നിങ്ങളുടെ ആഴ്ചയിലെ 30% സന്തോഷം നൽകുന്നു.'},
+            ];
+          default:
+            return [
+              {'targetIndex': 0, 'title': 'Astrological Wisdom', 'desc': 'Align long-term asset allocation with auspicious Jupiter transit phases.'},
+              {'targetIndex': 1, 'title': 'Preventative Health', 'desc': 'Removing financial uncertainty lowers chronic cardiovascular stress and anxiety.'},
+              {'targetIndex': 2, 'title': 'Daily Habit Streaks', 'desc': 'Daily 2-minute expense logging habit builds lifelong wealth discipline.'},
+              {'targetIndex': 4, 'title': 'Holistic Reflections', 'desc': 'Financial peace of mind contributes 30% to your overall weekly life satisfaction.'},
+            ];
+        }
 
       case 4: // From Insights
       default:
-        return [
-          {
-            'targetIndex': 0,
-            'title': 'Astrology Grounding',
-            'desc': 'Combines planetary transits with your actual journaled mood shifts.',
-          },
-          {
-            'targetIndex': 1,
-            'title': 'Health Recovery Trends',
-            'desc': 'Visualizes the link between sleep recovery and weekly creative productivity.',
-          },
-          {
-            'targetIndex': 2,
-            'title': 'Habit Neural Growth',
-            'desc': 'Identifies micro-friction points so your 1% habit improvements stick easily.',
-          },
-          {
-            'targetIndex': 3,
-            'title': 'Budgeting Balance',
-            'desc': 'Tracks your emotional ROI and money saved from mindful habit choices.',
-          },
-        ];
+        switch (lang) {
+          case AppLanguage.telugu:
+            return [
+              {'targetIndex': 0, 'title': 'ఖగోళ పునాది', 'desc': 'గ్రహ సంచారాలను మీ వ్యక్తిగత భావోద్వేగ మార్పులతో మేళవిస్తుంది.'},
+              {'targetIndex': 1, 'title': 'ఆరోగ్య పునరుద్ధరణ పోకడలు', 'desc': 'నిద్ర రికవరీ మరియు వారపు సృజనాత్మక ఉత్పాదకత మధ్య సంబంధాన్ని దృశ్యమానం చేస్తుంది.'},
+              {'targetIndex': 2, 'title': 'అలవాట్ల న్యూరల్ వృద్ధి', 'desc': 'చిన్నపాటి ఘర్షణలను గుర్తించి మీ 1% అలవాటు మెరుగుదలలు సులభంగా స్థిరపడేలా చేస్తుంది.'},
+              {'targetIndex': 3, 'title': 'బడ్జెట్ సమతుల్యత', 'desc': 'స్పృహతో కూడిన అలవాట్ల ద్వారా ఆదా అయిన డబ్బును మరియు మానసిక సంతృప్తిని ట్రాక్ చేస్తుంది.'},
+            ];
+          case AppLanguage.malayalam:
+            return [
+              {'targetIndex': 0, 'title': 'ജ്യോതിഷ അടിത്തറ', 'desc': 'ഗ്രഹ മാറ്റങ്ങളെ നിങ്ങളുടെ യഥാർത്ഥ മാനസിക മാറ്റങ്ങളുമായി ബന്ധിപ്പിക്കുന്നു.'},
+              {'targetIndex': 1, 'title': 'ആരോഗ്യ പുരോഗതി', 'desc': 'ഉറക്കവും ആഴ്ചയിലെ സർഗ്ഗാത്മക ഉൽപാദനക്ഷമതയും തമ്മിലുള്ള ബന്ധം കാണിക്കുന്നു.'},
+              {'targetIndex': 2, 'title': 'ശീലങ്ങളുടെ വളർച്ച', 'desc': 'സൂക്ഷ്മ ഘർഷണങ്ങൾ കണ്ടെത്തി 1% ശീല പുരോഗതി എളുപ്പമാക്കുന്നു.'},
+              {'targetIndex': 3, 'title': 'ബജറ്റ് സന്തുലനം', 'desc': 'ശരിയായ ശീലങ്ങളിലൂടെ ലഭിച്ച സാമ്പത്തിക നേട്ടം ട്രാക്ക് ചെയ്യുന്നു.'},
+            ];
+          default:
+            return [
+              {'targetIndex': 0, 'title': 'Astrology Grounding', 'desc': 'Combines planetary transits with your actual journaled mood shifts.'},
+              {'targetIndex': 1, 'title': 'Health Recovery Trends', 'desc': 'Visualizes the link between sleep recovery and weekly creative productivity.'},
+              {'targetIndex': 2, 'title': 'Habit Neural Growth', 'desc': 'Identifies micro-friction points so your 1% habit improvements stick easily.'},
+              {'targetIndex': 3, 'title': 'Budgeting Balance', 'desc': 'Tracks your emotional ROI and money saved from mindful habit choices.'},
+            ];
+        }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final activePillar = _pillarMeta[currentPillarIndex];
+    final lang = AppLanguageService.instance.currentLanguage;
+    final pillarMetas = _getPillarMeta(lang);
+    final activePillar = pillarMetas[currentPillarIndex];
     final activeColor = activePillar['color'] as Color;
-    final connections = _getCrossConnections();
+    final connections = _getCrossConnections(lang);
+
+    final headerTitle = switch (lang) {
+      AppLanguage.telugu => '🔗 ${activePillar['name']} ఎలా అనుసంధానమైంది',
+      AppLanguage.malayalam => '🔗 ${activePillar['name']} എങ്ങനെ ബന്ധപ്പെട്ടിരിക്കുന്നു',
+      AppLanguage.tanglish => '🔗 How ${activePillar['name']} Connects',
+      AppLanguage.manglish => '🔗 How ${activePillar['name']} Connects',
+      AppLanguage.english => '🔗 How ${activePillar['name']} Connects',
+    };
+
+    final subtitleText = switch (lang) {
+      AppLanguage.telugu => 'మీ 5 స్తంభాల అఖండ జీవన చక్రంలో భాగం',
+      AppLanguage.malayalam => 'നിങ്ങളുടെ 5 സ്തംഭ സമഗ്ര ജീവിത വ്യവസ്ഥയുടെ ഭാഗം',
+      AppLanguage.tanglish => 'Mee 5-pillar holistic ecosystem lo oka bhaagam',
+      AppLanguage.manglish => 'Njangalude 5-pillar holistic ecosystem-inte bhaagam',
+      AppLanguage.english => 'Part of your 5-pillar holistic ecosystem',
+    };
+
+    final connectedBadge = switch (lang) {
+      AppLanguage.telugu => 'అనుసంధానం ⚡',
+      AppLanguage.malayalam => 'ബന്ധിപ്പിച്ചു ⚡',
+      _ => 'Connected ⚡',
+    };
+
+    final openText = switch (lang) {
+      AppLanguage.telugu => 'తెరువు',
+      AppLanguage.malayalam => 'തുറക്കുക',
+      _ => 'Open',
+    };
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
@@ -2697,45 +3582,54 @@ class HolisticCrossPillarBridge extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: activeColor.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: activeColor.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.hub_rounded, color: activeColor, size: 18),
                     ),
-                    child: Icon(Icons.hub_rounded, color: activeColor, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '🔗 How ${activePillar['name']} Connects',
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.deepNavy,
-                        ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            headerTitle,
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.deepNavy,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            subtitleText,
+                            style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      const Text(
-                        'Part of your 5-pillar holistic ecosystem',
-                        style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFF00B894).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Connected',
-                  style: TextStyle(
+                child: Text(
+                  connectedBadge,
+                  style: const TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF00B894),
@@ -2749,73 +3643,73 @@ class HolisticCrossPillarBridge extends StatelessWidget {
           // 4 Cross-Connections
           ...connections.map((c) {
             final targetIdx = c['targetIndex'] as int;
-            final targetMeta = _pillarMeta[targetIdx];
+            final targetMeta = pillarMetas[targetIdx];
             final targetColor = targetMeta['color'] as Color;
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: targetColor.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: targetColor.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: targetColor.withValues(alpha: 0.15),
-                    child: Icon(targetMeta['icon'] as IconData, size: 14, color: targetColor),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              targetMeta['name'] as String,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: targetColor,
-                              ),
-                            ),
-                            if (onNavigateToPillar != null)
-                              GestureDetector(
-                                onTap: () => onNavigateToPillar!(targetIdx),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Open',
-                                      style: TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: targetColor,
-                                      ),
-                                    ),
-                                    Icon(Icons.chevron_right, size: 13, color: targetColor),
-                                  ],
+            return InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => _navigateToPillar(context, targetIdx),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: targetColor.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: targetColor.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundColor: targetColor.withValues(alpha: 0.15),
+                      child: Icon(targetMeta['icon'] as IconData, size: 14, color: targetColor),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                targetMeta['name'] as String,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: targetColor,
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          c['desc'] as String,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.deepNavy,
-                            height: 1.35,
+                              Row(
+                                children: [
+                                  Text(
+                                    openText,
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: targetColor,
+                                    ),
+                                  ),
+                                  Icon(Icons.chevron_right, size: 13, color: targetColor),
+                                ],
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          Text(
+                            c['desc'] as String,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.deepNavy,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }),
@@ -4661,6 +5555,8 @@ class _SacredJapaMalaCounterWidgetState
       'nameMl': 'ഗായത്രീ മഹാ മന്ത്രം',
       'nameManglish': 'Gayatri Maha Mantram',
       'sanskrit': 'Om Bhur Bhuvah Svah, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat.',
+      'sanskritTe': 'ఓం భూర్భువస్స్వః తత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి ధియో యో నః ప్రచోదయాత్।',
+      'sanskritMl': 'ഓം ഭൂർഭുവസ്സ്വഃ തത്സവിതുർവരേണ്യം ഭർഗോ ദേവസ്യ ധീമഹി ധിയോ യോ നഃ പ്രചോദയാത്।',
       'meaningEn': 'May the divine light of Savitr illuminate our intellect onto the righteous path.',
       'meaningTe': 'సవితృ సూర్య భగవానుని తేజస్సు మా బుద్ధిని సన్మార్గంలో నడిపించుగాక.',
       'meaningTanglish': 'Savitru soorya bhagavanuni thejassu maa buddhini sanmaargamlo nadipinchugaaka.',
@@ -4675,6 +5571,8 @@ class _SacredJapaMalaCounterWidgetState
       'nameMl': 'ഓം നമഃ ശിവായ (പഞ്ചാക്ഷരി)',
       'nameManglish': 'Om Namah Shivaya (Panchakshari)',
       'sanskrit': 'Om Namah Shivaaya, Om Namah Shivaaya, Om Namah Shivaaya.',
+      'sanskritTe': 'ఓం నమః శివాయ, ఓం నమః శివాయ, ఓం నమః శివాయ।',
+      'sanskritMl': 'ഓം നമഃ ശിവായ, ഓം നമഃ ശിവായ, ഓം നമഃ ശിവായ।',
       'meaningEn': 'Salutations to the auspicious Lord Shiva.',
       'meaningTe': 'మంగళకరుడైన పరమశివునికి ప్రణామాలు.',
       'meaningTanglish': 'Mangalakarudaina Paramashivuniki pranamaalu.',
@@ -4689,10 +5587,12 @@ class _SacredJapaMalaCounterWidgetState
       'nameMl': 'മഹാ മൃത്യുഞ്ജയ മന്ത്രം',
       'nameManglish': 'Maha Mrityunjaya Mantram',
       'sanskrit': 'Om Tryambakam Yajaamahe Sugandhim Pushtivardhanam, Urvaarukamiva Bandhanaan Mrityor Muksheeya Maamritaat.',
+      'sanskritTe': 'ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనం ఉర్వారుకమివ బంధనాన్ మృత్యోర్ముక్షీయ మామృతాత్।',
+      'sanskritMl': 'ഓം ത്ര്യംബകം യജാമഹേ സുഗന്ധിം പുഷ്ടിവർദ്ധനം ഉർവ്വാരുകമിവ ബന്ധനാൻ മൃത്യോർമുക്ഷീയ മാമൃതാത്।',
       'meaningEn': 'May Lord Shiva grant longevity, healing and complete health.',
       'meaningTe': 'పరమశివుని కటాక్షంతో దీర్ఘాయుష్షు మరియు సంపూర్ణ ఆరోగ్యం కలుగుగాక.',
       'meaningTanglish': 'Paramashivuni kataakshamtho deerghaayushshu mariyu sampoorna aarogyam kalugugaaka.',
-      'meaningMl': 'പരമശിവന്റെ കൃപയാൽ ദീർഘായുസ്സും പൂർണ്ണ ആരോഗ്യവും ലഭിക്കട്ടെ.',
+      'meaningMl': 'പരമശിവന്റെ കൃപയാൽ ദീർഘాయുസ്സും പൂർണ്ണ ആരോഗ്യവും ലഭിക്കട്ടെ.',
       'meaningManglish': 'Paramashivante krupayal deerghaayussum poorna aarogyavum labhikkatte.',
     },
     {
@@ -4703,6 +5603,8 @@ class _SacredJapaMalaCounterWidgetState
       'nameMl': 'ഓം നമോ നാരായണായ (അഷ്ടാക്ഷരി)',
       'nameManglish': 'Om Namo Narayanaya (Ashtakshari)',
       'sanskrit': 'Om Namo Naaraayanaaya, Om Namo Naaraayanaaya.',
+      'sanskritTe': 'ఓం నమో నారాయణాయ, ఓం నమో నారాయణాయ।',
+      'sanskritMl': 'ഓം നമോ നാരായണായ, ഓം നമോ നാരായണായ।',
       'meaningEn': 'Salutations to Lord Vishnu, the protector and preserver of all realms.',
       'meaningTe': 'జగద్రక్షకుడైన శ్రీమహావిష్ణువునకు ప్రణామాలు.',
       'meaningTanglish': 'Jagadrakshakudaina Srimahaavishnuvunaku pranamaalu.',
@@ -4958,8 +5860,10 @@ class _SacredJapaMalaCounterWidgetState
 
     final resetLabel = switch (currentLang) {
       AppLanguage.telugu => 'రీసెట్',
+      AppLanguage.tanglish => 'Reset',
       AppLanguage.malayalam => 'റീസെറ്റ്',
-      _ => 'Reset',
+      AppLanguage.manglish => 'Reset',
+      AppLanguage.english => 'Reset',
     };
 
     final beadsCountLabel = switch (currentLang) {
@@ -4971,9 +5875,11 @@ class _SacredJapaMalaCounterWidgetState
     };
 
     final bellTapLabel = switch (currentLang) {
-      AppLanguage.telugu => 'గంట ట్యాప్',
-      AppLanguage.malayalam => 'മണി ടാപ്പ്',
-      _ => 'BELL TAP',
+      AppLanguage.telugu => 'గంట మ్రోగింపు',
+      AppLanguage.tanglish => 'Ganta Tap',
+      AppLanguage.malayalam => 'മണി മുഴക്കുക',
+      AppLanguage.manglish => 'Mani Tap',
+      AppLanguage.english => 'BELL TAP',
     };
 
     final bottomInstruction = _count == _target
@@ -5191,7 +6097,11 @@ class _SacredJapaMalaCounterWidgetState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  m['sanskrit']!,
+                  switch (effectiveMalaTranslation) {
+                    'te' => m['sanskritTe'] ?? m['sanskrit']!,
+                    'ml' => m['sanskritMl'] ?? m['sanskrit']!,
+                    _ => m['sanskrit']!,
+                  },
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 13,
