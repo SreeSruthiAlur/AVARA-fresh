@@ -339,6 +339,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Creative Graphic: Interactive Holographic Cyber-Orb & XP Core
         const CyberHolographicOrbWidget(),
+        const SizedBox(height: 14),
+
+        // Creative Graphic: Vedic Cosmic Starfield & 27 Nakshatra Constellation Dome
+        const VedicCosmicStarfieldWidget(),
         FlowConduitConnector(title: conn1),
 
         // 2. Interactive Mind Quests & XP Task Tracker
@@ -424,6 +428,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Creative Graphic: 3-Channel Live Biometric Spectrum Waveform
         const ExecutiveBiorhythmMatrixCard(),
+        const SizedBox(height: 14),
+
+        // Creative Graphic: Prana Bio-Resonance Breathwork Lotus (4-4-4 Vedic Pranayama Sync)
+        const PranaBioResonanceWidget(),
         FlowConduitConnector(title: conn2),
 
         // 3. Executive Moment Card (Circadian Peak & Decision Making)
@@ -515,6 +523,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Creative Graphic: Sacred 7-Chakra Vitality & Diya Meditation
         const SacredChakraKundaliniMandala(),
+        const SizedBox(height: 14),
+
+        // Creative Graphic: Navaratna 9-Planetary Gemstone Talisman & Vedic Frequencies
+        const NavaratnaPlanetaryTalismanWidget(),
         FlowConduitConnector(title: conn3),
 
         // 4. Sacred 5-Pillar Mandala of Life Harmony

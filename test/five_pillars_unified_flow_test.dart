@@ -179,5 +179,85 @@ void main() {
       tester.view.resetPhysicalSize();
       tester.view.resetDevicePixelRatio();
     });
+
+    testWidgets('VedicCosmicStarfieldWidget renders celestial dome and cycles nakshatra on tap', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: VedicCosmicStarfieldWidget(),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('27 NAKSHATRAS'), findsOneWidget);
+      expect(find.text('✨ Rohini ✨'), findsOneWidget);
+
+      // Tap canvas to cycle to Mrigashira
+      await tester.tap(find.byType(GestureDetector).first);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('✨ Mrigashira ✨'), findsOneWidget);
+    });
+
+    testWidgets('PranaBioResonanceWidget renders breathing phases with sync indicator', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: PranaBioResonanceWidget(),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('SYNC: 100%'), findsOneWidget);
+      expect(find.byType(PranaBioResonanceWidget), findsOneWidget);
+    });
+
+    testWidgets('NavaratnaPlanetaryTalismanWidget renders 9 gemstones and selects active stone', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: NavaratnaPlanetaryTalismanWidget(),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('VEDIC 9 GEMS'), findsOneWidget);
+      expect(find.text('Ruby (Manikya)'), findsOneWidget);
+      expect(find.text('Sun (Surya)'), findsOneWidget);
+    });
+
+    testWidgets('MobileDeviceFrameWrapper provides toggle between desktop and mobile frame', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: MobileDeviceFrameWrapper(
+            child: Scaffold(
+              body: Center(child: Text('AVARA Mobile Inner')),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('📱 Mobile App View'), findsOneWidget);
+      expect(find.text('AVARA Mobile Inner'), findsOneWidget);
+
+      // Tap to toggle mobile smartphone frame
+      await tester.tap(find.text('📱 Mobile App View'));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Full Desktop View'), findsOneWidget);
+    });
   });
 }

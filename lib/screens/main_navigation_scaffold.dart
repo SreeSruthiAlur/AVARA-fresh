@@ -17,6 +17,7 @@ import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
+import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:flutter/material.dart';
 
 /// Root navigation scaffold — 6-tab bottom navigation bar:
@@ -259,44 +260,46 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
           '(${screens.length}) must be the same length.',
         );
 
-        return Scaffold(
-          body: IndexedStack(
-            index: _currentIndex,
-            children: screens,
-          ),
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: isSenior ? const Color(0xFFFFFDF5) : AppColors.white,
-              border: Border(
-                top: BorderSide(
-                  color: ageTheme.primaryAccent.withValues(alpha: 0.2),
-                  width: 1.2,
+        return MobileDeviceFrameWrapper(
+          child: Scaffold(
+            body: IndexedStack(
+              index: _currentIndex,
+              children: screens,
+            ),
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: isSenior ? const Color(0xFFFFFDF5) : AppColors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: ageTheme.primaryAccent.withValues(alpha: 0.2),
+                    width: 1.2,
+                  ),
                 ),
               ),
-            ),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: ageTheme.primaryAccent,
-              unselectedItemColor: isSenior ? const Color(0xFF92400E) : AppColors.secondaryText,
-              backgroundColor: isSenior ? const Color(0xFFFFFDF5) : AppColors.white,
-              elevation: 0,
-              iconSize: isSenior ? 26 : 24,
-              selectedFontSize: isSenior ? 13 : 12,
-              unselectedFontSize: isSenior ? 11.5 : 11,
-              selectedLabelStyle: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: ageTheme.primaryAccent,
+              child: BottomNavigationBar(
+                currentIndex: _currentIndex,
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: ageTheme.primaryAccent,
+                unselectedItemColor: isSenior ? const Color(0xFF92400E) : AppColors.secondaryText,
+                backgroundColor: isSenior ? const Color(0xFFFFFDF5) : AppColors.white,
+                elevation: 0,
+                iconSize: isSenior ? 26 : 24,
+                selectedFontSize: isSenior ? 13 : 12,
+                unselectedFontSize: isSenior ? 11.5 : 11,
+                selectedLabelStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: ageTheme.primaryAccent,
+                ),
+                onTap: (index) => setState(() => _currentIndex = index),
+                items: [
+                  for (final d in _destinations)
+                    BottomNavigationBarItem(
+                      icon: Icon(d.icon),
+                      activeIcon: Icon(d.activeIcon),
+                      label: tr(d.labelKey),
+                    ),
+                ],
               ),
-              onTap: (index) => setState(() => _currentIndex = index),
-              items: [
-                for (final d in _destinations)
-                  BottomNavigationBarItem(
-                    icon: Icon(d.icon),
-                    activeIcon: Icon(d.activeIcon),
-                    label: tr(d.labelKey),
-                  ),
-              ],
             ),
           ),
         );

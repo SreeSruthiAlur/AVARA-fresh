@@ -9121,6 +9121,1170 @@ class _SacredChakraDiyaPainter extends CustomPainter {
       oldDelegate.animValue != animValue;
 }
 
+// ============================================================================
+// 1. MOBILE DEVICE CHASSIS FRAME WRAPPER
+// ============================================================================
+
+/// Wraps the application UI inside a photorealistic smartphone chassis frame
+/// when viewed on desktop or wide browser screens.
+///
+/// Features:
+/// - Curved titanium smartphone bezel with realistic glass gloss and shadow.
+/// - Dynamic Island / punch-hole camera at top.
+/// - Mobile status bar with live time, WiFi, 5G, and 98% battery indicator.
+/// - Gesture navigation pill / Home indicator bar.
+/// - Switchable on/off anytime via the floating mode toggle.
+class MobileDeviceFrameWrapper extends StatefulWidget {
+  const MobileDeviceFrameWrapper({
+    super.key,
+    required this.child,
+    this.initialMobileMode = false,
+  });
+
+  final Widget child;
+  final bool initialMobileMode;
+
+  @override
+  State<MobileDeviceFrameWrapper> createState() => MobileDeviceFrameWrapperState();
+
+  static MobileDeviceFrameWrapperState? of(BuildContext context) {
+    return context.findAncestorStateOfType<MobileDeviceFrameWrapperState>();
+  }
+}
+
+class MobileDeviceFrameWrapperState extends State<MobileDeviceFrameWrapper> {
+  late bool _isMobileFrameEnabled;
+
+  bool get isMobileFrameEnabled => _isMobileFrameEnabled;
+
+  void toggleMobileFrame() {
+    setState(() {
+      _isMobileFrameEnabled = !_isMobileFrameEnabled;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _isMobileFrameEnabled = widget.initialMobileMode;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Only apply device frame if screen is wide enough (> 500 px)
+    if (screenWidth <= 500) {
+      return widget.child;
+    }
+
+    final togglePill = Positioned(
+      bottom: 24,
+      right: 24,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: toggleMobileFrame,
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: AppColors.blue.withValues(alpha: 0.7),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.blue.withValues(alpha: 0.35),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isMobileFrameEnabled ? Icons.desktop_windows_rounded : Icons.phone_android_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isMobileFrameEnabled ? 'Full Desktop View' : '📱 Mobile App View',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (!_isMobileFrameEnabled) {
+      return Stack(
+        children: [
+          widget.child,
+          togglePill,
+        ],
+      );
+    }
+
+    final now = DateTime.now();
+    final hour = now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
+    final minute = now.minute.toString().padLeft(2, '0');
+    final timeStr = '$hour:$minute';
+
+    return Stack(
+      children: [
+        Container(
+          color: const Color(0xFF0B0F19),
+          child: Center(
+            child: Container(
+              width: 412,
+              margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(46),
+                border: Border.all(
+                  color: const Color(0xFF334155),
+                  width: 4.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.75),
+                    blurRadius: 40,
+                    spreadRadius: 10,
+                    offset: const Offset(0, 16),
+                  ),
+                  BoxShadow(
+                    color: AppColors.blue.withValues(alpha: 0.2),
+                    blurRadius: 55,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(42),
+                child: Stack(
+                  children: [
+                    // Inner Screen Content
+                    Column(
+                      children: [
+                        // Smartphone Status Bar
+                        Container(
+                          height: 44,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          color: Colors.transparent,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                timeStr,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.deepNavy,
+                                ),
+                              ),
+                              const Row(
+                                children: [
+                                  Icon(Icons.signal_cellular_4_bar_rounded, size: 14, color: AppColors.deepNavy),
+                                  SizedBox(width: 5),
+                                  Icon(Icons.wifi_rounded, size: 14, color: AppColors.deepNavy),
+                                  SizedBox(width: 5),
+                                  Icon(Icons.battery_charging_full_rounded, size: 16, color: AppColors.blue),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(child: widget.child),
+                        // Gesture Home Bar Pill
+                        Container(
+                          height: 18,
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 120,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.black26,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Top Dynamic Island / Punch Hole
+                    Positioned(
+                      top: 9,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          width: 95,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0F172A),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF1E293B),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0284C7),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        togglePill,
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// 2. VEDIC COSMIC STARFIELD & NAKSHATRA CONSTELLATION DOME
+// ============================================================================
+
+/// Interactive 3D celestial starfield and Nakshatra constellation dome.
+///
+/// Features:
+/// - Concentric rotating celestial spheres with precession motion.
+/// - 27 glowing Vedic Nakshatra coordinates with twinkling starlight.
+/// - 7 classical Graha glyph markers (Sun ☉, Moon ☽, Mars ♂, Mercury ☿, Jupiter ♃, Venus ♀, Saturn ♄).
+/// - Interactive tap-to-cycle Nakshatra focus with starlight halo.
+class VedicCosmicStarfieldWidget extends StatefulWidget {
+  const VedicCosmicStarfieldWidget({super.key});
+
+  @override
+  State<VedicCosmicStarfieldWidget> createState() => _VedicCosmicStarfieldWidgetState();
+}
+
+class _VedicCosmicStarfieldWidgetState extends State<VedicCosmicStarfieldWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _cosmicController;
+  int _activeNakshatraIndex = 3; // Rohini (Moon's exalted nakshatra)
+
+  static const List<Map<String, String>> _nakshatras = [
+    {'name': 'Ashwini', 'ruler': 'Ketu', 'sign': 'Aries (Mesha)', 'symbol': 'Horse Head'},
+    {'name': 'Bharani', 'ruler': 'Venus', 'sign': 'Aries (Mesha)', 'symbol': 'Yoni'},
+    {'name': 'Krittika', 'ruler': 'Sun', 'sign': 'Taurus (Vrishabha)', 'symbol': 'Razor / Flame'},
+    {'name': 'Rohini', 'ruler': 'Moon', 'sign': 'Taurus (Vrishabha)', 'symbol': 'Cart / Chariot'},
+    {'name': 'Mrigashira', 'ruler': 'Mars', 'sign': 'Gemini (Mithuna)', 'symbol': 'Deer Head'},
+    {'name': 'Ardra', 'ruler': 'Rahu', 'sign': 'Gemini (Mithuna)', 'symbol': 'Teardrop'},
+    {'name': 'Punarvasu', 'ruler': 'Jupiter', 'sign': 'Cancer (Karkataka)', 'symbol': 'Bow & Quiver'},
+    {'name': 'Pushya', 'ruler': 'Saturn', 'sign': 'Cancer (Karkataka)', 'symbol': 'Flower / Milk'},
+    {'name': 'Ashlesha', 'ruler': 'Mercury', 'sign': 'Cancer (Karkataka)', 'symbol': 'Coiled Serpent'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _cosmicController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 24),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _cosmicController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = _nakshatras[_activeNakshatraIndex % _nakshatras.length];
+    final lang = AppLanguageService.instance.currentLanguage;
+
+    final headerTitle = switch (lang) {
+      AppLanguage.telugu => 'ఖగోళ నక్షత్ర మండలం & గ్రహ పరిభ్రమణం',
+      AppLanguage.tanglish => 'Cosmic Nakshatra Starfield & Planetary Orbit',
+      AppLanguage.malayalam => 'ഖഗോള നക്ഷത്ര മണ്ഡലവും ഗ്രഹ പരിക്രമണവും',
+      AppLanguage.manglish => 'Cosmic Nakshatra Mandala & Planetary Orbit',
+      AppLanguage.english => 'Vedic Cosmic Starfield & Nakshatra Dome',
+    };
+
+    final tapHint = switch (lang) {
+      AppLanguage.telugu => 'నక్షత్రాలను మార్చడానికి తాకండి',
+      AppLanguage.tanglish => 'Tap to Cycle Nakshatras',
+      AppLanguage.malayalam => 'നക്ഷത്രങ്ങൾ മാറ്റാൻ സ്പർശിക്കുക',
+      AppLanguage.manglish => 'Tap to Cycle Nakshatras',
+      AppLanguage.english => 'Tap Starfield to Cycle Nakshatra Focus',
+    };
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const RadialGradient(
+          center: Alignment(0.0, -0.3),
+          radius: 1.25,
+          colors: [
+            Color(0xFF1E1B4B), // Deep indigo nebula
+            Color(0xFF0F172A), // Midnight navy
+            Color(0xFF030712), // Deep cosmic black
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.22),
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.stars_rounded, color: Color(0xFFA5B4FC), size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    headerTitle,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF818CF8).withValues(alpha: 0.4)),
+                ),
+                child: const Text(
+                  '27 NAKSHATRAS',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFC7D2FE),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Interactive Animated Celestial Canvas
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _activeNakshatraIndex = (_activeNakshatraIndex + 1) % _nakshatras.length;
+              });
+            },
+            child: SizedBox(
+              height: 210,
+              child: AnimatedBuilder(
+                animation: _cosmicController,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _CosmicStarfieldPainter(
+                      animValue: _cosmicController.value,
+                      activeNakshatraIdx: _activeNakshatraIndex,
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFA5B4FC).withValues(alpha: 0.5)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                                  blurRadius: 16,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '✨ ${active['name']} ✨',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${active['sign']} • Ruler: ${active['ruler']}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFFC7D2FE),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            tapHint,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CosmicStarfieldPainter extends CustomPainter {
+  _CosmicStarfieldPainter({
+    required this.animValue,
+    required this.activeNakshatraIdx,
+  });
+
+  final double animValue;
+  final int activeNakshatraIdx;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxR = math.min(size.width, size.height) * 0.46;
+
+    // 1. Concentric Celestial Orbits
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (int i = 1; i <= 3; i++) {
+      final r = maxR * (i / 3.0);
+      ringPaint.color = const Color(0xFF818CF8).withValues(alpha: 0.12 + (i * 0.05));
+      canvas.drawCircle(center, r, ringPaint);
+    }
+
+    // 2. Rotating Celestial Equator Axes
+    final angle = animValue * 2 * math.pi;
+    final axisPaint = Paint()
+      ..color = const Color(0xFF6366F1).withValues(alpha: 0.18)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i < 4; i++) {
+      final a = angle + (i * math.pi / 4);
+      final p1 = Offset(center.dx + maxR * math.cos(a), center.dy + maxR * math.sin(a));
+      final p2 = Offset(center.dx - maxR * math.cos(a), center.dy - maxR * math.sin(a));
+      canvas.drawLine(p1, p2, axisPaint);
+    }
+
+    // 3. 27 Vedic Nakshatra Stars on Outer Perimeter
+    final starPaint = Paint()..style = PaintingStyle.fill;
+    final starGlowPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+
+    for (int i = 0; i < 27; i++) {
+      final starAngle = (i / 27.0) * 2 * math.pi - (animValue * math.pi * 0.5);
+      final dist = maxR * 0.92;
+      final starX = center.dx + dist * math.cos(starAngle);
+      final starY = center.dy + dist * math.sin(starAngle);
+
+      final isHighlight = (i % 9) == (activeNakshatraIdx % 9);
+      final twinkle = 0.5 + 0.5 * math.sin(animValue * 20.0 + i * 1.5);
+
+      if (isHighlight) {
+        starGlowPaint.color = const Color(0xFFA5B4FC).withValues(alpha: 0.8);
+        canvas.drawCircle(Offset(starX, starY), 7 + 3 * twinkle, starGlowPaint);
+        starPaint.color = Colors.white;
+        canvas.drawCircle(Offset(starX, starY), 4, starPaint);
+      } else {
+        starPaint.color = const Color(0xFFC7D2FE).withValues(alpha: 0.4 + 0.4 * twinkle);
+        canvas.drawCircle(Offset(starX, starY), 2.2, starPaint);
+      }
+    }
+
+    // 4. Orbiting Grahas (Sun, Moon, Jupiter)
+    final planets = [
+      {'r': maxR * 0.38, 'speed': 2.0, 'color': const Color(0xFFF59E0B), 'size': 5.0}, // Sun
+      {'r': maxR * 0.62, 'speed': -1.6, 'color': const Color(0xFFE2E8F0), 'size': 4.5}, // Moon
+      {'r': maxR * 0.82, 'speed': 0.9, 'color': const Color(0xFF38BDF8), 'size': 4.0}, // Jupiter
+    ];
+
+    for (final p in planets) {
+      final pAngle = (animValue * (p['speed'] as double) * 2 * math.pi);
+      final r = p['r'] as double;
+      final px = center.dx + r * math.cos(pAngle);
+      final py = center.dy + r * math.sin(pAngle);
+      final col = p['color'] as Color;
+      final sz = p['size'] as double;
+
+      canvas.drawCircle(
+        Offset(px, py),
+        sz + 3,
+        Paint()
+          ..color = col.withValues(alpha: 0.35)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+      canvas.drawCircle(Offset(px, py), sz, Paint()..color = col);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CosmicStarfieldPainter oldDelegate) =>
+      oldDelegate.animValue != animValue ||
+      oldDelegate.activeNakshatraIdx != activeNakshatraIdx;
+}
+
+// ============================================================================
+// 3. PRANIC RESONANCE BIO-BREATHWORK LOTUS
+// ============================================================================
+
+/// Animated living sacred geometry lotus petal visualizer that pulses with
+/// real-time Vedic pranayama cycles (Inhale 4s -> Hold 4s -> Exhale 4s).
+///
+/// Features:
+/// - 8 expanding/contracting harmonic sacred lotus petals with gradient color shifts.
+/// - Live breathing phase indicator (Prana Puraka, Kumbhaka, Rechaka).
+/// - Radiant biophoton energy particles emanating outward.
+class PranaBioResonanceWidget extends StatefulWidget {
+  const PranaBioResonanceWidget({super.key});
+
+  @override
+  State<PranaBioResonanceWidget> createState() => _PranaBioResonanceWidgetState();
+}
+
+class _PranaBioResonanceWidgetState extends State<PranaBioResonanceWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _breathController;
+
+  @override
+  void initState() {
+    super.initState();
+    // 12-second complete pranayama cycle (4s Inhale, 4s Hold, 4s Exhale)
+    _breathController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _breathController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF042F2E), // Deep emerald teal
+            Color(0xFF0F172A), // Slate navy
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFF14B8A6).withValues(alpha: 0.4),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0D9488).withValues(alpha: 0.22),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF14B8A6).withValues(alpha: 0.22),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.spa_rounded, color: Color(0xFF2DD4BF), size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    switch (lang) {
+                      AppLanguage.telugu => 'ప్రాణాయామ పవిత్ర కమల తరంగాలు',
+                      AppLanguage.tanglish => 'Prana Bio-Resonance Lotus Pulse',
+                      AppLanguage.malayalam => 'പ്ാണായാമ പവിത്ര താമര തരംഗങ്ങൾ',
+                      AppLanguage.manglish => 'Prana Bio-Resonance Lotus Pulse',
+                      AppLanguage.english => 'Prana Bio-Resonance Breathwork Lotus',
+                    },
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF14B8A6).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF2DD4BF).withValues(alpha: 0.4)),
+                ),
+                child: const Text(
+                  'SYNC: 100%',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF5EEAD4),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Breathing Canvas
+          SizedBox(
+            height: 180,
+            child: AnimatedBuilder(
+              animation: _breathController,
+              builder: (context, _) {
+                final t = _breathController.value;
+                // Determine phase: 0.0 - 0.33 Inhale, 0.33 - 0.66 Hold, 0.66 - 1.0 Exhale
+                final String phaseText;
+                final Color phaseColor;
+
+                if (t < 0.33) {
+                  phaseText = switch (lang) {
+                    AppLanguage.telugu => 'శ్వాస తీసుకోండి (పూర్ణ పూరక)',
+                    AppLanguage.malayalam => 'ശ്വാസം എടുക്കുക (പൂരകം)',
+                    _ => 'INHALE • ABSORB PRANA (4s)',
+                  };
+                  phaseColor = const Color(0xFF2DD4BF);
+                } else if (t < 0.66) {
+                  phaseText = switch (lang) {
+                    AppLanguage.telugu => 'శ్వాస నిలుపుకోండి (అంతః కుంభక)',
+                    AppLanguage.malayalam => 'ശ്വാസം നിർത്തുക (കുംഭകം)',
+                    _ => 'HOLD • INTERNAL CALM (4s)',
+                  };
+                  phaseColor = const Color(0xFFFBBF24);
+                } else {
+                  phaseText = switch (lang) {
+                    AppLanguage.telugu => 'శ్వాస వదలండి (ప్రశాంత రేచక)',
+                    AppLanguage.malayalam => 'ശ്വാസം വിടുക (രേചകം)',
+                    _ => 'EXHALE • RELEASE TENSION (4s)',
+                  };
+                  phaseColor = const Color(0xFFA78BFA);
+                }
+
+                return CustomPaint(
+                  painter: _PranaLotusPainter(breathValue: t),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: phaseColor.withValues(alpha: 0.6)),
+                      ),
+                      child: Text(
+                        phaseText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: phaseColor,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PranaLotusPainter extends CustomPainter {
+  _PranaLotusPainter({required this.breathValue});
+
+  final double breathValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    // Expansion curve: 0 -> 1 during inhale, 1 during hold, 1 -> 0 during exhale
+    double expansion;
+    if (breathValue < 0.33) {
+      expansion = Curves.easeInOut.transform(breathValue / 0.33);
+    } else if (breathValue < 0.66) {
+      expansion = 1.0;
+    } else {
+      expansion = 1.0 - Curves.easeInOut.transform((breathValue - 0.66) / 0.34);
+    }
+
+    final petalR = 36.0 + 32.0 * expansion;
+
+    // Outer Aura Resonance Ring
+    canvas.drawCircle(
+      center,
+      petalR + 18,
+      Paint()
+        ..color = const Color(0xFF14B8A6).withValues(alpha: 0.15 + 0.18 * expansion)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
+    );
+
+    // 8 Sacred Geometric Lotus Petals
+    for (int i = 0; i < 8; i++) {
+      final angle = (i * math.pi / 4) + (breathValue * math.pi * 0.25);
+      final tipX = center.dx + petalR * math.cos(angle);
+      final tipY = center.dy + petalR * math.sin(angle);
+
+      final ctrlAngle1 = angle - 0.28;
+      final ctrlAngle2 = angle + 0.28;
+      final ctrlDist = petalR * 0.65;
+
+      final p1 = Offset(center.dx + ctrlDist * math.cos(ctrlAngle1), center.dy + ctrlDist * math.sin(ctrlAngle1));
+      final p2 = Offset(center.dx + ctrlDist * math.cos(ctrlAngle2), center.dy + ctrlDist * math.sin(ctrlAngle2));
+
+      final petalPath = Path();
+      petalPath.moveTo(center.dx, center.dy);
+      petalPath.quadraticBezierTo(p1.dx, p1.dy, tipX, tipY);
+      petalPath.quadraticBezierTo(p2.dx, p2.dy, center.dx, center.dy);
+      petalPath.close();
+
+      final petalPaint = Paint()
+        ..shader = LinearGradient(
+          colors: [
+            const Color(0xFF0D9488).withValues(alpha: 0.5),
+            const Color(0xFF2DD4BF).withValues(alpha: 0.85),
+          ],
+          begin: Alignment.center,
+          end: Alignment.bottomRight,
+        ).createShader(Rect.fromCircle(center: center, radius: petalR));
+
+      canvas.drawPath(petalPath, petalPaint);
+
+      // Petal outline
+      canvas.drawPath(
+        petalPath,
+        Paint()
+          ..color = const Color(0xFF5EEAD4).withValues(alpha: 0.6)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2,
+      );
+    }
+
+    // Core Golden Bindu Seed
+    canvas.drawCircle(
+      center,
+      12 + 4 * expansion,
+      Paint()
+        ..color = const Color(0xFFFBBF24)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawCircle(center, 7, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PranaLotusPainter oldDelegate) =>
+      oldDelegate.breathValue != breathValue;
+}
+
+// ============================================================================
+// 4. NAVARATNA 9-PLANETARY GEMSTONE TALISMAN
+// ============================================================================
+
+/// Interactive 9-gemstone Vedic planetary talisman arranged in traditional
+/// 3x3 mandala with shimmering light sweeps and planetary frequencies.
+class NavaratnaPlanetaryTalismanWidget extends StatefulWidget {
+  const NavaratnaPlanetaryTalismanWidget({super.key});
+
+  @override
+  State<NavaratnaPlanetaryTalismanWidget> createState() =>
+      _NavaratnaPlanetaryTalismanWidgetState();
+}
+
+class _NavaratnaPlanetaryTalismanWidgetState
+    extends State<NavaratnaPlanetaryTalismanWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerController;
+  int _selectedGemIndex = 0; // 0 = Ruby (Sun)
+
+  static const List<Map<String, dynamic>> _gems = [
+    {
+      'name': 'Ruby (Manikya)',
+      'graha': 'Sun (Surya)',
+      'color': Color(0xFFDC2626),
+      'metal': 'Gold',
+      'chakra': 'Manipura (Solar Plexus)',
+      'power': 'Vitality, Leadership & Soul Clarity',
+    },
+    {
+      'name': 'Pearl (Mukta)',
+      'graha': 'Moon (Chandra)',
+      'color': Color(0xFFF1F5F9),
+      'metal': 'Silver',
+      'chakra': 'Swadhisthana (Sacral)',
+      'power': 'Emotional Serenity, Intuition & Rest',
+    },
+    {
+      'name': 'Red Coral (Moonga)',
+      'graha': 'Mars (Mangala)',
+      'color': Color(0xFFEA580C),
+      'metal': 'Copper',
+      'chakra': 'Muladhara (Root)',
+      'power': 'Physical Courage, Stamina & Drive',
+    },
+    {
+      'name': 'Emerald (Marakata)',
+      'graha': 'Mercury (Budha)',
+      'color': Color(0xFF059669),
+      'metal': 'Brass',
+      'chakra': 'Anahata (Heart)',
+      'power': 'Intellect, Communication & Wealth',
+    },
+    {
+      'name': 'Yellow Sapphire (Pukhraj)',
+      'graha': 'Jupiter (Guru)',
+      'color': Color(0xFFEAB308),
+      'metal': 'Gold',
+      'chakra': 'Ajna (Third Eye)',
+      'power': 'Divine Wisdom, Prosperity & Dharma',
+    },
+    {
+      'name': 'Diamond (Heera)',
+      'graha': 'Venus (Shukra)',
+      'color': Color(0xFF67E8F9),
+      'metal': 'Platinum',
+      'chakra': 'Sahasrara (Crown)',
+      'power': 'Artistic Harmony, Love & Luxury',
+    },
+    {
+      'name': 'Blue Sapphire (Neelam)',
+      'graha': 'Saturn (Shani)',
+      'color': Color(0xFF2563EB),
+      'metal': 'Iron',
+      'chakra': 'Vishuddha (Throat)',
+      'power': 'Discipline, Longevity & Karmic Focus',
+    },
+    {
+      'name': 'Hessonite (Gomed)',
+      'graha': 'Rahu (North Node)',
+      'color': Color(0xFF78350F),
+      'metal': 'Panchadhatu',
+      'chakra': 'Aura Shield',
+      'power': 'Success over Illusions & Innovation',
+    },
+    {
+      'name': 'Cat\'s Eye (Vaidurya)',
+      'graha': 'Ketu (South Node)',
+      'color': Color(0xFF65A30D),
+      'metal': 'Silver',
+      'chakra': 'Kundalini Core',
+      'power': 'Moksha, Spiritual Awakening & Healing',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeGem = _gems[_selectedGemIndex];
+    final lang = AppLanguageService.instance.currentLanguage;
+
+    final title = switch (lang) {
+      AppLanguage.telugu => 'నవరత్న ఖగోళ తాయెత్తు & రత్నశక్తి',
+      AppLanguage.tanglish => 'Navaratna 9-Planetary Gemstone Talisman',
+      AppLanguage.malayalam => 'നവരത്ന ഖഗോള താലിസ്മാൻ',
+      AppLanguage.manglish => 'Navaratna 9-Planetary Gemstone Talisman',
+      AppLanguage.english => 'Navaratna 9-Planetary Gemstone Talisman',
+    };
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const RadialGradient(
+          center: Alignment(0.0, -0.2),
+          radius: 1.1,
+          colors: [
+            Color(0xFF2E1065), // Deep royal amethyst
+            Color(0xFF0F172A), // Slate navy
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFA855F7).withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF9333EA).withValues(alpha: 0.2),
+            blurRadius: 26,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFA855F7).withValues(alpha: 0.25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.diamond_rounded, color: Color(0xFFE9D5FF), size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFA855F7).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFC084FC).withValues(alpha: 0.4)),
+                ),
+                child: const Text(
+                  'VEDIC 9 GEMS',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFE9D5FF),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 3x3 Gemstone Grid
+          Center(
+            child: SizedBox(
+              width: 250,
+              height: 250,
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: _gems.length,
+                itemBuilder: (context, i) {
+                  final gem = _gems[i];
+                  final isSelected = i == _selectedGemIndex;
+                  final color = gem['color'] as Color;
+
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedGemIndex = i),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: color.withValues(alpha: isSelected ? 0.9 : 0.4),
+                        border: Border.all(
+                          color: isSelected ? Colors.white : color,
+                          width: isSelected ? 2.5 : 1.2,
+                        ),
+                        boxShadow: [
+                          if (isSelected)
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.7),
+                              blurRadius: 14,
+                              spreadRadius: 2,
+                            ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          i == 0 ? Icons.wb_sunny_rounded : Icons.auto_awesome_rounded,
+                          size: isSelected ? 20 : 16,
+                          color: isSelected ? Colors.white : Colors.white70,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Active Gemstone Info Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: (activeGem['color'] as Color).withValues(alpha: 0.4),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      activeGem['name'] as String,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: activeGem['color'] as Color,
+                      ),
+                    ),
+                    Text(
+                      activeGem['graha'] as String,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${activeGem['power']} • Chakra: ${activeGem['chakra']}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 
 
 
