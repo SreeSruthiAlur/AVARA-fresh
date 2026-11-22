@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
+import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -4735,6 +4736,8 @@ class _SacredJapaMalaCounterWidgetState
 
     AppLanguageService.instance.addListener(_handleLangChange);
     TtsService.instance.addListener(_handleTtsChange);
+    VoiceService.instance.onJapaMalaTapRequest = _increment;
+    VoiceService.instance.onJapaMalaResetRequest = _reset;
   }
 
   void _handleLangChange() {
@@ -4754,6 +4757,8 @@ class _SacredJapaMalaCounterWidgetState
 
   @override
   void dispose() {
+    VoiceService.instance.onJapaMalaTapRequest = null;
+    VoiceService.instance.onJapaMalaResetRequest = null;
     AppLanguageService.instance.removeListener(_handleLangChange);
     TtsService.instance.removeListener(_handleTtsChange);
     _auraController.dispose();

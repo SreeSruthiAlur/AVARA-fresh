@@ -48,6 +48,10 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
   void initState() {
     super.initState();
     // Connect VoiceService navigation and action callbacks
+    VoiceService.instance.onAgeCohortChangeRequest = (group) {
+      if (mounted) setState(() {});
+    };
+
     VoiceService.instance.onNavigateRequest = (index) {
       if (mounted && index >= 0 && index < _destinations.length) {
         setState(() => _currentIndex = index);
@@ -168,6 +172,9 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
 
   @override
   void dispose() {
+    VoiceService.instance.onAgeCohortChangeRequest = null;
+    VoiceService.instance.onJapaMalaTapRequest = null;
+    VoiceService.instance.onJapaMalaResetRequest = null;
     VoiceService.instance.onNavigateRequest = null;
     VoiceService.instance.onRouteRequest = null;
     VoiceService.instance.onOpenScreenRequest = null;

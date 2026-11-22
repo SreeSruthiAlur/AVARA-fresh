@@ -46,10 +46,126 @@
       var silenceTimer = null;
       var lastTranscript = '';
       var isExplicitlyStopped = false;
+      var sessionStartTime = 0;
+      var micPermissionRequested = false;
+      var targetLang = 'en-IN';
 
       window.isWebSpeechAvailable = function() {
         return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
       };
+
+      function createRecognitionInstance() {
+        var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) return null;
+
+        var rec = new SpeechRec();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+        rec.lang = targetLang;
+
+        rec.onstart = function() {
+          console.log('🎤 [AVARA Web Speech]: Microphone listening active in', rec.lang);
+        };
+
+        rec.onresult = function(event) {
+          var fullTranscript = '';
+          var hasFinal = false;
+
+          for (var i = 0; i < event.results.length; i++) {
+            var res = event.results[i];
+            if (res && res[0] && res[0].transcript) {
+              var piece = res[0].transcript.trim();
+              if (piece.length > 0) {
+                fullTranscript += (fullTranscript.length > 0 ? ' ' : '') + piece;
+              }
+            }
+            if (res && res.isFinal) {
+              hasFinal = true;
+            }
+          }
+
+          fullTranscript = fullTranscript.trim();
+          if (fullTranscript.length > 0) {
+            lastTranscript = fullTranscript;
+            console.log('🎤 [AVARA Web Speech]: Heard words ->', fullTranscript, '(isFinal:', hasFinal, ')');
+            if (activeOnResult) {
+              // Immediately stream live spoken words to Flutter UI so it types in real-time
+              activeOnResult(fullTranscript, false);
+            }
+
+            // Auto-finalize action 1600ms after user finishes speaking
+            if (silenceTimer) clearTimeout(silenceTimer);
+            silenceTimer = setTimeout(function() {
+              console.log('🎤 [AVARA Web Speech]: Natural speech pause -> Executing:', lastTranscript);
+              if (activeOnResult && lastTranscript.length > 0) {
+                activeOnResult(lastTranscript, true);
+              }
+              window.stopWebSpeechRecognition();
+            }, 1600);
+          }
+        };
+
+        rec.onerror = function(event) {
+          console.warn('🎤 [AVARA Web Speech Error]:', event.error);
+          if (event.error === 'no-speech') {
+            // Silence while user is thinking or preparing to speak — keep mic alive!
+            return;
+          }
+          if (event.error === 'language-not-supported' || event.error === 'network') {
+            if (targetLang !== 'en-IN') {
+              console.log('🎤 [AVARA Web Speech]: Switching to en-IN locale fallback for broad compatibility');
+              targetLang = 'en-IN';
+              rec.lang = 'en-IN';
+              try { rec.start(); return; } catch(e){}
+            }
+          }
+          if (activeOnError) {
+            activeOnError(event.error || 'speech-error');
+          }
+        };
+
+        rec.onend = function() {
+          console.log('🎤 [AVARA Web Speech]: Recognition cycle ended. Explicit:', isExplicitlyStopped);
+          if (silenceTimer) {
+            clearTimeout(silenceTimer);
+            silenceTimer = null;
+          }
+
+          // If the user spoke words and session ended, deliver final result!
+          if (!isExplicitlyStopped && lastTranscript.length > 0 && activeOnResult) {
+            activeOnResult(lastTranscript, true);
+            if (activeOnEnd) activeOnEnd();
+            return;
+          }
+
+          // If user hasn't spoken yet and hasn't explicitly stopped, keep listening for up to 30s!
+          var elapsed = Date.now() - sessionStartTime;
+          if (!isExplicitlyStopped && elapsed < 30000) {
+            console.log('🎤 [AVARA Web Speech]: Idle silence cycle complete. Keeping listening active for user...');
+            try {
+              rec.start();
+              return;
+            } catch(e) {
+              setTimeout(function() {
+                if (!isExplicitlyStopped && (Date.now() - sessionStartTime < 30000)) {
+                  try {
+                    recognition = createRecognitionInstance();
+                    if (recognition) recognition.start();
+                  } catch(_) {}
+                }
+              }, 200);
+              return;
+            }
+          }
+
+          if (activeOnEnd) {
+            activeOnEnd();
+          }
+        };
+
+        return rec;
+      }
 
       window.startWebSpeechRecognition = function(lang, onResult, onEnd, onError) {
         var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -75,84 +191,42 @@
           activeOnError = onError;
           lastTranscript = '';
           isExplicitlyStopped = false;
+          sessionStartTime = Date.now();
+          targetLang = lang || 'en-IN';
 
-          recognition = new SpeechRec();
-          recognition.continuous = true;
-          recognition.interimResults = true;
-          recognition.maxAlternatives = 1;
-          recognition.lang = lang || 'en-IN';
-
-          recognition.onstart = function() {
-            console.log('🎤 [AVARA Web Speech]: Voice detection active in', recognition.lang);
-          };
-
-          recognition.onresult = function(event) {
-            var fullTranscript = '';
-            var hasFinal = false;
-
-            for (var i = 0; i < event.results.length; i++) {
-              var res = event.results[i];
-              if (res && res[0] && res[0].transcript) {
-                var piece = res[0].transcript.trim();
-                if (piece.length > 0) {
-                  fullTranscript += (fullTranscript.length > 0 ? ' ' : '') + piece;
-                }
+          function doStart() {
+            try {
+              recognition = createRecognitionInstance();
+              if (recognition) {
+                recognition.start();
               }
-              if (res && res.isFinal) {
-                hasFinal = true;
-              }
+            } catch(startErr) {
+              console.error('🎤 [AVARA Web Speech Start Error]:', startErr);
+              if (onError) onError(startErr.toString());
             }
+          }
 
-            fullTranscript = fullTranscript.trim();
-            if (fullTranscript.length > 0) {
-              lastTranscript = fullTranscript;
-              console.log('🎤 [AVARA Web Speech]: Heard words ->', fullTranscript, '(isFinal:', hasFinal, ')');
-              if (activeOnResult) {
-                // Immediately stream live spoken words to Flutter UI so it types in real-time
-                activeOnResult(fullTranscript, false);
-              }
+          // Prime microphone permissions via getUserMedia if not yet authorized
+          if (!micPermissionRequested && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            micPermissionRequested = true;
+            navigator.mediaDevices.getUserMedia({ audio: true })
+              .then(function(stream) {
+                setTimeout(function() {
+                  stream.getTracks().forEach(function(t) { t.stop(); });
+                }, 1000);
+                doStart();
+              })
+              .catch(function(err) {
+                console.warn('🎤 [AVARA getUserMedia Note]:', err);
+                doStart();
+              });
+          } else {
+            doStart();
+          }
 
-              // Auto-finalize action 1400ms after user pauses speaking
-              if (silenceTimer) clearTimeout(silenceTimer);
-              silenceTimer = setTimeout(function() {
-                console.log('🎤 [AVARA Web Speech]: Pause detected -> Auto-finalizing and executing:', lastTranscript);
-                if (activeOnResult && lastTranscript.length > 0) {
-                  activeOnResult(lastTranscript, true);
-                }
-                window.stopWebSpeechRecognition();
-              }, 1400);
-            }
-          };
-
-          recognition.onerror = function(event) {
-            console.warn('🎤 [AVARA Web Speech Error]:', event.error);
-            if (event.error === 'no-speech') {
-              // Silence while listening is expected — do not abort
-              return;
-            }
-            if (activeOnError) {
-              activeOnError(event.error || 'speech-error');
-            }
-          };
-
-          recognition.onend = function() {
-            console.log('🎤 [AVARA Web Speech]: Session ended. Explicit:', isExplicitlyStopped);
-            if (silenceTimer) {
-              clearTimeout(silenceTimer);
-              silenceTimer = null;
-            }
-            if (!isExplicitlyStopped && lastTranscript.length > 0 && activeOnResult) {
-              activeOnResult(lastTranscript, true);
-            }
-            if (activeOnEnd) {
-              activeOnEnd();
-            }
-          };
-
-          recognition.start();
           return true;
         } catch(err) {
-          console.error('🎤 [AVARA Web Speech Start Error]:', err);
+          console.error('🎤 [AVARA Web Speech Init Error]:', err);
           if (onError) onError(err.toString());
           return false;
         }

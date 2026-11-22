@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
@@ -142,6 +143,41 @@ void main() {
       expect(result.type, equals(VoiceCommandType.changeLanguage));
       expect(result.targetLanguage, equals(AppLanguage.english));
       expect(AppLanguageService.instance.currentLanguage, equals(AppLanguage.english));
+    });
+
+    test('Voice command switches age cohorts (Youth, Adult, Senior)', () {
+      final voice = VoiceService.instance;
+
+      // Youth
+      final resYouth = voice.parseAndExecuteCommand('Switch to youth mode', speakFeedback: false);
+      expect(resYouth.type, equals(VoiceCommandType.changeAgeCohort));
+      expect(resYouth.targetAgeGroup, equals(AgeGroup.youth));
+
+      // Adult
+      final resAdult = voice.parseAndExecuteCommand('Switch to adult mode', speakFeedback: false);
+      expect(resAdult.type, equals(VoiceCommandType.changeAgeCohort));
+      expect(resAdult.targetAgeGroup, equals(AgeGroup.adult));
+
+      // Senior
+      final resSenior = voice.parseAndExecuteCommand('Switch to senior mode', speakFeedback: false);
+      expect(resSenior.type, equals(VoiceCommandType.changeAgeCohort));
+      expect(resSenior.targetAgeGroup, equals(AgeGroup.senior));
+    });
+
+    test('Voice command triggers Japa Mala counting and reset', () {
+      final voice = VoiceService.instance;
+      bool tapped = false;
+      bool reset = false;
+      voice.onJapaMalaTapRequest = () => tapped = true;
+      voice.onJapaMalaResetRequest = () => reset = true;
+
+      final resTap = voice.parseAndExecuteCommand('Count bead', speakFeedback: false);
+      expect(resTap.type, equals(VoiceCommandType.japaMalaAction));
+      expect(tapped, isTrue);
+
+      final resReset = voice.parseAndExecuteCommand('Reset mala', speakFeedback: false);
+      expect(resReset.type, equals(VoiceCommandType.japaMalaAction));
+      expect(reset, isTrue);
     });
 
     test('Voice navigation commands switch tabs correctly', () {

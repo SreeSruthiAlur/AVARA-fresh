@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/services/web_audio_stub.dart'
@@ -10,6 +11,8 @@ import 'package:avara_astrology_trial/services/web_audio_stub.dart'
 /// Categories of voice commands supported by AVARA.
 enum VoiceCommandType {
   changeLanguage,
+  changeAgeCohort,
+  japaMalaAction,
   navigate,
   openScreen,
   askAstrology,
@@ -25,6 +28,7 @@ class VoiceCommandResult {
     required this.type,
     required this.rawTranscript,
     this.targetLanguage,
+    this.targetAgeGroup,
     this.targetTabIndex,
     this.targetRouteName,
     this.feedbackMessage,
@@ -38,6 +42,7 @@ class VoiceCommandResult {
   final VoiceCommandType type;
   final String rawTranscript;
   final AppLanguage? targetLanguage;
+  final AgeGroup? targetAgeGroup;
   final int? targetTabIndex;
   final String? targetRouteName;
   final String? feedbackMessage;
@@ -100,6 +105,13 @@ class VoiceService extends ChangeNotifier {
 
   /// Callback when user requests to open a specific screen (e.g. 'chat', 'add_expense', 'astrologers', 'birth_profile', 'profile', 'register').
   void Function(String screenName)? onOpenScreenRequest;
+
+  /// Callback when user commands an age cohort mode change by voice.
+  void Function(AgeGroup group)? onAgeCohortChangeRequest;
+
+  /// Callback when user commands japa mala counting or reset by voice.
+  void Function()? onJapaMalaTapRequest;
+  void Function()? onJapaMalaResetRequest;
 
   Timer? _silenceTimer;
   bool _hasFinalized = false;
@@ -461,6 +473,20 @@ class VoiceService extends ChangeNotifier {
           AppLanguageService.instance.setLanguage(result.targetLanguage!);
         }
         break;
+      case VoiceCommandType.changeAgeCohort:
+        if (result.targetAgeGroup != null) {
+          AgeProfileService.instance.setAgeGroup(result.targetAgeGroup!);
+          onAgeCohortChangeRequest?.call(result.targetAgeGroup!);
+        }
+        break;
+      case VoiceCommandType.japaMalaAction:
+        if (result.feedbackMessage?.toLowerCase().contains('reset') ?? false) {
+          onJapaMalaResetRequest?.call();
+        } else {
+          TtsService.instance.playTempleBell();
+          onJapaMalaTapRequest?.call();
+        }
+        break;
       case VoiceCommandType.navigate:
         if (result.targetTabIndex != null) {
           onNavigateRequest?.call(result.targetTabIndex!);
@@ -626,6 +652,107 @@ class VoiceService extends ChangeNotifier {
         rawTranscript: spokenText,
         targetLanguage: AppLanguage.english,
         feedbackMessage: 'Display language changed to English',
+      );
+    }
+
+    // Age Cohort Mode Switching
+    if (_matchesPattern(clean, [
+      'youth mode',
+      'switch to youth',
+      'change to youth',
+      'youngster mode',
+      'youth',
+      'youngster',
+      'level up',
+      'explorer mode',
+      'cosmic explorer',
+      'teens',
+      'yuvakulu',
+      'student mode',
+    ])) {
+      AgeProfileService.instance.setAgeGroup(AgeGroup.youth);
+      return VoiceCommandResult(
+        type: VoiceCommandType.changeAgeCohort,
+        rawTranscript: spokenText,
+        targetAgeGroup: AgeGroup.youth,
+        feedbackMessage: 'Switched to Youth & Cosmic Explorer Mode! 🚀 (Under 22)',
+      );
+    }
+
+    if (_matchesPattern(clean, [
+      'adult mode',
+      'switch to adult',
+      'change to adult',
+      'executive mode',
+      'focus mode',
+      'professional mode',
+      'adult',
+      'peddalu',
+      'achiever',
+    ])) {
+      AgeProfileService.instance.setAgeGroup(AgeGroup.adult);
+      return VoiceCommandResult(
+        type: VoiceCommandType.changeAgeCohort,
+        rawTranscript: spokenText,
+        targetAgeGroup: AgeGroup.adult,
+        feedbackMessage: 'Switched to Mindful Professional & Executive Mode (22-45)',
+      );
+    }
+
+    if (_matchesPattern(clean, [
+      'senior mode',
+      'switch to senior',
+      'change to senior',
+      'vedic sanctuary',
+      'spiritual mode',
+      'senior',
+      'vrudhulu',
+      'peddala mode',
+      'elderly mode',
+      'shanti mode',
+    ])) {
+      AgeProfileService.instance.setAgeGroup(AgeGroup.senior);
+      return VoiceCommandResult(
+        type: VoiceCommandType.changeAgeCohort,
+        rawTranscript: spokenText,
+        targetAgeGroup: AgeGroup.senior,
+        feedbackMessage: 'Switched to Grace & Serenity Vedic Sanctuary Mode (45+)',
+      );
+    }
+
+    // Sacred Japa Mala & Chanting Commands
+    if (_matchesPattern(clean, [
+      'count bead',
+      'count mala',
+      'japa',
+      'om namah shivaya',
+      'gayatri mantra',
+      'next bead',
+      'japam',
+      'mani',
+      'om namo narayanaya',
+      'maha mrityunjaya',
+      'hare krishna',
+      'chant',
+      'chanting',
+    ])) {
+      return VoiceCommandResult(
+        type: VoiceCommandType.japaMalaAction,
+        rawTranscript: spokenText,
+        feedbackMessage: 'Japa bead counted. Temple bell sounded 🔔',
+      );
+    }
+
+    if (_matchesPattern(clean, [
+      'reset mala',
+      'reset japa',
+      'clear mala',
+      'restart mala',
+    ])) {
+      return VoiceCommandResult(
+        type: VoiceCommandType.japaMalaAction,
+        rawTranscript: spokenText,
+        feedbackMessage: 'Japa Mala counter reset to zero',
       );
     }
 

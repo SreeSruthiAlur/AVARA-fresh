@@ -257,10 +257,12 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
           _pulseController.reset();
 
           if (text.trim().isNotEmpty) {
-            // First check if the finalized statement is an app command (e.g. "change to telugu")
+            // First check if the finalized statement is an app command (e.g. "change to telugu", "youth mode")
             final commandResult = voice.tryExecuteCommand(text);
             if (commandResult != null &&
                 (commandResult.type == VoiceCommandType.changeLanguage ||
+                    commandResult.type == VoiceCommandType.changeAgeCohort ||
+                    commandResult.type == VoiceCommandType.japaMalaAction ||
                     (widget.onSpeechComplete == null &&
                         commandResult.type != VoiceCommandType.dictateText))) {
               _showFloatingStatusOverlay(

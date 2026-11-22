@@ -129,8 +129,16 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
         if (!mounted) return;
         setState(() {
           _liveTranscript = words;
-          _statusMessage = 'Hearing: "$words"';
+          _statusMessage = isFinal ? 'Processing: "$words"' : 'Listening: "$words"';
         });
+
+        // Real-time typewriter effect into the test command text field
+        if (words.trim().isNotEmpty) {
+          _testCommandController.text = words;
+          _testCommandController.selection = TextSelection.fromPosition(
+            TextPosition(offset: words.length),
+          );
+        }
 
         // Only execute actions when speech has paused / finalized, not while mid-sentence
         if (isFinal && words.trim().isNotEmpty) {
@@ -459,13 +467,13 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
                     Text(
                       _lastResult != null
                           ? '✅ Executed Action'
-                          : 'Recognized Speech:',
+                          : (_isListening ? '🎙️ Listening & Typing Live:' : 'Captured Speech:'),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: _lastResult != null
                             ? Colors.green.shade800
-                            : AppColors.secondaryText,
+                            : (_isListening ? AppColors.blue : AppColors.secondaryText),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -611,6 +619,26 @@ class _GlobalVoiceAssistantModalState extends State<GlobalVoiceAssistantModal>
               spacing: 8,
               runSpacing: 8,
               children: [
+                _commandChip(
+                  icon: Icons.rocket_launch_rounded,
+                  label: 'Youth Mode (<22) 🚀',
+                  onTap: () => _executeCommand('Youth Mode'),
+                ),
+                _commandChip(
+                  icon: Icons.work_outline_rounded,
+                  label: 'Adult Mode (22-45) 💼',
+                  onTap: () => _executeCommand('Adult Mode'),
+                ),
+                _commandChip(
+                  icon: Icons.self_improvement_rounded,
+                  label: 'Senior Mode (45+) 📿',
+                  onTap: () => _executeCommand('Senior Mode'),
+                ),
+                _commandChip(
+                  icon: Icons.notifications_active_rounded,
+                  label: 'Count Mala Bead 🔔',
+                  onTap: () => _executeCommand('Count Bead'),
+                ),
                 _commandChip(
                   icon: Icons.auto_awesome,
                   label: 'What is my horoscope?',
