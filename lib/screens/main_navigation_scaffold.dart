@@ -49,7 +49,7 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
     super.initState();
     // Connect VoiceService navigation and action callbacks
     VoiceService.instance.onNavigateRequest = (index) {
-      if (mounted && index >= 0 && index < _screens.length) {
+      if (mounted && index >= 0 && index < _destinations.length) {
         setState(() => _currentIndex = index);
       }
     };
@@ -210,35 +210,52 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
     ),
   ];
 
-  late final List<Widget> _screens = [
-    HomeScreen(userName: widget.userName),          // 0 — Home
-    AstrologyHubScreen(apiKey: widget.apiKey),      // 1 — Astrology hub
-    const FinanceScreen(),                          // 2 — Finance
-    const HealthScreen(),                           // 3 — Health
-    const HabitsScreen(),                           // 4 — Track (Habits)
-    const InsightsScreen(),                         // 5 — Insights
-  ];
-
   @override
   Widget build(BuildContext context) {
-    assert(
-      _destinations.length == _screens.length,
-      'Bottom-nav destinations (${_destinations.length}) and screens '
-      '(${_screens.length}) must be the same length.',
-    );
-
-    final tr = AppLanguageService.instance.tr;
-
     return ListenableBuilder(
-      listenable: AgeProfileService.instance,
+      listenable: Listenable.merge([
+        AgeProfileService.instance,
+        AppLanguageService.instance,
+      ]),
       builder: (context, _) {
+        final tr = AppLanguageService.instance.tr;
+        final currentLang = AppLanguageService.instance.currentLanguage;
         final ageTheme = AgeProfileService.instance.activeTheme;
         final isSenior = ageTheme.group == AgeGroup.senior;
+
+        final screens = [
+          HomeScreen(
+            key: ValueKey('home_${currentLang.code}'),
+            userName: widget.userName,
+          ),
+          AstrologyHubScreen(
+            key: ValueKey('astro_${currentLang.code}'),
+            apiKey: widget.apiKey,
+          ),
+          FinanceScreen(
+            key: ValueKey('finance_${currentLang.code}'),
+          ),
+          HealthScreen(
+            key: ValueKey('health_${currentLang.code}'),
+          ),
+          HabitsScreen(
+            key: ValueKey('habits_${currentLang.code}'),
+          ),
+          InsightsScreen(
+            key: ValueKey('insights_${currentLang.code}'),
+          ),
+        ];
+
+        assert(
+          _destinations.length == screens.length,
+          'Bottom-nav destinations (${_destinations.length}) and screens '
+          '(${screens.length}) must be the same length.',
+        );
 
         return Scaffold(
           body: IndexedStack(
             index: _currentIndex,
-            children: _screens,
+            children: screens,
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () => GlobalVoiceAssistantModal.show(context),

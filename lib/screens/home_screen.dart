@@ -212,7 +212,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: AgeProfileService.instance,
+      listenable: Listenable.merge([
+        AgeProfileService.instance,
+        AppLanguageService.instance,
+      ]),
       builder: (context, _) {
         final ageService = AgeProfileService.instance;
         final ageGroup = ageService.ageGroup;
@@ -538,9 +541,21 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 4),
               Text(
                 switch (activeTheme.group) {
-                  AgeGroup.youth => '⚡ Hey there, explorer!',
+                  AgeGroup.youth => switch (currentLang) {
+                      AppLanguage.telugu => '⚡ హలో, అన్వేషకుడా!',
+                      AppLanguage.tanglish => '⚡ Hello, explorer!',
+                      AppLanguage.malayalam => '⚡ നമസ്കാരം, പര്യവേക്ഷകാ!',
+                      AppLanguage.manglish => '⚡ Hello, explorer!',
+                      AppLanguage.english => '⚡ Hey there, explorer!',
+                    },
                   AgeGroup.adult => _greetingPrefix(),
-                  AgeGroup.senior => '🌸 Namaste, peace & good health.',
+                  AgeGroup.senior => switch (currentLang) {
+                      AppLanguage.telugu => '🌸 నమస్తే, శాంతి మరియు సంపూర్ణ ఆరోగ్యం.',
+                      AppLanguage.tanglish => '🌸 Namaste, shanti mariyu sampoorna arogyam.',
+                      AppLanguage.malayalam => '🌸 നമസ്തേ, ശാന്തിയും പൂർണ്ണ ആരോഗ്യവും.',
+                      AppLanguage.manglish => '🌸 Namaste, shanthiyum poorna aarogyavum.',
+                      AppLanguage.english => '🌸 Namaste, peace & good health.',
+                    },
                 },
                 style: Theme.of(context)
                     .textTheme
@@ -552,7 +567,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 switch (activeTheme.group) {
                   AgeGroup.youth => '${widget.userName} ⚡',
                   AgeGroup.adult => widget.userName,
-                  AgeGroup.senior => '${widget.userName} ji 🙏',
+                  AgeGroup.senior => switch (currentLang) {
+                      AppLanguage.telugu => '${widget.userName} గారు 🙏',
+                      AppLanguage.tanglish => '${widget.userName} garu 🙏',
+                      AppLanguage.malayalam => '${widget.userName} അവർകൾ 🙏',
+                      AppLanguage.manglish => '${widget.userName} ji 🙏',
+                      AppLanguage.english => '${widget.userName} ji 🙏',
+                    },
                 },
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: activeTheme.group == AgeGroup.senior

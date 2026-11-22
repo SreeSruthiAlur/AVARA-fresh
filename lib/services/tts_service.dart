@@ -128,17 +128,31 @@ class TtsService extends ChangeNotifier {
   /// Plays natural human voice translation for the specified mantra in the chosen language.
   Future<void> playTranslationVoice({
     required String mantraKey,
-    required String langCode, // 'en' or 'te'
+    required String langCode, // 'en', 'te', 'tanglish', 'ml', 'manglish'
     required String fallbackText,
   }) async {
+    final lang = switch (langCode) {
+      'te' => AppLanguage.telugu,
+      'tanglish' => AppLanguage.tanglish,
+      'ml' => AppLanguage.malayalam,
+      'manglish' => AppLanguage.manglish,
+      _ => AppLanguage.english,
+    };
+
     if (kIsWeb) {
-      playTranslationAudioWeb(mantraKey, langCode);
+      if (langCode == 'te' || langCode == 'en') {
+        playTranslationAudioWeb(mantraKey, langCode);
+      }
+      if (langCode == 'ml' || langCode == 'manglish' || langCode == 'tanglish') {
+        await speak(fallbackText, language: lang);
+        return;
+      }
       _isSpeaking = true;
       _isSpeakingTranslation = true;
       _currentlySpeakingText = fallbackText;
       notifyListeners();
     } else {
-      await speak(fallbackText, language: langCode == 'te' ? AppLanguage.telugu : AppLanguage.english);
+      await speak(fallbackText, language: lang);
     }
   }
 
