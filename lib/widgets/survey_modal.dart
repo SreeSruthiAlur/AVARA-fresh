@@ -52,12 +52,17 @@ class _SurveyModalState extends State<SurveyModal> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 480),
-        padding: const EdgeInsets.all(24),
+        constraints: BoxConstraints(
+          maxWidth: 480,
+          maxHeight: screenHeight * 0.88,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -94,7 +99,7 @@ class _SurveyModalState extends State<SurveyModal> {
               borderRadius: BorderRadius.circular(4),
               minHeight: 6,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Question Header
             Text(
@@ -106,19 +111,27 @@ class _SurveyModalState extends State<SurveyModal> {
                 height: 1.3,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               _stepSubtitles[_currentStep],
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 color: AppColors.secondaryText,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
 
-            // Step Content
-            _buildStepContent(),
-            const SizedBox(height: 24),
+            // Scrollable Step Content (Ensures Zero Overflow on All Viewports)
+            Flexible(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: _buildStepContent(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
 
             // Navigation Buttons
             Row(
@@ -179,7 +192,7 @@ class _SurveyModalState extends State<SurveyModal> {
                 AppLanguageService.instance.setLanguage(AppLanguage.english);
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             _optionTile(
               icon: Icons.translate_rounded,
               title: 'తెలుగు (Telugu)',
@@ -190,7 +203,7 @@ class _SurveyModalState extends State<SurveyModal> {
                 AppLanguageService.instance.setLanguage(AppLanguage.telugu);
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             _optionTile(
               icon: Icons.chat_bubble_outline_rounded,
               title: 'Tanglish (Telugu in English)',
@@ -201,7 +214,7 @@ class _SurveyModalState extends State<SurveyModal> {
                 AppLanguageService.instance.setLanguage(AppLanguage.tanglish);
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             _optionTile(
               icon: Icons.auto_awesome_rounded,
               title: 'മലയാളം (Malayalam)',
@@ -212,7 +225,7 @@ class _SurveyModalState extends State<SurveyModal> {
                 AppLanguageService.instance.setLanguage(AppLanguage.malayalam);
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             _optionTile(
               icon: Icons.forum_outlined,
               title: 'Manglish (Malayalam in English)',
@@ -357,7 +370,7 @@ class _SurveyModalState extends State<SurveyModal> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.blue.withValues(alpha: 0.08) : AppColors.background,
           borderRadius: BorderRadius.circular(14),
