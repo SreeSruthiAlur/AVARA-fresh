@@ -232,9 +232,6 @@ class _HealthBody extends StatelessWidget {
         const SizedBox(height: 20),
         // Daily check-in prompt
         _CheckInPrompt(onTap: onAddEntry),
-        const SizedBox(height: 14),
-        // 4-Way Holistic Connections (Astrology, Habits, Finance, Insights)
-        const HolisticCrossPillarBridge(currentPillarIndex: 1),
         const SizedBox(height: 20),
         // History
         Row(

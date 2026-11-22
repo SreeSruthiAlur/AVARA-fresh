@@ -8120,7 +8120,25 @@ class _UnifiedFivePillarsLifeRiverState extends State<UnifiedFivePillarsLifeRive
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // Live Animated 5-Pillars Energy River Circuit Canvas
+          AnimatedBuilder(
+            animation: _flowController,
+            builder: (context, _) {
+              return CustomPaint(
+                size: const Size(double.infinity, 50),
+                painter: _FivePillarsCircuitFlowPainter(
+                  activeNode: _activeNode,
+                  animValue: _flowController.value,
+                  pillarColors: [
+                    for (final p in pillars) p['color'] as Color,
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 14),
 
           // Active Pillar Detailed Synergy Box
           Container(
@@ -8284,6 +8302,823 @@ class _UnifiedFivePillarsLifeRiverState extends State<UnifiedFivePillarsLifeRive
       ),
     );
   }
+}
+
+// =============================================================================
+// Live 5-Pillars Circuit Flow Canvas Painter
+// =============================================================================
+
+class _FivePillarsCircuitFlowPainter extends CustomPainter {
+  _FivePillarsCircuitFlowPainter({
+    required this.activeNode,
+    required this.animValue,
+    required this.pillarColors,
+  });
+
+  final int activeNode;
+  final double animValue;
+  final List<Color> pillarColors;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final cy = h * 0.5;
+
+    // 5 Node X positions along the width
+    final nodeX = [
+      w * 0.10,
+      w * 0.30,
+      w * 0.50,
+      w * 0.70,
+      w * 0.90,
+    ];
+
+    // Background track
+    final trackPaint = Paint()
+      ..color = const Color(0xFFE2E8F0)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(nodeX[0], cy), Offset(nodeX[4], cy), trackPaint);
+
+    // Glowing energy pulse wave moving across the nodes
+    final wavePath = Path();
+    wavePath.moveTo(nodeX[0], cy);
+    for (double x = nodeX[0]; x <= nodeX[4]; x += 4) {
+      final norm = (x - nodeX[0]) / (nodeX[4] - nodeX[0]);
+      final wave = math.sin((norm * math.pi * 4) - (animValue * math.pi * 2)) * 6.0;
+      wavePath.lineTo(x, cy + wave);
+    }
+    final activeColor = pillarColors[activeNode % pillarColors.length];
+    final activeWavePaint = Paint()
+      ..color = activeColor.withValues(alpha: 0.6)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke;
+    canvas.drawPath(wavePath, activeWavePaint);
+
+    // Animated traveling photon packets moving between nodes
+    for (int i = 0; i < 4; i++) {
+      final startX = nodeX[i];
+      final endX = nodeX[i + 1];
+      final packetX = startX + (endX - startX) * ((animValue + i * 0.25) % 1.0);
+      final pColor = pillarColors[i % pillarColors.length];
+
+      canvas.drawCircle(
+        Offset(packetX, cy),
+        4.0,
+        Paint()..color = pColor.withValues(alpha: 0.8),
+      );
+      canvas.drawCircle(
+        Offset(packetX, cy),
+        1.8,
+        Paint()..color = Colors.white,
+      );
+    }
+
+    // Return arc loop indicator (connecting node 4 back to node 0)
+    final arcPath = Path();
+    arcPath.moveTo(nodeX[4], cy);
+    arcPath.quadraticBezierTo(w * 0.5, h * 0.95, nodeX[0], cy);
+    final arcPaint = Paint()
+      ..color = pillarColors[4].withValues(alpha: 0.35)
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke;
+    canvas.drawPath(arcPath, arcPaint);
+
+    // 5 Node indicators
+    for (int i = 0; i < 5; i++) {
+      final isCurrent = i == activeNode;
+      final c = pillarColors[i % pillarColors.length];
+
+      if (isCurrent) {
+        canvas.drawCircle(
+          Offset(nodeX[i], cy),
+          10.0 + 3.0 * math.sin(animValue * math.pi * 2),
+          Paint()..color = c.withValues(alpha: 0.25),
+        );
+      }
+      canvas.drawCircle(
+        Offset(nodeX[i], cy),
+        isCurrent ? 6.0 : 4.0,
+        Paint()..color = c,
+      );
+      canvas.drawCircle(
+        Offset(nodeX[i], cy),
+        isCurrent ? 2.5 : 1.5,
+        Paint()..color = Colors.white,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _FivePillarsCircuitFlowPainter oldDelegate) =>
+      oldDelegate.animValue != animValue || oldDelegate.activeNode != activeNode;
+}
+
+// =============================================================================
+// 20. CyberHolographicOrbWidget (Youth Interactive 3D Cyber Orb)
+// =============================================================================
+
+class CyberHolographicOrbWidget extends StatefulWidget {
+  const CyberHolographicOrbWidget({super.key});
+
+  @override
+  State<CyberHolographicOrbWidget> createState() => _CyberHolographicOrbWidgetState();
+}
+
+class _CyberHolographicOrbWidgetState extends State<CyberHolographicOrbWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _orbController;
+  int _tapCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _orbController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _orbController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final title = switch (lang) {
+      AppLanguage.telugu => 'హోలోగ్రాఫిక్ సైబర్-ఆర్బ్ & XP కోర్',
+      AppLanguage.malayalam => 'ഹോളോഗ്രാഫിക് സൈബർ ഓർബ് & എക്സ്പി കോർ',
+      _ => 'Holographic Cyber-Orb & XP Core',
+    };
+    final subtitle = switch (lang) {
+      AppLanguage.telugu => 'మీ దైనందిన ఏకాగ్రత మరియు శక్తి ప్రవాహం',
+      AppLanguage.malayalam => 'നിങ്ങളുടെ ദൈനംദിന ഏകാഗ്രതയും ഊർജ്ജ പ്രവാഹവും',
+      _ => 'Real-time cognitive focus & neural stamina flow',
+    };
+    final tapHint = switch (lang) {
+      AppLanguage.telugu => 'ఆర్బ్‌పై నొక్కండి: ఎనర్జీ బరస్ట్ ✨',
+      AppLanguage.malayalam => 'ഓർബിൽ ടാപ്പ് ചെയ്യുക: ഊർജ്ജ സ്ഫോടനം ✨',
+      _ => 'Tap Orb for Energy Surge ✨',
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF14072B), Color(0xFF261245), Color(0xFF0F1A3A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF00CEC9).withValues(alpha: 0.4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6C5CE7).withValues(alpha: 0.25),
+            blurRadius: 22,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.motion_photos_on_rounded, color: Color(0xFF00CEC9), size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00CEC9).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF00CEC9).withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  'LVL ${12 + _tapCount}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00CEC9),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+          ),
+          const SizedBox(height: 14),
+
+          // Interactive Holographic Core Canvas
+          GestureDetector(
+            onTap: () => setState(() => _tapCount++),
+            child: AnimatedBuilder(
+              animation: _orbController,
+              builder: (context, _) {
+                return CustomPaint(
+                  size: const Size(double.infinity, 140),
+                  painter: _CyberOrbPainter(
+                    animValue: _orbController.value,
+                    burstMultiplier: _tapCount,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Tap interactive badge
+          InkWell(
+            onTap: () => setState(() => _tapCount++),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6C5CE7).withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF6C5CE7).withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.touch_app_rounded, color: Color(0xFFFF7675), size: 14),
+                  const SizedBox(width: 6),
+                  Text(
+                    tapHint,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CyberOrbPainter extends CustomPainter {
+  _CyberOrbPainter({required this.animValue, required this.burstMultiplier});
+
+  final double animValue;
+  final int burstMultiplier;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width * 0.5;
+    final cy = size.height * 0.5;
+    final center = Offset(cx, cy);
+
+    // Outer cyber glowing halo
+    final glowRadius = 45.0 + 8.0 * math.sin(animValue * math.pi * 2);
+    final glowPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF00CEC9).withValues(alpha: 0.5),
+          const Color(0xFF6C5CE7).withValues(alpha: 0.2),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: glowRadius * 1.5));
+    canvas.drawCircle(center, glowRadius * 1.5, glowPaint);
+
+    // Rotating Outer Gyro Ring 1
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(animValue * math.pi * 2);
+    final ring1Paint = Paint()
+      ..color = const Color(0xFF00CEC9).withValues(alpha: 0.7)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 100, height: 42), ring1Paint);
+    canvas.restore();
+
+    // Counter-Rotating Inner Gyro Ring 2
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(-(animValue * math.pi * 2 * 0.8) + (math.pi / 3));
+    final ring2Paint = Paint()
+      ..color = const Color(0xFFFF7675).withValues(alpha: 0.6)
+      ..strokeWidth = 1.8
+      ..style = PaintingStyle.stroke;
+    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 88, height: 36), ring2Paint);
+    canvas.restore();
+
+    // Center Core Spherical Orb
+    final corePaint = Paint()
+      ..shader = const RadialGradient(
+        colors: [
+          Colors.white,
+          Color(0xFF00CEC9),
+          Color(0xFF6C5CE7),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: 24));
+    canvas.drawCircle(center, 22 + 2 * math.sin(animValue * math.pi * 4), corePaint);
+
+    // Drifting Cyber Particles & Burst Sparks
+    final sparkCount = 8 + (burstMultiplier % 6) * 3;
+    for (int i = 0; i < sparkCount; i++) {
+      final angle = (i * (math.pi * 2 / sparkCount)) + (animValue * math.pi);
+      final dist = 32.0 + (i % 3) * 16.0 + (burstMultiplier > 0 ? 8.0 : 0.0);
+      final px = cx + math.cos(angle) * dist;
+      final py = cy + math.sin(angle) * dist * 0.65;
+      final pRadius = 1.6 + (i % 2) * 1.2;
+      canvas.drawCircle(
+        Offset(px, py),
+        pRadius,
+        Paint()..color = (i % 2 == 0 ? Colors.cyanAccent : const Color(0xFFFF7675)).withValues(alpha: 0.8),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CyberOrbPainter oldDelegate) =>
+      oldDelegate.animValue != animValue || oldDelegate.burstMultiplier != burstMultiplier;
+}
+
+// =============================================================================
+// 21. ExecutiveBiorhythmMatrixCard (Adult Circadian Multi-Curve Wave)
+// =============================================================================
+
+class ExecutiveBiorhythmMatrixCard extends StatefulWidget {
+  const ExecutiveBiorhythmMatrixCard({super.key});
+
+  @override
+  State<ExecutiveBiorhythmMatrixCard> createState() => _ExecutiveBiorhythmMatrixCardState();
+}
+
+class _ExecutiveBiorhythmMatrixCardState extends State<ExecutiveBiorhythmMatrixCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bioController;
+
+  @override
+  void initState() {
+    super.initState();
+    _bioController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _bioController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final title = switch (lang) {
+      AppLanguage.telugu => 'ఎగ్జిక్యూటివ్ బయోరిథమ్ & కాగ్నిటివ్ స్పెక్ట్రమ్',
+      AppLanguage.malayalam => 'എക്സിക്യൂട്ടീവ് ബയോറിഥം & കോഗ്നിറ്റീവ് സ്പെക്ട്രം',
+      _ => 'Executive Bio-Rhythm & Cognitive Spectrum',
+    };
+    final subtitle = switch (lang) {
+      AppLanguage.telugu => '3-ఛానల్ లైవ్ బయోమెట్రిక్ వేవ్‌ఫామ్ (ఫోకస్, జీవక్రియ, నిశ్చలత)',
+      AppLanguage.malayalam => '3-ചാനൽ ലൈവ് ബയോമെട്രിക് തരംഗം (ശ്രദ്ധ, ഉപാപചയം, ശാന്തത)',
+      _ => '3-Channel Live Biometric Waveform (Focus, Metabolism & Calm)',
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E3A8A).withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.water_drop_rounded, color: Color(0xFF2563EB), size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.deepNavy,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'SYNC: 94%',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2563EB),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.secondaryText)),
+          const SizedBox(height: 16),
+
+          // Animated Tri-Channel Waveform Canvas
+          AnimatedBuilder(
+            animation: _bioController,
+            builder: (context, _) {
+              return CustomPaint(
+                size: const Size(double.infinity, 110),
+                painter: _TriChannelBiorhythmPainter(animValue: _bioController.value),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Legend
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildLegend(const Color(0xFF2563EB), 'Cognitive (88%)'),
+              _buildLegend(const Color(0xFF0D9488), 'Metabolism (76%)'),
+              _buildLegend(const Color(0xFF8B5CF6), 'Serenity (92%)'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegend(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 5),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+      ],
+    );
+  }
+}
+
+class _TriChannelBiorhythmPainter extends CustomPainter {
+  _TriChannelBiorhythmPainter({required this.animValue});
+  final double animValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Channel 1: Cognitive Alertness (Sapphire Blue)
+    _drawSineWave(
+      canvas: canvas,
+      w: w,
+      h: h,
+      baseY: h * 0.35,
+      amplitude: 16,
+      freq: 3.5,
+      speedOffset: animValue * math.pi * 2,
+      color: const Color(0xFF2563EB),
+      strokeWidth: 2.2,
+    );
+
+    // Channel 2: Metabolic Stamina (Teal Emerald)
+    _drawSineWave(
+      canvas: canvas,
+      w: w,
+      h: h,
+      baseY: h * 0.55,
+      amplitude: 14,
+      freq: 2.8,
+      speedOffset: -animValue * math.pi * 1.8,
+      color: const Color(0xFF0D9488),
+      strokeWidth: 2.0,
+    );
+
+    // Channel 3: Cortisol Serenity (Lavender Purple)
+    _drawSineWave(
+      canvas: canvas,
+      w: w,
+      h: h,
+      baseY: h * 0.75,
+      amplitude: 12,
+      freq: 4.2,
+      speedOffset: animValue * math.pi * 2.4,
+      color: const Color(0xFF8B5CF6),
+      strokeWidth: 1.8,
+    );
+  }
+
+  void _drawSineWave({
+    required Canvas canvas,
+    required double w,
+    required double h,
+    required double baseY,
+    required double amplitude,
+    required double freq,
+    required double speedOffset,
+    required Color color,
+    required double strokeWidth,
+  }) {
+    final path = Path();
+    for (double x = 0; x <= w; x += 5) {
+      final normX = x / w;
+      final y = baseY + math.sin(normX * math.pi * freq + speedOffset) * amplitude;
+      if (x == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TriChannelBiorhythmPainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
+}
+
+// =============================================================================
+// 22. SacredChakraKundaliniMandala (Senior 7-Chakra & Diya Flame Graphic)
+// =============================================================================
+
+class SacredChakraKundaliniMandala extends StatefulWidget {
+  const SacredChakraKundaliniMandala({super.key});
+
+  @override
+  State<SacredChakraKundaliniMandala> createState() => _SacredChakraKundaliniMandalaState();
+}
+
+class _SacredChakraKundaliniMandalaState extends State<SacredChakraKundaliniMandala>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pranaController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pranaController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4500),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pranaController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = AppLanguageService.instance.currentLanguage;
+    final title = switch (lang) {
+      AppLanguage.telugu => 'సప్త చక్రాలు & పంచ ప్రాణ చైతన్య చక్రం',
+      AppLanguage.malayalam => 'സപ്ത ചക്രങ്ങളും പഞ്ച പ്രാണ ചൈതന്യ ചക്രവും',
+      _ => 'Sacred 7-Chakras & Pancha Prana Mandala',
+    };
+    final subtitle = switch (lang) {
+      AppLanguage.telugu => 'ఆత్మ శాంతి, నాడీ ప్రవాహం & దీప జ్యోతి ధ్యానం',
+      AppLanguage.malayalam => 'ആത്മീയ ശാന്തി, നാഡീ പ്രവാഹം & ദീപ ജ്യോതി ധ്യാനം',
+      _ => 'Inner serenity, pranic vitality & sacred diya flame meditation',
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFDF5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFB45309).withValues(alpha: 0.35), width: 1.6),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFB45309).withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.spa_rounded, color: Color(0xFFB45309), size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF78350F),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB45309).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'ॐ శాంతి',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFB45309),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF92400E))),
+          const SizedBox(height: 16),
+
+          // Sacred 7-Chakra & Diya Flame Canvas
+          AnimatedBuilder(
+            animation: _pranaController,
+            builder: (context, _) {
+              return CustomPaint(
+                size: const Size(double.infinity, 140),
+                painter: _SacredChakraDiyaPainter(animValue: _pranaController.value),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Auspicious quote
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF3C7).withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.auto_awesome, color: Color(0xFFB45309), size: 16),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'दीपेन दीपः प्रज्वाल्यते — "A lamp lights another without diminishing its own radiance."',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                      color: Color(0xFF78350F),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SacredChakraDiyaPainter extends CustomPainter {
+  _SacredChakraDiyaPainter({required this.animValue});
+  final double animValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // 7 Chakras mapped along horizontal line
+    final chakraColors = [
+      const Color(0xFF9333EA), // Sahasrara (Violet)
+      const Color(0xFF3B82F6), // Ajna (Indigo)
+      const Color(0xFF06B6D4), // Vishuddha (Blue)
+      const Color(0xFF10B981), // Anahata (Green)
+      const Color(0xFFFBBF24), // Manipura (Yellow)
+      const Color(0xFFF97316), // Svadhisthana (Orange)
+      const Color(0xFFEF4444), // Muladhara (Red)
+    ];
+
+    final cy = h * 0.45;
+    final startX = w * 0.08;
+    final endX = w * 0.68;
+    final seg = (endX - startX) / 6;
+
+    // Prana Kundalini connecting energy wave
+    final pranaPath = Path();
+    pranaPath.moveTo(startX, cy);
+    for (double x = startX; x <= endX; x += 4) {
+      final normX = (x - startX) / (endX - startX);
+      final y = cy + math.sin(normX * math.pi * 3 + animValue * math.pi * 2) * 8;
+      pranaPath.lineTo(x, y);
+    }
+    canvas.drawPath(
+      pranaPath,
+      Paint()
+        ..color = const Color(0xFFD97706).withValues(alpha: 0.5)
+        ..strokeWidth = 2.0
+        ..style = PaintingStyle.stroke,
+    );
+
+    // Draw the 7 Chakras
+    for (int i = 0; i < 7; i++) {
+      final cx = startX + i * seg;
+      final c = chakraColors[i];
+      final pulse = 2.5 * math.sin(animValue * math.pi * 2 + i * 0.8);
+
+      canvas.drawCircle(Offset(cx, cy), 10 + pulse, Paint()..color = c.withValues(alpha: 0.22));
+      canvas.drawCircle(Offset(cx, cy), 6.5, Paint()..color = c);
+      canvas.drawCircle(Offset(cx, cy), 2.5, Paint()..color = Colors.white);
+    }
+
+    // Sacred Flickering Diya (Oil Lamp) on the right side
+    final diyaX = w * 0.86;
+    final diyaY = h * 0.55;
+
+    // Brass Lamp Base
+    final lampPath = Path();
+    lampPath.moveTo(diyaX - 22, diyaY);
+    lampPath.quadraticBezierTo(diyaX, diyaY + 16, diyaX + 22, diyaY);
+    lampPath.lineTo(diyaX - 22, diyaY);
+    canvas.drawPath(
+      lampPath,
+      Paint()..color = const Color(0xFFB45309),
+    );
+
+    // Flickering Golden Flame
+    final flameHeight = 24.0 + 4.0 * math.sin(animValue * math.pi * 4);
+    final flameSway = math.sin(animValue * math.pi * 6) * 2.5;
+    final flamePath = Path();
+    flamePath.moveTo(diyaX - 8, diyaY);
+    flamePath.quadraticBezierTo(diyaX + flameSway - 10, diyaY - flameHeight * 0.6, diyaX + flameSway, diyaY - flameHeight);
+    flamePath.quadraticBezierTo(diyaX + flameSway + 10, diyaY - flameHeight * 0.6, diyaX + 8, diyaY);
+    flamePath.close();
+
+    // Outer Flame Halo
+    canvas.drawCircle(
+      Offset(diyaX + flameSway, diyaY - flameHeight * 0.6),
+      22 + 4 * math.sin(animValue * math.pi * 3),
+      Paint()
+        ..color = const Color(0xFFF59E0B).withValues(alpha: 0.28)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+    );
+
+    // Inner Flame
+    canvas.drawPath(
+      flamePath,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [
+            Color(0xFFD97706),
+            Color(0xFFF59E0B),
+            Colors.white,
+          ],
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+        ).createShader(Rect.fromLTWH(diyaX - 10, diyaY - flameHeight, 20, flameHeight)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _SacredChakraDiyaPainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
 }
 
 

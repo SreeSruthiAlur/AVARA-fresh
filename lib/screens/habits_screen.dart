@@ -542,9 +542,6 @@ class _TodayTabState extends State<_TodayTab> {
           habitCount: widget.habits.length,
           activeStreak: widget.habits.fold<int>(0, (maxStreak, h) => h.currentStreak > maxStreak ? h.currentStreak : maxStreak),
         ),
-        const SizedBox(height: 14),
-        // 4-Way Holistic Connections (Astrology, Health, Finance, Insights)
-        const HolisticCrossPillarBridge(currentPillarIndex: 2),
         const SizedBox(height: 18),
         // Habit list + merged goals
         if (widget.habits.isEmpty && widget.goals.isEmpty)

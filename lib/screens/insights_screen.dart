@@ -146,9 +146,6 @@ class _ThisWeekTab extends StatelessWidget {
         const SizedBox(height: 18),
         // 5-Pillar Holistic Synergy Spider Radar
         const HolisticRadarSynergyChart(),
-        const SizedBox(height: 14),
-        // 4-Way Holistic Connections (Astrology, Health, Habits, Finance)
-        const HolisticCrossPillarBridge(currentPillarIndex: 4),
         const SizedBox(height: 24),
         if (summary.keyObservations.isNotEmpty) ...[
           Text('Patterns you can explore',

@@ -335,6 +335,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           onOpenDetox: () => _showYouthDetoxModal(context),
         ),
+        const SizedBox(height: 14),
+
+        // Creative Graphic: Interactive Holographic Cyber-Orb & XP Core
+        const CyberHolographicOrbWidget(),
         FlowConduitConnector(title: conn1),
 
         // 2. Interactive Mind Quests & XP Task Tracker
@@ -416,6 +420,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 2. Executive Circadian Energy Flow & Peak Hours
         const ExecutiveCircadianFlowCard(),
+        const SizedBox(height: 14),
+
+        // Creative Graphic: 3-Channel Live Biometric Spectrum Waveform
+        const ExecutiveBiorhythmMatrixCard(),
         FlowConduitConnector(title: conn2),
 
         // 3. Executive Moment Card (Circadian Peak & Decision Making)
@@ -503,6 +511,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // 3. Ayurvedic Tridosha Vitality Wheel (Vata, Pitta, Kapha)
         const AyurvedicTridoshaWheel(),
+        const SizedBox(height: 14),
+
+        // Creative Graphic: Sacred 7-Chakra Vitality & Diya Meditation
+        const SacredChakraKundaliniMandala(),
         FlowConduitConnector(title: conn3),
 
         // 4. Sacred 5-Pillar Mandala of Life Harmony
