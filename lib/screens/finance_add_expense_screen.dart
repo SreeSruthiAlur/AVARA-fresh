@@ -7,7 +7,6 @@ import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
-import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 
 /// Standard expense categories shared by the backend and the UI.
@@ -211,53 +210,6 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Quick Voice Expense Fill Card (for non-typists)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.lavender,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.record_voice_over_rounded, color: AppColors.blue, size: 26),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Speak Full Expense',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: AppColors.deepNavy,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Say e.g. "Coffee 150" or "Petrol 500"',
-                              style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
-                            ),
-                          ],
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.mic, size: 16),
-                        label: const Text('Speak'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.blue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        onPressed: _listenFullExpense,
-                      ),
-                    ],
-                  ),
-                ),
                 AvaraSurfaceCard(
                   backgroundColor: AppColors.white,
                   child: Column(
@@ -316,10 +268,6 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
         hintText: '0.00',
         prefixIcon:
             const Icon(Icons.currency_rupee, color: AppColors.secondaryText),
-        suffixIcon: VoiceInputButton(
-          controller: _amountController,
-          size: 20,
-        ),
       ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return 'Amount is required';
@@ -395,10 +343,6 @@ class _FinanceAddExpenseScreenState extends State<FinanceAddExpenseScreen> {
         hintText: tr('finance_description_hint'),
         prefixIcon:
             const Icon(Icons.notes_outlined, color: AppColors.secondaryText),
-        suffixIcon: VoiceInputButton(
-          controller: _descriptionController,
-          size: 20,
-        ),
       ),
     );
   }

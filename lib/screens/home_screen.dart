@@ -15,7 +15,6 @@ import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
 import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/fact_popup.dart';
-import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -845,22 +844,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-          ),
-        ),
-        const SizedBox(width: 8),
-
-        // Quick Voice Assistant Button
-        GestureDetector(
-          onTap: () => GlobalVoiceAssistantModal.show(context),
-          child: Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: AppColors.lightBlue.withValues(alpha: 0.8),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
-            ),
-            child: const Icon(Icons.mic_rounded,
-                size: 20, color: AppColors.blue),
           ),
         ),
         const SizedBox(width: 8),

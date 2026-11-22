@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
-import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
 
@@ -27,63 +26,6 @@ class LanguageSelectorSheet extends StatefulWidget {
 }
 
 class _LanguageSelectorSheetState extends State<LanguageSelectorSheet> {
-  bool _isListening = false;
-  String _spokenVoiceFeedback = '';
-
-  @override
-  void dispose() {
-    VoiceService.instance.stopListening();
-    super.dispose();
-  }
-
-  Future<void> _startVoiceLanguageChange() async {
-    final voice = VoiceService.instance;
-    if (_isListening) {
-      await voice.stopListening();
-      if (mounted) setState(() => _isListening = false);
-      return;
-    }
-
-    setState(() {
-      _isListening = true;
-      _spokenVoiceFeedback = 'Listening... Say "Telugu", "Tanglish", or "English"';
-    });
-
-    final ready = await voice.initialize();
-    if (!ready) {
-      if (mounted) {
-        setState(() {
-          _isListening = false;
-          _spokenVoiceFeedback = 'Microphone unavailable. Please tap an option below.';
-        });
-      }
-      return;
-    }
-
-    await voice.startListening(
-      onResult: (text, isFinal) {
-        if (!mounted) return;
-        setState(() {
-          _spokenVoiceFeedback = 'Heard: "$text"';
-        });
-
-        final result = voice.parseAndExecuteCommand(text);
-        if (result.type == VoiceCommandType.changeLanguage) {
-          voice.stopListening();
-          setState(() {
-            _isListening = false;
-            _spokenVoiceFeedback = result.feedbackMessage ?? 'Language updated!';
-          });
-          Future.delayed(const Duration(milliseconds: 700), () {
-            if (mounted) Navigator.of(context).pop();
-          });
-        } else if (isFinal) {
-          setState(() => _isListening = false);
-        }
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final langService = AppLanguageService.instance;
@@ -147,69 +89,7 @@ class _LanguageSelectorSheetState extends State<LanguageSelectorSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-
-          // Voice Command Banner
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: _isListening
-                  ? AppColors.lightOrange.withValues(alpha: 0.6)
-                  : AppColors.lightBlue.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _isListening ? AppColors.orange : AppColors.blue.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: _startVoiceLanguageChange,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _isListening ? AppColors.orange : AppColors.blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _isListening ? Icons.mic : Icons.mic_none_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isListening
-                            ? tr('voice_listening')
-                            : 'Use Voice to Change Language',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: _isListening ? AppColors.orange : AppColors.deepNavy,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _spokenVoiceFeedback.isNotEmpty
-                            ? _spokenVoiceFeedback
-                            : 'Tap mic & say "Telugu", "Tanglish", or "English"',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.secondaryText,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
           // 5 Language Cards
           _buildLanguageCard(

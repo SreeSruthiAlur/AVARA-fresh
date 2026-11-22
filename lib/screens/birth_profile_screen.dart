@@ -8,7 +8,6 @@ import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
-import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -502,17 +501,9 @@ class _BirthProfileScreenState extends State<BirthProfileScreen> {
                 null,
               ).copyWith(
                 hintText: tr('astrology_pob_hint'),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    VoiceInputButton(
-                      controller: _placeController,
-                      size: 20,
-                      activeColor: AppColors.blue,
-                    ),
-                    const Icon(Icons.place, color: AppColors.blue, size: 20),
-                    const SizedBox(width: 8),
-                  ],
+                suffixIcon: const Padding(
+                  padding: EdgeInsets.only(right: 12),
+                  child: Icon(Icons.place, color: AppColors.blue, size: 20),
                 ),
               ),
             ),

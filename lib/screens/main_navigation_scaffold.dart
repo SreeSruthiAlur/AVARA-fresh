@@ -17,7 +17,6 @@ import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/finance_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
-import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
 import 'package:flutter/material.dart';
 
 /// Root navigation scaffold — 6-tab bottom navigation bar:
@@ -263,15 +262,6 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
           body: IndexedStack(
             index: _currentIndex,
             children: screens,
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => GlobalVoiceAssistantModal.show(context),
-            backgroundColor: ageTheme.primaryAccent,
-            foregroundColor: Colors.white,
-            elevation: 4,
-            shape: const CircleBorder(),
-            tooltip: tr('voice_assistant_title'),
-            child: const Icon(Icons.mic_rounded, size: 28),
           ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(

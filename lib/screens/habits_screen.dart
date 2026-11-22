@@ -9,7 +9,6 @@ import 'package:avara_astrology_trial/widgets/avara_surface_card.dart';
 import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
 import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
-import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 
 /// AVARA Habits & Goals screen — mirrors "08 — AVARA Habits & Goals" Figma.
@@ -940,10 +939,6 @@ class _AddHabitSheetState extends State<_AddHabitSheet> {
                   hintText: AppLanguageService.instance.tr('habits_name_hint'),
                   prefixIcon: const Icon(Icons.edit_outlined,
                       color: AppColors.secondaryText),
-                  suffixIcon: VoiceInputButton(
-                    controller: _titleController,
-                    size: 20,
-                  ),
                 ),
               ),
               const SizedBox(height: 16),

@@ -8,10 +8,8 @@ import 'package:avara_astrology_trial/services/survey_service.dart';
 import 'package:avara_astrology_trial/services/voice_service.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
 import 'package:avara_astrology_trial/theme/app_theme.dart';
-import 'package:avara_astrology_trial/widgets/global_voice_assistant_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/survey_modal.dart';
-import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -157,12 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         actions: [
-          // Voice Assistant in header
-          IconButton(
-            icon: const Icon(Icons.mic_rounded, color: AppColors.blue),
-            tooltip: 'Voice Assistant / మాట్లాడండి',
-            onPressed: () => GlobalVoiceAssistantModal.show(context),
-          ),
           // Quick Language Switcher Button
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -179,19 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => GlobalVoiceAssistantModal.show(context),
-        icon: const Icon(Icons.mic_rounded, color: Colors.white, size: 26),
-        label: const Text(
-          'Speak / మాట్లాడండి',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        backgroundColor: AppColors.blue,
       ),
       body: SafeArea(
         child: Center(
@@ -445,20 +424,16 @@ class _LoginScreenState extends State<LoginScreen> {
       key: _formKey,
       child: Column(
         children: [
-          // Email Field with Voice Input
+          // Email Field
           TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autocorrect: false,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Email',
-              hintText: 'you@example.com (or tap mic to speak)',
-              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.secondaryText),
-              suffixIcon: VoiceInputButton(
-                controller: _emailController,
-                tooltip: 'Speak your email',
-              ),
+              hintText: 'you@example.com',
+              prefixIcon: Icon(Icons.email_outlined, color: AppColors.secondaryText),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Email is required';
@@ -468,7 +443,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Password Field with Voice Input and Visibility Toggle
+          // Password Field with Visibility Toggle
           TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
@@ -476,27 +451,18 @@ class _LoginScreenState extends State<LoginScreen> {
             onFieldSubmitted: (_) => _submit(),
             decoration: InputDecoration(
               labelText: 'Password',
-              hintText: 'Your password (or tap mic to speak)',
+              hintText: 'Your password',
               prefixIcon: const Icon(Icons.lock_outline, color: AppColors.secondaryText),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  VoiceInputButton(
-                    controller: _passwordController,
-                    tooltip: 'Speak your password',
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: AppColors.secondaryText,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                    tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                  ),
-                ],
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: AppColors.secondaryText,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+                tooltip: _obscurePassword ? 'Show password' : 'Hide password',
               ),
             ),
             validator: (v) {

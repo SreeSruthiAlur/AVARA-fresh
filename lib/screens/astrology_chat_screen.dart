@@ -12,7 +12,6 @@ import 'package:avara_astrology_trial/widgets/fact_popup.dart';
 import 'package:avara_astrology_trial/widgets/keyword_glossary_modal.dart';
 import 'package:avara_astrology_trial/widgets/language_selector_sheet.dart';
 import 'package:avara_astrology_trial/widgets/square_kundli_widget.dart';
-import 'package:avara_astrology_trial/widgets/voice_input_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -815,20 +814,6 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
                               horizontal: 16, vertical: 10),
                         ),
                         onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 2, right: 4),
-                      child: VoiceInputButton(
-                        controller: _inputController,
-                        size: 20,
-                        activeColor: AppColors.blue,
-                        inactiveColor: AppColors.secondaryText,
-                        onSpeechComplete: () {
-                          if (_inputController.text.trim().isNotEmpty) {
-                            _sendMessage();
-                          }
-                        },
                       ),
                     ),
                   ],
