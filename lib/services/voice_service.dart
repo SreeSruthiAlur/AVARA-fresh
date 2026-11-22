@@ -141,9 +141,13 @@ class VoiceService extends ChangeNotifier {
         onError: (val) {
           debugPrint('🎤 [AVARA Voice Error]: ${val.errorMsg} (permanent: ${val.permanent})');
           final lower = val.errorMsg.toLowerCase();
-          if (lower.contains('no-speech') || lower.contains('no_speech')) {
-            // Transient silence event in browser — do not treat as fatal error
-            debugPrint('🎤 [AVARA Voice]: Transient silence detected, continuing.');
+          if (lower.contains('no-speech') ||
+              lower.contains('no_speech') ||
+              lower.contains('aborted') ||
+              lower.contains('canceled') ||
+              lower.contains('cancelled')) {
+            // Transient silence or intentional cancellation — do not treat as fatal error
+            debugPrint('🎤 [AVARA Voice]: Transient silence or cancellation detected, continuing.');
             return;
           }
           if (lower.contains('language') || lower.contains('not-supported')) {
@@ -278,7 +282,14 @@ class VoiceService extends ChangeNotifier {
             _hasPermissionError = true;
             _errorMessage =
                 'Microphone permission blocked. Click the 🔒 lock icon in the Chrome URL bar and select "Allow" for Microphone.';
-          } else if (!lower.contains('no-speech')) {
+          } else if (lower.contains('no-speech') ||
+              lower.contains('no_speech') ||
+              lower.contains('aborted') ||
+              lower.contains('canceled') ||
+              lower.contains('cancelled')) {
+            // Normal silence or cancellation — do not show error banner
+            _errorMessage = null;
+          } else {
             _errorMessage = 'Voice status: $err';
           }
           _isListening = false;
@@ -395,6 +406,11 @@ class VoiceService extends ChangeNotifier {
   /// Converts technical speech engine error codes to user-friendly advice.
   static String _humanFriendlyError(String code) {
     final lower = code.toLowerCase();
+    if (lower.contains('aborted') ||
+        lower.contains('canceled') ||
+        lower.contains('cancelled')) {
+      return '';
+    }
     if (lower.contains('permission') ||
         lower.contains('not-allowed') ||
         lower.contains('denied')) {

@@ -32,6 +32,15 @@ void playTranslationAudioWeb(String mantraKey, String langCode) {
   }
 }
 
+void playDynamicTtsWeb(String text, String langCode) {
+  try {
+    js.context.callMethod('playDynamicTts', [text, langCode]);
+  } catch (e) {
+    // ignore: avoid_print
+    print('Web dynamic TTS JS error: $e');
+  }
+}
+
 bool isWebSpeechRecognitionSupported() {
   try {
     return js.context.callMethod('isWebSpeechAvailable', []) == true;

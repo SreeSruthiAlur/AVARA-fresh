@@ -108,8 +108,8 @@
 
         rec.onerror = function(event) {
           console.warn('🎤 [AVARA Web Speech Error]:', event.error);
-          if (event.error === 'no-speech') {
-            // Silence while user is thinking or preparing to speak — keep mic alive!
+          if (event.error === 'no-speech' || event.error === 'aborted') {
+            // Silence or intentional cancellation — do not trigger error overlay!
             return;
           }
           if (event.error === 'language-not-supported' || event.error === 'network') {
@@ -277,7 +277,12 @@
         'om_namah_shivaya_meaning_en': new Audio('om_namah_shivaya_meaning_en.mp3'),
         'om_namah_shivaya_meaning_te': new Audio('om_namah_shivaya_meaning_te.mp3'),
         'om_namo_narayanaya_meaning_en': new Audio('om_namo_narayanaya_meaning_en.mp3'),
-        'om_namo_narayanaya_meaning_te': new Audio('om_namo_narayanaya_meaning_te.mp3')
+        'om_namo_narayanaya_meaning_te': new Audio('om_namo_narayanaya_meaning_te.mp3'),
+        'asato_ma_meaning_ml': new Audio('asato_ma_meaning_ml.mp3'),
+        'gayatri_meaning_ml': new Audio('gayatri_meaning_ml.mp3'),
+        'mrityunjaya_meaning_ml': new Audio('mrityunjaya_meaning_ml.mp3'),
+        'om_namah_shivaya_meaning_ml': new Audio('om_namah_shivaya_meaning_ml.mp3'),
+        'om_namo_narayanaya_meaning_ml': new Audio('om_namo_narayanaya_meaning_ml.mp3')
       };
 
       for (var k in chantAudios) {
@@ -408,7 +413,13 @@
         console.log("🕉️ [AVARA Audio]: Playing spoken translation...", mantraKey, langCode);
         window.stopSacredChant();
 
-        var key = (mantraKey || 'asato_ma') + '_meaning_' + (langCode === 'te' ? 'te' : 'en');
+        var langSuffix = 'en';
+        if (langCode === 'te' || langCode === 'tanglish') {
+          langSuffix = 'te';
+        } else if (langCode === 'ml' || langCode === 'manglish') {
+          langSuffix = 'ml';
+        }
+        var key = (mantraKey || 'asato_ma') + '_meaning_' + langSuffix;
         var audio = chantAudios[key];
         if (!audio) {
           audio = new Audio(key + '.mp3');
@@ -422,7 +433,7 @@
           var p = audio.play();
           if (p !== undefined) {
             p.then(function() {
-              console.log("🕉️ [AVARA Audio]: Spoken translation is playing in", langCode);
+              console.log("🕉️ [AVARA Audio]: Spoken translation is playing in", langCode, "as", key);
             }).catch(function(err) {
               console.warn("Translation audio error:", err);
             });
@@ -432,7 +443,43 @@
         }
       };
 
+      var currentDynamicTts = null;
+      window.playDynamicTts = function(text, langCode) {
+        window.stopSacredChant();
+        try {
+          if (currentDynamicTts) {
+            try { currentDynamicTts.pause(); } catch(e){}
+            currentDynamicTts = null;
+          }
+          var encoded = encodeURIComponent(text);
+          var effective = (langCode === 'manglish' || langCode === 'ml') ? 'ml' : (langCode === 'tanglish' ? 'te' : langCode);
+          var url = 'http://127.0.0.1:8000/api/v1/tts/synthesize?text=' + encoded + '&lang=' + (effective || 'ml');
+          var audio = new Audio(url);
+          currentDynamicTts = audio;
+          audio.volume = 1.0;
+          audio.play().then(function() {
+            console.log("🔊 [AVARA Dynamic Neural TTS]: Playing pure native voice in", langCode);
+          }).catch(function(err) {
+            console.warn("Dynamic TTS network audio error:", err);
+            if ('speechSynthesis' in window) {
+              var utt = new SpeechSynthesisUtterance(text);
+              utt.lang = (langCode === 'te' || langCode === 'tanglish') ? 'te-IN' : (langCode === 'ml' ? 'ml-IN' : 'en-IN');
+              window.speechSynthesis.speak(utt);
+            }
+          });
+        } catch(e) {
+          console.error("Dynamic TTS exception:", e);
+        }
+      };
+
       window.stopSacredChant = function() {
+        if (currentDynamicTts) {
+          try {
+            currentDynamicTts.pause();
+            currentDynamicTts.currentTime = 0;
+          } catch(e){}
+          currentDynamicTts = null;
+        }
         if (currentChantAudio) {
           try {
             currentChantAudio.pause();

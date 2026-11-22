@@ -6,6 +6,7 @@ from app.api.v1.finance import router as finance_router
 from app.api.v1.health import router as health_router
 from app.api.v1.astrologers import router as astrologers_router
 from app.api.v1.integrations import router as integrations_router
+from app.api.v1.tts import router as tts_router
 
 api_router = APIRouter()
 
@@ -16,3 +17,4 @@ api_router.include_router(finance_router)
 api_router.include_router(health_router)
 api_router.include_router(astrologers_router)
 api_router.include_router(integrations_router)
+api_router.include_router(tts_router)

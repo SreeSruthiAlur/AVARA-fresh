@@ -79,7 +79,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
   void _onVoiceServiceChanged() {
     if (!mounted) return;
     final voice = VoiceService.instance;
-    if (voice.errorMessage != null && _isListening) {
+    if (voice.errorMessage != null &&
+        voice.errorMessage!.trim().isNotEmpty &&
+        _isListening) {
       setState(() => _isListening = false);
       _pulseController.stop();
       _pulseController.reset();

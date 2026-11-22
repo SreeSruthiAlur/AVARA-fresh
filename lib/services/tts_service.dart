@@ -70,6 +70,26 @@ class TtsService extends ChangeNotifier {
     try {
       await _tts.stop();
 
+      // On Web, route Malayalam, Manglish, Telugu, and Tanglish through authentic neural Indian voices
+      if (kIsWeb &&
+          (lang == AppLanguage.malayalam ||
+              lang == AppLanguage.manglish ||
+              lang == AppLanguage.telugu ||
+              lang == AppLanguage.tanglish)) {
+        _currentlySpeakingText = text;
+        _isSpeaking = true;
+        notifyListeners();
+        final langCode = switch (lang) {
+          AppLanguage.malayalam => 'ml',
+          AppLanguage.manglish => 'manglish',
+          AppLanguage.telugu => 'te',
+          AppLanguage.tanglish => 'tanglish',
+          _ => 'en',
+        };
+        playDynamicTtsWeb(clean, langCode);
+        return;
+      }
+
       // Configure locale
       if (lang == AppLanguage.telugu) {
         await _tts.setLanguage('te-IN');
@@ -140,13 +160,7 @@ class TtsService extends ChangeNotifier {
     };
 
     if (kIsWeb) {
-      if (langCode == 'te' || langCode == 'en') {
-        playTranslationAudioWeb(mantraKey, langCode);
-      }
-      if (langCode == 'ml' || langCode == 'manglish' || langCode == 'tanglish') {
-        await speak(fallbackText, language: lang);
-        return;
-      }
+      playTranslationAudioWeb(mantraKey, langCode);
       _isSpeaking = true;
       _isSpeakingTranslation = true;
       _currentlySpeakingText = fallbackText;
