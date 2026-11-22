@@ -15,6 +15,7 @@ build/
 
 # Backend / Python cache & SQLite DB
 backend/avara.db
+*.db
 backend/.env
 **/__pycache__/
 *.py[cod]
