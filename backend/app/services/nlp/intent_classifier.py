@@ -16,11 +16,11 @@ class IntentClassifier:
         # 1. Astrology (Teammate 1 responsibility)
         "astrology": [
             # English
-            r"\b(astrology|horoscope|zodiac|birth\s*chart|kundali|natal\s*chart|sun\s*sign|moon\s*sign|planetary|graha|raasi|nakshatra|saturn|jupiter|mars|mercury)\b",
+            r"\b(astrology|horoscope|zodiac|birth\s*chart|kundali|kundli|natal\s*chart|sun\s*sign|moon\s*sign|planetary|graha|raasi|nakshatra|saturn|jupiter|mars|mercury|dob|tob|pob|date\s*of\s*birth|time\s*of\s*birth|place\s*of\s*birth|birth\s*date|birth\s*time|birth\s*place|born\s*on|born\s*in|internship|promotion|milestone|antardasha|bhukti|good\s*time)\b",
             # Telugu Script
-            r"(జ్యోతిష్యం|జాతకం|రాశి|నక్షత్రం|గ్రహాలు|కుండలి|రాశిఫలాలు|గ్రహచారము|శని|గురు|కుజ)",
+            r"(జ్యోతిష్యం|జాతకం|రాశి|నక్షత్రం|గ్రహాలు|కుండలి|రాశిఫలాలు|గ్రహచారము|శని|గురు|కుజ|పుట్టిన\s*తేదీ|పుట్టిన\s*సమయం|పుట్టిన\s*ప్రదేశం|మంచి\s*సమయం|ఉద్యోగం|ప్రమోషన్)",
             # Tanglish
-            r"\b(jathakam|jathakamu|raasi|rasi|nakshatram|grahalu|kundali|graha\s*shanti|subha\s*muhurtham|horoscope)\b"
+            r"\b(jathakam|jathakamu|raasi|rasi|nakshatram|grahalu|kundali|kundli|graha\s*shanti|subha\s*muhurtham|horoscope|puttina\s*roju|puttina\s*samayam|manchi\s*samayam)\b"
         ],
 
         # 2. Habits (Teammate 1 responsibility)

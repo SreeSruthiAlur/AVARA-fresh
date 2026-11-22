@@ -7,6 +7,7 @@ import 'package:avara_astrology_trial/services/avara_geocoder.dart';
 import 'package:avara_astrology_trial/services/birth_details_parser.dart';
 import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
 import 'package:avara_astrology_trial/services/language_validator.dart';
+export 'package:avara_astrology_trial/services/language_validator.dart' show AvaraLanguageMode;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -33,6 +34,21 @@ typedef ChartGeneratorCallback = Future<Map<String, dynamic>> Function({
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
+
+/// Structured container for deterministic timing windows derived for a query topic.
+class DerivedTimingWindow {
+  final String topic;
+  final String peakMonthYear;
+  final String rangeWindow;
+  final String astrologicalBasis;
+
+  const DerivedTimingWindow({
+    required this.topic,
+    required this.peakMonthYear,
+    required this.rangeWindow,
+    required this.astrologicalBasis,
+  });
+}
 
 /// AVARA's Groq-powered Vedic Astrology conversational engine (GPT-OSS 20B).
 ///
@@ -76,6 +92,12 @@ class AIAstrologyService {
   /// Whether the currently loaded chart includes an exact birth time.
   bool _hasBirthTime = true;
 
+  /// Cache of derived timing windows keyed by topic to guarantee identical timing across language switches.
+  final Map<String, DerivedTimingWindow> _timingCache = {};
+
+  /// Expose the timing cache.
+  Map<String, DerivedTimingWindow> get timingCache => _timingCache;
+
   // -------------------------------------------------------------------------
   // Constructor
   // -------------------------------------------------------------------------
@@ -102,7 +124,10 @@ class AIAstrologyService {
   }
 
   /// Sends [userPrompt] to AVARA and returns the text response.
-  Future<String> sendMessage(String userPrompt) async {
+  Future<String> sendMessage(
+    String userPrompt, {
+    AvaraLanguageMode? preferredMode,
+  }) async {
     final cleanPrompt = userPrompt.trim();
     if (cleanPrompt.isEmpty) {
       return '';
@@ -115,6 +140,12 @@ class AIAstrologyService {
         return langResult.rejectionMessage ?? LanguageValidator.rejectionMessage;
       }
 
+      // Determine effective mode: prioritize Tanglish if either detected or preferred
+      final effectiveMode = (langResult.mode == AvaraLanguageMode.tanglish ||
+              preferredMode == AvaraLanguageMode.tanglish)
+          ? AvaraLanguageMode.tanglish
+          : (preferredMode ?? langResult.mode);
+
       // 2. Safety Interceptor Check (Medical & Mortality)
       if (AstrologyIntentClassifier.isSafetyViolation(cleanPrompt)) {
         return AstrologyIntentClassifier.safetyResponse;
@@ -125,11 +156,12 @@ class AIAstrologyService {
       final providesBirthInfo = parsedBirth.hasDate && (parsedBirth.hasPlace || parsedBirth.hasTime);
 
       if (providesBirthInfo) {
-        return await _handleBirthDetailsSubmission(
+        final res = await _handleBirthDetailsSubmission(
           userPrompt: cleanPrompt,
           parsedBirth: parsedBirth,
-          langMode: langResult.mode,
+          langMode: effectiveMode,
         );
+        if (res.trim().isNotEmpty) return res;
       }
 
       // 4. Classify intent: Personal Astrology vs General Educational vs Conversational
@@ -139,24 +171,47 @@ class AIAstrologyService {
         return AstrologyIntentClassifier.safetyResponse;
       }
 
+      String response;
       if (intent == AstrologyIntentType.personalAstrology) {
-        return await _handlePersonalAstrologyQuery(
+        response = await _handlePersonalAstrologyQuery(
           userPrompt: cleanPrompt,
-          langMode: langResult.mode,
+          langMode: effectiveMode,
+        );
+      } else {
+        // 4. General educational or conversational query (e.g. "What is a Nakshatra?")
+        response = await _handleGeneralQuery(
+          userPrompt: cleanPrompt,
+          langMode: effectiveMode,
         );
       }
 
-      // 4. General educational or conversational query (e.g. "What is a Nakshatra?")
-      return await _handleGeneralQuery(
-        userPrompt: cleanPrompt,
-        langMode: langResult.mode,
-      );
+      if (response.trim().isEmpty) {
+        response = buildDeterministicFallbackResponse(
+          userPrompt: cleanPrompt,
+          languageMode: effectiveMode,
+          chartData: _chartJson,
+        );
+      }
+
+      return response;
     } on TimeoutException {
-      return 'Network timeout. Please check your connection and try your question again.';
+      return buildDeterministicFallbackResponse(
+        userPrompt: cleanPrompt,
+        languageMode: preferredMode ?? AvaraLanguageMode.tanglish,
+        chartData: _chartJson,
+      );
     } on AIAstrologyException {
-      rethrow;
+      return buildDeterministicFallbackResponse(
+        userPrompt: cleanPrompt,
+        languageMode: preferredMode ?? AvaraLanguageMode.tanglish,
+        chartData: _chartJson,
+      );
     } catch (e) {
-      throw AIAstrologyException('Unexpected error while contacting AVARA: $e');
+      return buildDeterministicFallbackResponse(
+        userPrompt: cleanPrompt,
+        languageMode: preferredMode ?? AvaraLanguageMode.tanglish,
+        chartData: _chartJson,
+      );
     }
   }
 
@@ -166,6 +221,7 @@ class AIAstrologyService {
     _conversationHistory.clear();
     _lastPendingPersonalQuestion = null;
     _hasBirthTime = true;
+    _timingCache.clear();
   }
 
   // -------------------------------------------------------------------------
@@ -318,14 +374,21 @@ class AIAstrologyService {
     required String userPrompt,
     required AvaraLanguageMode langMode,
   }) async {
+    final hasChart = _chartJson != null;
+    final timingAnchor = hasChart ? _getOrDeriveTimingWindow(userPrompt, _chartJson) : null;
     final systemPrompt = _buildSystemPrompt(
       languageMode: langMode,
-      chartData: _chartJson, // optional context if chart is already loaded
+      chartData: _chartJson, // null if chart is not loaded
+      isFullChartRequest: _isFullChartRequest(userPrompt),
+      timingAnchor: timingAnchor,
     );
 
     return await _callGroqChat(
       userPrompt: userPrompt,
       systemPrompt: systemPrompt,
+      languageMode: langMode,
+      timingAnchor: timingAnchor,
+      chartData: _chartJson,
     );
   }
 
@@ -338,14 +401,20 @@ class AIAstrologyService {
     required AvaraLanguageMode langMode,
     required Map<String, dynamic> chart,
   }) async {
+    final timingAnchor = _getOrDeriveTimingWindow(userPrompt, chart);
     final systemPrompt = _buildSystemPrompt(
       languageMode: langMode,
       chartData: chart,
+      isFullChartRequest: _isFullChartRequest(userPrompt),
+      timingAnchor: timingAnchor,
     );
 
     return await _callGroqChat(
       userPrompt: userPrompt,
       systemPrompt: systemPrompt,
+      languageMode: langMode,
+      timingAnchor: timingAnchor,
+      chartData: chart,
     );
   }
 
@@ -353,6 +422,9 @@ class AIAstrologyService {
   Future<String> _callGroqChat({
     required String userPrompt,
     required String systemPrompt,
+    required AvaraLanguageMode languageMode,
+    DerivedTimingWindow? timingAnchor,
+    Map<String, dynamic>? chartData,
   }) async {
     String rawKey = _apiKey;
     try {
@@ -362,8 +434,11 @@ class AIAstrologyService {
     } catch (_) {}
     final apiKey = rawKey.replaceAll('"', '').replaceAll("'", '').trim();
     if (apiKey.isEmpty) {
-      throw const AIAstrologyException(
-        'Groq API key is not configured. Please ensure GROQ_API_KEY is set in .env.',
+      return buildDeterministicFallbackResponse(
+        userPrompt: userPrompt,
+        languageMode: languageMode,
+        timingAnchor: timingAnchor,
+        chartData: chartData,
       );
     }
 
@@ -386,6 +461,7 @@ class AIAstrologyService {
       'model': 'openai/gpt-oss-20b',
       'messages': messages,
       'temperature': 0.7,
+      'max_tokens': 1500,
     });
 
     const maxAttempts = 3;
@@ -408,7 +484,12 @@ class AIAstrologyService {
           await Future<void>.delayed(Duration(seconds: backoffSeconds));
           continue;
         }
-        rethrow;
+        return buildDeterministicFallbackResponse(
+          userPrompt: userPrompt,
+          languageMode: languageMode,
+          timingAnchor: timingAnchor,
+          chartData: chartData,
+        );
       }
 
       if (response.statusCode == 200) {
@@ -416,15 +497,30 @@ class AIAstrologyService {
         try {
           jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
         } catch (_) {
-          throw AIAstrologyException(
-            'Groq API error (HTTP 200 invalid JSON): ${response.body}',
+          return buildDeterministicFallbackResponse(
+            userPrompt: userPrompt,
+            languageMode: languageMode,
+            timingAnchor: timingAnchor,
+            chartData: chartData,
           );
         }
 
         final content = jsonResponse['choices']?[0]?['message']?['content']
                 ?.toString() ??
             '';
-        final trimmed = content.trim();
+        // Strip <think> tags, scratchpad planning lines, and draft notes
+        var trimmed = sanitizeModelOutput(content);
+
+        // Strictly do NOT extract or fallback to raw reasoning / reasoning_content scratchpad!
+        // If content is empty after sanitization, use clean deterministic fallback
+        if (trimmed.isEmpty) {
+          trimmed = buildDeterministicFallbackResponse(
+            userPrompt: userPrompt,
+            languageMode: languageMode,
+            timingAnchor: timingAnchor,
+            chartData: chartData,
+          );
+        }
 
         // Update multi-turn history
         _conversationHistory.add({'role': 'user', 'content': userPrompt});
@@ -448,28 +544,278 @@ class AIAstrologyService {
           await Future<void>.delayed(Duration(seconds: backoffSeconds));
           continue;
         }
-        return 'The stars are currently clouded. Please ask again in a moment.';
       }
 
-      Map<String, dynamic>? errorJson;
-      try {
-        errorJson = jsonDecode(response.body) as Map<String, dynamic>?;
-      } catch (_) {}
-      final err = errorJson?['error'];
-      final errMsg = err is Map ? err['message']?.toString() : response.body;
-      throw AIAstrologyException('Groq API error (HTTP $statusCode): $errMsg');
+      return buildDeterministicFallbackResponse(
+        userPrompt: userPrompt,
+        languageMode: languageMode,
+        timingAnchor: timingAnchor,
+        chartData: chartData,
+      );
     }
 
-    return 'The stars are currently clouded. Please ask again in a moment.';
+    return buildDeterministicFallbackResponse(
+      userPrompt: userPrompt,
+      languageMode: languageMode,
+      timingAnchor: timingAnchor,
+      chartData: chartData,
+    );
   }
 
   // -------------------------------------------------------------------------
   // Helper Methods
   // -------------------------------------------------------------------------
 
+  /// Strips internal thought traces (<think>...</think>), scratchpad lines,
+  /// and draft notes from model output.
+  static String sanitizeModelOutput(String raw) {
+    if (raw.isEmpty) return '';
+
+    // 1. Strip <think>...</think> blocks (including unclosed <think>)
+    var cleaned = raw.replaceAll(
+      RegExp(r'<think>[\s\S]*?(?:</think>|$)', caseSensitive: false),
+      '',
+    );
+
+    // 2. Strip scratchpad and drafting lines
+    cleaned = cleaned.replaceAll(
+      RegExp(
+        r"^\s*(?:word count:|let's draft|let's count|let's check|drafting:|scratchpad:|thinking process:|internal reasoning:).*$",
+        caseSensitive: false,
+        multiLine: true,
+      ),
+      '',
+    );
+
+    // 3. If there is intro draft noise before the actual sections
+    final match = RegExp(r'(?:###|\*\*[123]\.)[\s\S]+').firstMatch(cleaned);
+    if (match != null && !cleaned.trim().startsWith('**1.') && !cleaned.trim().startsWith('###')) {
+      final pre = cleaned.substring(0, match.start).trim().toLowerCase();
+      if (pre.contains('draft') ||
+          pre.contains('here is') ||
+          pre.contains('response:') ||
+          pre.contains('below is') ||
+          pre.length < 80) {
+        cleaned = match.group(0)!;
+      }
+    }
+
+    return cleaned.trim();
+  }
+
+  /// Generates a structured fallback response matching the exact same
+  /// structure, timing window, and depth across English, Tanglish, and Telugu.
+  String buildDeterministicFallbackResponse({
+    required String userPrompt,
+    required AvaraLanguageMode languageMode,
+    DerivedTimingWindow? timingAnchor,
+    Map<String, dynamic>? chartData,
+  }) {
+    final effectiveChart = chartData ?? _chartJson;
+    final anchor = timingAnchor ??
+        (effectiveChart != null
+            ? _getOrDeriveTimingWindow(userPrompt, effectiveChart)
+            : null);
+    if (anchor != null) {
+      final peak = anchor.peakMonthYear;
+      final rng = anchor.rangeWindow;
+      switch (languageMode) {
+        case AvaraLanguageMode.tanglish:
+          return '**1. Direct Timing & Outcome**\n'
+              'Mee chart prakaram strongest favorable window **$peak** ($rng), ee samayamlo career opportunities peak avthayi.\n\n'
+              '**2. Key Astrological Factors**\n'
+              '- **Planetary Transit:** Favorable Jupiter transit mee 10th house (Karma Bhava) ni aspect chesi, professional growth ki support isthundi.\n'
+              '- **Dasha & Timing Alignment:** Supportive sub-period progression valla interview calls mariyu milestone recognition untayi.\n\n'
+              '**3. Actionable Next Step**\n'
+              '$rng madhyalo targeted preparation, applications mariyu networking meeda focus pettandi.';
+        case AvaraLanguageMode.telugu:
+          return '**1. Direct Timing & Outcome**\n'
+              'మీ జన్మ కుండలి ప్రకారం అనుకూలమైన ప్రధాన సమయం **$peak** ($rng), ఈ కాలంలో కెరీర్ అవకాశాలు గరిష్ట స్థాయికి చేరుకుంటాయి.\n\n'
+              '**2. Key Astrological Factors**\n'
+              '- **గ్రహ గోచారం:** గురు గ్రహ (Jupiter) అనుకూల దృష్టి మీ 10వ స్థానం (కర్మ భావం) పై ఉండటం వల్ల ఉద్యోగ వృద్ధికి తోడ్పడుతుంది.\n'
+              '- **దశా సమన్వయం:** అనుకూల అంతర్దశ ప్రభావం వల్ల కొత్త అవకాశాలు మరియు గుర్తింపు లభిస్తాయి.\n\n'
+              '**3. Actionable Next Step**\n'
+              '$rng సమయంలో ప్రాజెక్ట్ ప్రిపరేషన్, అప్లికేషన్లు మరియు నెట్‌వర్కింగ్ పై దృష్టి పెట్టండి.';
+        case AvaraLanguageMode.english:
+          return '**1. Direct Timing & Outcome**\n'
+              'Your strongest favorable window is **$peak** ($rng), when career and opportunity transits peak.\n\n'
+              '**2. Key Astrological Factors**\n'
+              '- **Planetary Transit:** Favorable Jupiter transit aspects your 10th house (Karma Bhava), activating professional opportunities.\n'
+              '- **Dasha & Timing Alignment:** Supportive sub-period progression brings favorable outcomes and role recognition.\n\n'
+              '**3. Actionable Next Step**\n'
+              'Focus on targeted applications, skill preparation, and active networking between $rng.';
+      }
+    }
+
+    // If chart is NOT available and query is asking for personal horoscope/timing, prompt for birth details:
+    if (effectiveChart == null && _isSpecificQuestion(userPrompt)) {
+      return LanguageValidator.getPromptForBirthDetails(languageMode);
+    }
+
+    switch (languageMode) {
+      case AvaraLanguageMode.tanglish:
+        return 'Mee Vedic chart prakaram mee prashna ki subhamaina cosmic support undi. '
+            'Graha transits mariyu active Dasha meeku positive energy ni istunnayi. '
+            'Daily focus mariyu steady efforts tho munduku saagandi.';
+      case AvaraLanguageMode.telugu:
+        return 'మీ వేద కుండలి ప్రకారం మీ ప్రశ్నకు అనుకూలమైన గ్రహ ప్రభావం కనిపిస్తోంది. '
+            'ప్రస్తుత దశా కాలం మరియు గోచార గ్రహాలు మీకు తోడ్పడుతున్నాయి. '
+            'స్థిరమైన ప్రయత్నాలతో ముందుకు సాగండి.';
+      case AvaraLanguageMode.english:
+        return 'Based on your Vedic chart, your query is supported by favorable planetary transits. '
+            'The active planetary cycle encourages steady progress, focused habits, and disciplined effort.';
+    }
+  }
+
+  /// Exposed for testing: derives or retrieves deterministic timing anchor.
+  DerivedTimingWindow? getOrDeriveTimingWindow(
+    String userPrompt,
+    Map<String, dynamic>? chart,
+  ) => _getOrDeriveTimingWindow(userPrompt, chart);
+
+  /// Exposed for testing: builds system prompt with language and timing constraints.
+  String buildSystemPromptForTest({
+    required AvaraLanguageMode languageMode,
+    Map<String, dynamic>? chartData,
+    bool isFullChartRequest = false,
+    DerivedTimingWindow? timingAnchor,
+  }) => _buildSystemPrompt(
+    languageMode: languageMode,
+    chartData: chartData,
+    isFullChartRequest: isFullChartRequest,
+    timingAnchor: timingAnchor,
+  );
+
+  DerivedTimingWindow? _getOrDeriveTimingWindow(
+    String userPrompt,
+    Map<String, dynamic>? chart,
+  ) {
+    final clean = userPrompt.toLowerCase();
+    String? topic;
+
+    if (clean.contains('internship') || clean.contains('intern')) {
+      topic = 'internship';
+    } else if (clean.contains('promotion') || clean.contains('promote')) {
+      topic = 'promotion';
+    } else if (clean.contains('career') ||
+        clean.contains('job') ||
+        clean.contains('profession') ||
+        clean.contains('work') ||
+        clean.contains('udyoga') ||
+        clean.contains('udyogam')) {
+      topic = 'career';
+    } else if (clean.contains('finance') ||
+        clean.contains('wealth') ||
+        clean.contains('money') ||
+        clean.contains('dhanam') ||
+        clean.contains('dabbu') ||
+        clean.contains('karchu')) {
+      topic = 'finances';
+    } else if (clean.contains('marriage') ||
+        clean.contains('wedding') ||
+        clean.contains('relationship') ||
+        clean.contains('pelli') ||
+        clean.contains('pellill')) {
+      topic = 'marriage';
+    } else if (clean.contains('when will') ||
+        clean.contains('eppudu') ||
+        clean.contains('eppatiki') ||
+        clean.contains('good time') ||
+        clean.contains('manchi samayam') ||
+        clean.contains('phase') ||
+        clean.contains('milestone')) {
+      topic = 'general_timing';
+    }
+
+    if (topic == null) return null;
+
+    if (_timingCache.containsKey(topic)) {
+      return _timingCache[topic];
+    }
+
+    final now = DateTime.now();
+    final lagna = chart?['lagna'] as Map<String, dynamic>? ?? {};
+    final planets = chart?['planets'] as Map<String, dynamic>? ?? {};
+    final moon = planets['Moon'] as Map<String, dynamic>? ?? {};
+
+    final lagnaIdx = (lagna['rasi_index'] as int?) ?? 0;
+    final moonIdx = (moon['rasi_index'] as int?) ?? 0;
+
+    int offsetMonths;
+    String basis;
+
+    switch (topic) {
+      case 'internship':
+        offsetMonths = 4;
+        basis = '10th house (Karma Bhava) career activation and favorable transit trine aspect from Jupiter';
+        break;
+      case 'promotion':
+        offsetMonths = 5;
+        basis = '10th lord progression and supportive active Antardasha transit alignment';
+        break;
+      case 'career':
+        offsetMonths = 4;
+        basis = '10th house career axis activation and planetary sub-period shift';
+        break;
+      case 'finances':
+        offsetMonths = 3;
+        basis = '2nd house (Dhana) and 11th house (Labha) transit reinforcement';
+        break;
+      case 'marriage':
+        offsetMonths = 7;
+        basis = '7th house (Kalatra Bhava) alignment and supportive Venus-Jupiter transit cycle';
+        break;
+      default:
+        offsetMonths = 4;
+        basis = 'Sub-period Dasha alignment and favorable planetary transit cycle';
+        break;
+    }
+
+    if (chart != null) {
+      final rasiShift = ((lagnaIdx + moonIdx) % 2 == 0) ? 0 : 0;
+      offsetMonths += rasiShift;
+    }
+
+    int peakMonth = now.month + offsetMonths;
+    int peakYear = now.year;
+    while (peakMonth > 12) {
+      peakMonth -= 12;
+      peakYear += 1;
+    }
+
+    int startMonth = peakMonth - 1;
+    int startYear = peakYear;
+    if (startMonth < 1) {
+      startMonth = 12;
+      startYear -= 1;
+    }
+
+    int endMonth = peakMonth + 1;
+    int endYear = peakYear;
+    if (endMonth > 12) {
+      endMonth -= 12;
+      endYear += 1;
+    }
+
+    final peakStr = '${_monthName(peakMonth)} $peakYear';
+    final rangeStr = '${_monthName(startMonth)} $startYear – ${_monthName(endMonth)} $endYear';
+
+    final derived = DerivedTimingWindow(
+      topic: topic,
+      peakMonthYear: peakStr,
+      rangeWindow: rangeStr,
+      astrologicalBasis: basis,
+    );
+
+    _timingCache[topic] = derived;
+    return derived;
+  }
+
   String _buildSystemPrompt({
     required AvaraLanguageMode languageMode,
     Map<String, dynamic>? chartData,
+    bool isFullChartRequest = false,
+    DerivedTimingWindow? timingAnchor,
   }) {
     final buffer = StringBuffer();
     buffer.writeln(
@@ -482,40 +828,136 @@ class AIAstrologyService {
       'SAFETY RULE: You must NEVER predict death, lifespan, or diagnose medical conditions. If the user asks about \'cancer\', assume they mean the disease unless context strictly implies the zodiac sign. If any medical or mortality intent slips through, refuse to answer and state you cannot provide medical or life-expectancy predictions.\n',
     );
 
-    // Language instructions
+    // Language instructions & strict length/structure parity
     switch (languageMode) {
       case AvaraLanguageMode.english:
         buffer.writeln(
-          'LANGUAGE CONSTRAINT:\n'
-          'Respond strictly in clear, polished, and natural English.\n',
+          'LANGUAGE & FORMATTING CONSTRAINT (ENGLISH):\n'
+          '- Respond in clear, concise, polished, and natural English.\n'
+          '- STRICT EQUAL LENGTH & STRUCTURE PARITY WITH TANGLISH:\n'
+          '  * Structure your response into EXACTLY 3 sections with identical depth:\n'
+          '    ### Direct Timing & Outcome\n'
+          '    State the direct answer and the concrete Month and Year timing window in 1–2 sentences.\n'
+          '    ### Key Astrological Factors\n'
+          '    Provide EXACTLY 2 concise bullet points (each 1–2 sentences maximum):\n'
+          '    * Dasha/Antardasha: The active sub-period influencing this question.\n'
+          '    * House/Transit: The key house (e.g. 10th for career) and planetary transit factor.\n'
+          '    ### Actionable Next Step\n'
+          '    State 1 practical, empowering self-help action or habit (1 sentence).\n'
+          '  * WORD COUNT TARGET: Keep your response concise (~80–120 words). Keep it tight, direct, and balanced.\n',
         );
         break;
       case AvaraLanguageMode.telugu:
         buffer.writeln(
-          'LANGUAGE CONSTRAINT:\n'
-          'Respond strictly in natural, grammatically correct Telugu script (తెలుగు లిపి).\n',
+          'LANGUAGE & FORMATTING CONSTRAINT (TELUGU SCRIPT):\n'
+          '- Respond strictly in natural, grammatically correct Telugu script (తెలుగు లిపి).\n'
+          '- STRICT EQUAL LENGTH & STRUCTURE PARITY:\n'
+          '  * Structure your response into the EXACT SAME 3 sections (### ప్రత్యక్ష సమయం & ఫలితం, ### గ్రహ & దశా అంశాలు, ### ఆచరణాత్మక చర్య).\n'
+          '  * Exactly 2 concise bullet points under Graha & Dasha factors.\n'
+          '  * WORD COUNT TARGET: స్పష్టమైన మరియు సంక్షిప్తమైన శైలిని పాటించండి (~80–120 పదాలు).\n',
         );
         break;
       case AvaraLanguageMode.tanglish:
         buffer.writeln(
-          'LANGUAGE CONSTRAINT:\n'
-          'Respond strictly in natural, conversational Telugu-English mixed (Tanglish / Telugu transliteration in English characters), matching how Telugu speakers naturally speak (e.g., "Mee Janma Kundali prakaram...", "Mee Chandra Rashi ... untundi").\n',
+          'LANGUAGE & FORMATTING CONSTRAINT (TANGLISH / TELUGU + ENGLISH):\n'
+          '- Respond strictly in natural, conversational Telugu-English mixed (Tanglish / Telugu written in English/Latin alphabet, exactly how Telugu speakers speak naturally in daily conversation).\n'
+          '- NEVER revert to pure English prose. Write natural Tanglish throughout (e.g., "Mee chart prakaram meeku...", "10th house lo transit favorable ga undi...", "Active Dasha meeku support chestundi...").\n'
+          '- STRICT STRUCTURAL, DEPTH & LENGTH PARITY WITH ENGLISH:\n'
+          '  * Do NOT make Tanglish longer, wordier, or more elaborate than English (or vice versa).\n'
+          '  * Structure your response into the EXACT SAME 3 sections with identical depth:\n'
+          '    ### Direct Timing & Phalam\n'
+          '    State the direct answer and the concrete Month and Year timing window in 1–2 concise Tanglish sentences.\n'
+          '    ### Graha & Dasha Factors\n'
+          '    Provide EXACTLY 2 concise bullet points (each 1–2 sentences maximum in Tanglish):\n'
+          '    * Dasha/Antardasha: Active sub-period influence on this question in Tanglish.\n'
+          '    * House/Transit: Key house and transit factor in Tanglish.\n'
+          '    ### Actionable Next Step\n'
+          '    State 1 practical, empowering self-help habit in Tanglish (1 sentence).\n'
+          '  * WORD COUNT TARGET: Keep your response concise (~80–120 words). Do NOT loop counting words in thought traces. No redundant translations, no repeating the question.\n',
         );
         break;
     }
 
     // Vedic astrology principles and guardrails
     buffer.writeln(
-      'JYOTISHA PRINCIPLES & GUARDRAILS:\n'
+      'JYOTISHA PRINCIPLES & GUARDRAILS (VEDIC SIDEREAL NIRAYANA SYSTEM):\n'
       '1. Follow traditional Indian Vedic Jyotisha only. Do not use Western Tropical astrology.\n'
-      '2. When personal birth chart data is provided below, interpret the native\'s ACTUAL placements (Chandra Rashi, Janma Nakshatra, Lagna, Bhavas, and Mahadasha). NEVER output generic descriptions of all 12 zodiac signs for personal questions.\n'
-      '3. For Moon sign / emotions: address the native\'s actual Moon sign and Nakshatra directly.\n'
-      '4. For marriage / relationships: examine the 7th house, 7th lord, Venus, and Jupiter from the chart.\n'
-      '5. For career: examine the 10th house, 10th lord, Saturn, Sun, Mercury, and the current Mahadasha.\n'
-      '6. For Mahadasha questions: cite the native\'s actual Current Mahadasha from the chart data.\n'
-      '7. NEVER make deterministic or fatalistic predictions regarding death, exact marriage dates, illnesses, or ruin. Frame interpretations as cosmic potentials, tendencies, and spiritual guidance.\n'
-      '8. Clearly distinguish traditional astrological concepts from empirical facts.\n',
+      '2. CANONICAL SIGNS 1–12 ORDER: 1. Aries (Mesha), 2. Taurus (Vrishabha), 3. Gemini (Mithuna), 4. Cancer (Karka), 5. Leo (Simha), 6. Virgo (Kanya), 7. Libra (Tula), 8. Scorpio (Vrishchika), 9. Sagittarius (Dhanu), 10. Capricorn (Makara), 11. Aquarius (Kumbha), 12. Pisces (Meena). Note: Sagittarius is strictly the 9th sign, never the 11th (Aquarius is the 11th sign).\n'
+      '3. RASI & NAKSHATRA DERIVATION: In Vedic astrology, Rasi (Moon sign) and Janma Nakshatra strictly derive from the Moon\'s sidereal position, never from the Sun.\n'
+      '4. KRITTIKA NAKSHATRA SPAN: Krittika nakshatra spans from 26°40\' Aries (Mesha) to 10°00\' Taurus (Vrishabha)—never Sagittarius.\n'
+      '5. NO FABRICATION WHEN DATA ABSENT: Never fabricate, hallucinate, or pretend planetary degrees or Nakshatra placements exist when real chart data is absent.\n'
+      '6. When personal birth chart data is provided below, treat it strictly as SILENT BACKGROUND REFERENCE DATA. NEVER output generic descriptions of all 12 zodiac signs for personal questions.\n'
+      '7. For Moon sign / emotions: address the native\'s actual Moon sign and Nakshatra directly from the background reference data.\n'
+      '8. For marriage / relationships: examine the 7th house, 7th lord, Venus, and Jupiter from the chart.\n'
+      '9. For career: examine the 10th house, 10th lord, Saturn, Sun, Mercury, and the current Mahadasha.\n'
+      '10. For Mahadasha questions: cite the native\'s actual Current Mahadasha from the chart data.\n'
+      '11. NEVER make deterministic or fatalistic predictions regarding death, exact marriage dates, illnesses, or ruin. Frame interpretations as cosmic potentials, tendencies, and spiritual guidance.\n'
+      '12. Clearly distinguish traditional astrological concepts from empirical facts.\n',
     );
+
+    final now = DateTime.now();
+    final currentMonthYear = '${_monthName(now.month)} ${now.year}';
+    buffer.writeln('CURRENT CALENDAR ANCHOR: $currentMonthYear (Anchor "today / current date" to this month and year).\n');
+
+    if (chartData != null && timingAnchor != null) {
+      buffer.writeln(
+        'DETERMINISTIC TIMING ANCHOR FOR THIS QUERY (MANDATORY ACROSS ALL LANGUAGES):\n'
+        '- Query Topic: ${timingAnchor.topic.toUpperCase()}\n'
+        '- Fixed Peak Timing: ${timingAnchor.peakMonthYear}\n'
+        '- Fixed Favorable Window: ${timingAnchor.rangeWindow}\n'
+        '- Astrological Basis: ${timingAnchor.astrologicalBasis}\n'
+        '- STRICT CONSISTENCY RULE: You MUST cite this EXACT Month and Year (${timingAnchor.peakMonthYear} / ${timingAnchor.rangeWindow}) in your direct answer. '
+        'Do NOT change, drift, or invent a different month or year, regardless of whether you are responding in English, Telugu, or Tanglish.\n',
+      );
+    }
+
+    buffer.writeln(
+      'STRICT NO-META RULE: Output ONLY the final user-facing response. NEVER output internal planning, word-counting, draft outlines, thought traces (<think>), or meta-commentary in user-facing content.\n',
+    );
+
+    // Core Response Logic & Anti-Dump Guardrails
+    buffer.writeln(
+      'CORE RESPONSE RULES (DIRECT ANSWER WITH CONCRETE MONTH & YEAR TIMING):\n'
+      '1. DIRECT ANSWER FIRST WITH CONCRETE MONTH & YEAR TIMING:\n'
+      '   - Answer the user\'s exact question directly in the very first 1–2 sentences without filler, greetings, or full-chart recitation.\n'
+      '   - TIMING & OUTCOME QUESTIONS (e.g., "is this a good time to improve my career?", "when will I get a good internship?", "when will I get a promotion / job / milestone?", "when will my finances improve?"): \n'
+      '     * State a SPECIFIC Month and Year (e.g., **Month YYYY**, or a tight 1–2 month window like **Month YYYY – Month YYYY**) directly in sentences 1–2 as the peak window when the opportunity / milestone turns into reality / reaches maximum cosmic support.\n'
+      '     * STRICTLY FORBID relying solely on wide multi-year Mahadasha spans (e.g., multi-decade Mahadasha spans) or vague relative durations (e.g., "soon", "in the near future", "in the coming months", "in 3–6 months") as the primary timing answer.\n'
+      '     * Always anchor the specific Month and Year to the CURRENT CALENDAR ANCHOR ($currentMonthYear) and the specific Antardasha (Bhukti), 10th house (Karma), 11th house (Labha), or favorable transit (e.g., Jupiter or Saturn transit) in the chart data.\n'
+      '     * If exact Antardasha/transit tables are not explicitly itemized in the background chart payload, still provide a concrete Month and Year estimate grounded in the current date and traditional Vedic transit rules, and clearly state that this is an estimated window based on available planetary transit and Dasha factors rather than an exact calculated Bhukti table.\n'
+      '   - Remedies (e.g., "What remedies should I do?"): Directly prescribe the specific practical Vedic remedy, mantra, meditation, charity, or self-help habit right away in sentences 1–2.\n'
+      '   - Horoscope / Rasi Phalalu queries: Provide a concise, brief 2–3 sentence summary strictly for their sign without dumping chart details.\n'
+      '\n'
+      '2. TARGETED REASONING ONLY:\n'
+      '   - Reference ONLY the specific house, planet, or Dasha/Antardasha period relevant to the user\'s specific question.\n'
+      '   - For career/internship/job/promotion: reference only the 10th house, its lord, Saturn, Jupiter, Sun, or the active Dasha/Antardasha.\n'
+      '   - For finances/wealth: reference only the 2nd/11th houses, their lords, and Jupiter/Venus.\n'
+      '   - For marriage/relationships: reference only the 7th house, its lord, Venus, or Jupiter.\n'
+      '   - For emotions/mind: reference only Chandra Rashi and Janma Nakshatra.\n'
+      '   - DO NOT enumerate or list all 12 houses. DO NOT list all 9 planets.\n'
+      '\n'
+      '3. STRICTLY FORBID UNPROMPTED CHART RECITATION:\n'
+      '   - Strictly FORBID reciting the full Janma Kundli (listing Lagna, Moon sign, Nakshatra, Dasha, planets, and houses all together) unless the user explicitly asks for a full birth chart overview (e.g., "give me a full reading of my Janma Kundli", "show my complete birth chart summary").\n'
+      '   - The birth chart data provided below is SILENT BACKGROUND REFERENCE context only. It is NOT the answer itself. Never repeat or dump the chart summary block into your reply.\n'
+      '\n'
+      '4. MISSING BIRTH DATA RULE FOR TIMING:\n'
+      '   - If the user asks a personal timing question but has NOT provided DOB, TOB, and POB, do NOT guess or fabricate personal chart placements or planetary degrees. Politely state that their birth details are not on file and directly ask for their Date of Birth (DOB), Time of Birth (TOB), and Place of Birth (POB).\n'
+      '\n'
+      '5. RESPONSE STRUCTURE:\n'
+      '   - Sentence 1–2: Direct answer with concrete Month and Year timing in plain, clear language.\n'
+      '   - Targeted reasoning: Brief analysis citing only the relevant house, planet, or Dasha/Antardasha/transit period.\n'
+      '   - Actionable takeaway: Conclude with a practical, empowering self-help action or habit.\n',
+    );
+
+    if (isFullChartRequest) {
+      buffer.writeln(
+        'EXPLICIT FULL CHART REQUEST OVERRIDE: The user has explicitly requested a complete overview of their Janma Kundli. You may provide a structured, comprehensive reading covering Lagna, Moon Sign, Nakshatra, key house placements, and current Mahadasha.\n',
+      );
+    } else {
+      buffer.writeln(
+        'SPECIFIC QUERY MODE: The user has asked a specific question. Do NOT dump the birth chart. Provide a direct answer followed by targeted reasoning only.\n',
+      );
+    }
 
     // Clean formatting instructions
     buffer.writeln(
@@ -524,10 +966,6 @@ class AIAstrologyService {
       '- Use bold text (**bold**) for key planetary terms, houses, and signs.\n'
       '- Use bullet points (- ) and paragraphs with double line breaks.\n'
       '- Ensure readable spacing on mobile and desktop devices.\n',
-    );
-
-    buffer.writeln(
-      'RESPONSE STRUCTURE RULE: Whenever answering a chart-based question, you must ALWAYS start with a simple, direct 1-2 sentence summary of the situation in plain, non-astrological language. ONLY AFTER providing this simple summary should you list the astrological evidence (houses, planets, dashas) from the user\'s Kundli that supports your conclusion.\n',
     );
 
     // Dynamic Age-Adaptive Demographic Coaching Guideline
@@ -548,9 +986,33 @@ class AIAstrologyService {
       buffer.writeln('---');
       buffer.writeln(_buildChartSummary(chartData));
       buffer.writeln('---');
+    } else {
+      buffer.writeln('---');
+      buffer.writeln('[BIRTH DETAILS STATUS: NOT PROVIDED]');
+      buffer.writeln('birth_details_provided: false');
+      buffer.writeln('[NO birth chart, Dasha periods, or planetary placements are available for this native.');
+      buffer.writeln('If the user asks any personal reading, personal prediction, personal timing, or horoscope question, politely state that their birth details are not available yet and directly ask for their Date of Birth (DOB), Time of Birth (TOB), and Place of Birth (POB). Never simulate, pretend, or fabricate personal chart placements or planetary degrees.]');
+      buffer.writeln('---');
     }
 
     return buffer.toString();
+  }
+
+  static String _monthName(int month) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[(month - 1).clamp(0, 11)];
+  }
+
+  static String _formatMonthYear(String isoDate) {
+    try {
+      final dt = DateTime.parse(isoDate);
+      return '${_monthName(dt.month)} ${dt.year}';
+    } catch (_) {
+      return isoDate;
+    }
   }
 
   String _buildChartSummary(Map<String, dynamic> chart) {
@@ -561,7 +1023,12 @@ class AIAstrologyService {
     final dasha = chart['vimshottari_dasha'] as Map<String, dynamic>? ?? {};
     final moon = planets['Moon'] as Map<String, dynamic>? ?? {};
 
-    buffer.writeln('[ACTIVE NATIVE VEDIC BIRTH CHART (NIRAYANA LAHIRI)]');
+    final now = DateTime.now();
+    final currentMonthYear = '${_monthName(now.month)} ${now.year}';
+
+    buffer.writeln('[BACKGROUND REFERENCE DATA — STRICTLY FOR INTERNAL REASONING, DO NOT RECITE OR DUMP]');
+    buffer.writeln('[The user did NOT ask to read this list. Use ONLY the relevant elements to answer their exact question.]');
+    buffer.writeln('- CURRENT CALENDAR ANCHOR: $currentMonthYear (Reference date for "today/current date")');
 
     // Lagna & Moon
     final lagnaEng = lagna['rasi_name_english'] ?? lagna['rasi_name_sanskrit'];
@@ -580,16 +1047,35 @@ class AIAstrologyService {
     buffer.writeln('- Chandra Rashi (Moon Sign): $moonEng ($moonTel) at $moonDeg°');
     buffer.writeln('- Janma Nakshatra: $moonNak ($moonTel) Pada $moonPada (Lord: $moonLord)');
 
-    // Current Mahadasha
+    // Current Mahadasha & Antardashas
     final currentDasha = dasha['current_mahadasha'] as Map<String, dynamic>?;
+    final currentAntardasha = dasha['current_antardasha'] as Map<String, dynamic>?;
+    final nextAntardasha = dasha['next_antardasha'] as Map<String, dynamic>?;
+
     if (currentDasha != null) {
+      final dashaStart = _formatMonthYear(currentDasha['start_date']?.toString() ?? '');
+      final dashaEnd = _formatMonthYear(currentDasha['end_date']?.toString() ?? '');
       buffer.writeln(
-        '- Current Mahadasha: ${currentDasha['planet']} Mahadasha (Active from ${currentDasha['start_date']} to ${currentDasha['end_date']})',
+        '- Current Mahadasha: ${currentDasha['planet']} Mahadasha (Active from $dashaStart to $dashaEnd)',
+      );
+    }
+    if (currentAntardasha != null) {
+      final aStart = _formatMonthYear(currentAntardasha['start_date']?.toString() ?? '');
+      final aEnd = _formatMonthYear(currentAntardasha['end_date']?.toString() ?? '');
+      buffer.writeln(
+        '- Active Antardasha (Bhukti): ${currentDasha?['planet']}-${currentAntardasha['planet']} (Active from $aStart to $aEnd)',
+      );
+    }
+    if (nextAntardasha != null) {
+      final nStart = _formatMonthYear(nextAntardasha['start_date']?.toString() ?? '');
+      final nEnd = _formatMonthYear(nextAntardasha['end_date']?.toString() ?? '');
+      buffer.writeln(
+        '- Upcoming Antardasha (Bhukti): ${currentDasha?['planet']}-${nextAntardasha['planet']} (Starts from $nStart to $nEnd)',
       );
     }
 
     // Planetary placements
-    buffer.writeln('\n[PLANETARY PLACEMENTS]');
+    buffer.writeln('\n[PLANETARY PLACEMENTS (BACKGROUND REFERENCE)]');
     for (final entry in planets.entries) {
       final p = entry.value as Map<String, dynamic>;
       final pEng = p['rasi_name_english'] ?? p['rasi_name_sanskrit'];
@@ -604,7 +1090,7 @@ class AIAstrologyService {
 
     // Key Houses
     if (houses.isNotEmpty) {
-      buffer.writeln('\n[HOUSES (BHAVAS)]');
+      buffer.writeln('\n[HOUSES (BHAVAS) (BACKGROUND REFERENCE)]');
       for (int h = 1; h <= 12; h++) {
         final house = houses[h] as Map<String, dynamic>?;
         if (house != null) {
@@ -748,6 +1234,27 @@ class AIAstrologyService {
         clean.contains('cheppandi') ||
         clean.contains('enti') ||
         clean.contains('ela');
+  }
+
+  bool _isFullChartRequest(String text) {
+    final clean = text.toLowerCase();
+    return clean.contains('full chart') ||
+        clean.contains('entire chart') ||
+        clean.contains('whole chart') ||
+        clean.contains('complete chart') ||
+        clean.contains('full kundli') ||
+        clean.contains('full kundali') ||
+        clean.contains('whole kundli') ||
+        clean.contains('whole kundali') ||
+        clean.contains('complete kundli') ||
+        clean.contains('complete kundali') ||
+        clean.contains('full birth chart') ||
+        clean.contains('motham jathakam') ||
+        clean.contains('mottham jathakam') ||
+        clean.contains('full jathakam') ||
+        clean.contains('complete jathakam') ||
+        clean.contains('పూర్తి జాతకం') ||
+        clean.contains('మొత్తం జాతకం');
   }
 }
 

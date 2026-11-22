@@ -344,7 +344,7 @@ class AstrologyAdapter(BaseAstrologyAdapter):
         self, request: AstrologyBirthChartRequest
     ) -> AstrologyResponse:
         summary = (
-            f"Birth details received — Date: {request.birth_date}, "
+            f"Birth details received (Teammate 1 Astrology) — Date: {request.birth_date}, "
             f"Time: {request.birth_time}, Place: {request.birth_place}. "
             f"Language preference: {request.preferred_language}. "
             "Planetary computation is performed client-side via "

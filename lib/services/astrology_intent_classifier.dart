@@ -176,6 +176,11 @@ class AstrologyIntentClassifier {
         text.contains('మహర్దశ') ||
         text.contains('వివాహం') ||
         text.contains('కెరీర్') ||
+        text.contains('ఉద్యోగం') ||
+        text.contains('ధనం') ||
+        text.contains('డబ్బు') ||
+        text.contains('పరిహారం') ||
+        text.contains('పరిహారాలు') ||
         text.contains('భవిష్యత్తు');
   }
 
@@ -183,7 +188,7 @@ class AstrologyIntentClassifier {
   // Personal Query Keywords (Lagna, Nakshatra, Houses, Career, Marriage, etc.)
   // ---------------------------------------------------------------------------
   static final RegExp _personalDomainPattern = RegExp(
-    r'(?:moon\s*sign|janma\s*nakshatra|nakshatra|lagna|ascendant|rashi|raasi|kundali|kundli|horoscope|(?:birth\s*)?chart|jathakam|jathakamu|mahadasha|dasha|dasa|7th\s*house|10th\s*house|house|bhavas?|marriage|career|future|emotions|personality|relationships?|strengths?|weaknesses?)',
+    r'(?:moon\s*sign|janma\s*nakshatra|nakshatra|lagna|ascendant|rashi|raasi|kundali|kundli|horoscope|(?:birth\s*)?chart|jathakam|jathakamu|mahadasha|dasha|dasa|antardasha|bhukti|7th\s*house|10th\s*house|2nd\s*house|11th\s*house|\b\d+(?:st|nd|rd|th)?\s*house\b|bhavas?|marriage|career|job|jobs|promotion|internship|internships|milestone|milestones|finances?|wealth|money|remed(?:y|ies)|phase|transit|future|emotions|personality|relationships?|strengths?|weaknesses?)',
     caseSensitive: false,
   );
 
@@ -236,7 +241,7 @@ class AstrologyIntentClassifier {
 
     // Follow-ups without explicit "my", e.g. "What about relationships?", "Tell me about 7th house"
     final isFollowupPersonal = RegExp(
-      r'^\s*(?:what\s+about\s+(?:my\s+)?relationships|tell\s+me\s+about\s+(?:my\s+)?(?:the\s+)?\d+(?:st|nd|rd|th)?\s+house|what\s+is\s+my\s+current\s+mahadasha)\b',
+      r'^\s*(?:what\s+about\s+(?:my\s+)?relationships|tell\s+me\s+about\s+(?:my\s+)?(?:the\s+)?\d+(?:st|nd|rd|th)?\s+house|what\s+is\s+my\s+current\s+mahadasha|which\s+(?:astrological\s+)?phase|is\s+this\s+a\s+good\s+time|when\s+will\s+i\s+(?:get|find|start|have)\b|when\s+will\s+(?:my\s+)?(?:finances?|career|job)\s+improve|what\s+remedies?\s+(?:should|can)\s+i\s+do|remedies\s+for)\b',
       caseSensitive: false,
     ).hasMatch(clean);
 

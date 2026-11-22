@@ -8154,20 +8154,26 @@ class _UnifiedFivePillarsLifeRiverState extends State<UnifiedFivePillarsLifeRive
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Icon(active['icon'] as IconData, color: activeColor, size: 22),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${active['name']} • ${active['role']}',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.bold,
-                            color: activeColor,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(active['icon'] as IconData, color: activeColor, size: 22),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${active['name']} • ${active['role']}',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: activeColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     ElevatedButton.icon(
                       onPressed: () => _speakFlowExplanation(context, active, lang),
                       icon: const Icon(Icons.volume_up_rounded, size: 14),

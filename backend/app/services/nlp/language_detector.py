@@ -10,8 +10,10 @@ TANGLISH_VOCABULARY = {
     "namaskaram", "namaste", "ela", "unnav", "unnaru", "enti", "emti", "cheppandi", "cheppu",
     "kavali", "vaddu", "ledu", "undhi", "undha", "unnadi", "avunu", "kaadu", "chudandi", "chudu",
     "bagunna", "bagundi", "manchidi", "dhanyavadalu", "please", "repu", "eeroju", "ninna",
-    "ippudu", "appudu", "eppudu", "ekkada", "enduku", "elaaga", "entha", "evaru", "naaku",
+    "ippudu", "appudu", "eppudu", "ekkada", "enduku", "elaaga", "entha", "evaru", "naaku", "naku",
     "nenu", "meeru", "manaki", "vaallu", "chala", "chaala", "koncham", "thondaraga",
+    "oka", "manchi", "vastundi", "vasthundi", "cheyali", "cheyyandi", "pothundi", "vachindi",
+    "kuda", "mariyu", "gurinchi", "prakaram", "antaru", "chesukovali",
     
     # Financial markers in Tanglish
     "kharchu", "kharchulu", "dabbu", "dabbulu", "karchu", "budget", "spend", "ayindi",

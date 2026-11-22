@@ -307,10 +307,58 @@ class TeluguKundaliCalculator {
       currentMahadasha ??= dashaTimeline.first;
     }
 
+    // Compute Antardashas (Bhuktis) for the active Mahadasha
+    Map<String, dynamic>? currentAntardasha;
+    Map<String, dynamic>? nextAntardasha;
+    final antardashas = <Map<String, dynamic>>[];
+
+    if (currentMahadasha != null) {
+      final mLord = currentMahadasha['planet'] as String;
+      final mLordIdx = _vimshottariPlanets.indexOf(mLord);
+      final mStart = DateTime.parse(currentMahadasha['start_date'] as String);
+      final mEnd = DateTime.parse(currentMahadasha['end_date'] as String);
+      final totalMahadashaDays = mEnd.difference(mStart).inDays.toDouble();
+
+      DateTime aStart = mStart;
+      for (int a = 0; a < 9; a++) {
+        final aPlanetIdx = (mLordIdx + a) % 9;
+        final aPlanetName = _vimshottariPlanets[aPlanetIdx];
+        final aPlanetYears = _vimshottariYears[aPlanetIdx];
+
+        final aDays = (totalMahadashaDays * (aPlanetYears / 120.0)).round();
+        final DateTime aEnd = (a == 8) ? mEnd : aStart.add(Duration(days: aDays));
+
+        final aEntry = {
+          'planet': aPlanetName,
+          'mahadasha_lord': mLord,
+          'start_date': '${aStart.year}-${aStart.month.toString().padLeft(2, '0')}-${aStart.day.toString().padLeft(2, '0')}',
+          'end_date': '${aEnd.year}-${aEnd.month.toString().padLeft(2, '0')}-${aEnd.day.toString().padLeft(2, '0')}',
+        };
+        antardashas.add(aEntry);
+
+        if (now.isAfter(aStart) && now.isBefore(aEnd)) {
+          currentAntardasha = aEntry;
+        }
+        aStart = aEnd;
+      }
+
+      currentAntardasha ??= antardashas.isNotEmpty ? antardashas.first : null;
+
+      if (currentAntardasha != null) {
+        final currIdx = antardashas.indexOf(currentAntardasha);
+        if (currIdx + 1 < antardashas.length) {
+          nextAntardasha = antardashas[currIdx + 1];
+        }
+      }
+    }
+
     final vimshottariDasha = {
       'starting_lord': startingLord,
       'balance_years_at_birth': balanceYearsAtBirth,
       'current_mahadasha': currentMahadasha,
+      'current_antardasha': currentAntardasha,
+      'next_antardasha': nextAntardasha,
+      'antardashas': antardashas,
       'timeline': dashaTimeline,
     };
 

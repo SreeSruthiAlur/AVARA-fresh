@@ -5,6 +5,7 @@ import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/ai_astrology_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/services/birth_profile_manager.dart';
+import 'package:avara_astrology_trial/services/language_validator.dart';
 import 'package:avara_astrology_trial/services/tts_service.dart';
 import 'package:avara_astrology_trial/telugu_kundali.dart';
 import 'package:avara_astrology_trial/theme/app_colors.dart';
@@ -181,9 +182,28 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
     _scrollToBottom();
 
     try {
+      // Resolve user's preferred language mode from AppLanguageService
+      final appLang = AppLanguageService.instance.currentLanguage;
+      AvaraLanguageMode? prefMode;
+      if (appLang == AppLanguage.tanglish) {
+        prefMode = AvaraLanguageMode.tanglish;
+      } else if (appLang == AppLanguage.telugu) {
+        prefMode = AvaraLanguageMode.telugu;
+      } else if (appLang == AppLanguage.english) {
+        prefMode = AvaraLanguageMode.english;
+      }
+
       // sendMessage() handles pre-loaded chart injection and the full
       // function-calling loop (geocoding → sweph → model response) internally.
-      final response = await _service.sendMessage(text);
+      var response = await _service.sendMessage(text, preferredMode: prefMode);
+      response = AIAstrologyService.sanitizeModelOutput(response);
+      if (response.trim().isEmpty) {
+        response = _service.buildDeterministicFallbackResponse(
+          userPrompt: text,
+          languageMode: prefMode ?? AvaraLanguageMode.tanglish,
+        );
+      }
+
       if (!mounted) return;
       setState(() {
         _messages.add(_ChatMessage(text: response, sender: _MessageSender.ai));
@@ -193,15 +213,31 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
       TtsService.instance.speak(response);
     } on AIAstrologyException catch (e) {
       if (!mounted) return;
+      final appLang = AppLanguageService.instance.currentLanguage;
+      final mode = appLang == AppLanguage.tanglish
+          ? AvaraLanguageMode.tanglish
+          : (appLang == AppLanguage.telugu ? AvaraLanguageMode.telugu : AvaraLanguageMode.english);
+      final fallback = _service.buildDeterministicFallbackResponse(
+        userPrompt: text,
+        languageMode: mode,
+      );
       setState(() {
+        _messages.add(_ChatMessage(text: fallback, sender: _MessageSender.ai));
         _isThinking = false;
-        _errorMessage = e.message;
       });
     } catch (e) {
       if (!mounted) return;
+      final appLang = AppLanguageService.instance.currentLanguage;
+      final mode = appLang == AppLanguage.tanglish
+          ? AvaraLanguageMode.tanglish
+          : (appLang == AppLanguage.telugu ? AvaraLanguageMode.telugu : AvaraLanguageMode.english);
+      final fallback = _service.buildDeterministicFallbackResponse(
+        userPrompt: text,
+        languageMode: mode,
+      );
       setState(() {
+        _messages.add(_ChatMessage(text: fallback, sender: _MessageSender.ai));
         _isThinking = false;
-        _errorMessage = 'Unexpected error: $e';
       });
     }
 
@@ -378,9 +414,14 @@ class _AstrologyChatScreenState extends State<AstrologyChatScreen>
     final isUser = message.sender == _MessageSender.user;
     final containsSquareKundli =
         !isUser && message.text.contains('[RENDER_SQUARE_KUNDLI]');
-    final cleanText = containsSquareKundli
+    final rawClean = (containsSquareKundli
         ? message.text.replaceAll('[RENDER_SQUARE_KUNDLI]', '').trim()
-        : message.text;
+        : message.text).trim();
+    final cleanText = rawClean.isNotEmpty
+        ? rawClean
+        : (AppLanguageService.instance.currentLanguage == AppLanguage.tanglish
+            ? 'Mee chart sambhandhinchina vivaraalu load avthunnayi. Please wait or re-enter your question.'
+            : 'I am here to guide and support your personal growth. Please ask your question.');
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

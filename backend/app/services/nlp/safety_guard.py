@@ -151,12 +151,16 @@ class SafetyGuard:
         return {"is_safe": True, "status": "safe", "block_normal_routing": False}
 
     @classmethod
-    def validate_llm_response(cls, response_text: str) -> str:
+    def validate_llm_response(cls, response_text: str, language: str = "english") -> str:
         """
         Validate generated assistant responses to ensure they do not produce
         unsupported medical cures, guaranteed financial gains, or dangerous advice.
         """
-        if not response_text:
+        if not response_text or not response_text.strip():
+            if language == "tanglish":
+                return "Mee personal growth, wellness, mariyu life guidance lo help cheyadaniki nenu ikkade unnaanu."
+            elif language == "telugu":
+                return "మీ వ్యక్తిగత ఎదుగుదల, ఆరోగ్యం మరియు జీవిత మార్గదర్శనంలో సహాయపడటానికి నేను ఇక్కడ ఉన్నాను."
             return "I am here to assist with your personal growth, wellness, and finances."
 
         lower_resp = response_text.lower()
