@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// - Youth: Futuristic constellation orbital nodes & vibrant energy lines.
 /// - Adult: Sleek minimalist geometric harmony & circadian flow.
 /// - Senior: Sacred golden lotus & radiant aura petals.
-class AgeAdaptiveHeaderGraphic extends StatelessWidget {
+class AgeAdaptiveHeaderGraphic extends StatefulWidget {
   const AgeAdaptiveHeaderGraphic({
     super.key,
     required this.ageGroup,
@@ -24,14 +24,46 @@ class AgeAdaptiveHeaderGraphic extends StatelessWidget {
   final double height;
 
   @override
+  State<AgeAdaptiveHeaderGraphic> createState() =>
+      _AgeAdaptiveHeaderGraphicState();
+}
+
+class _AgeAdaptiveHeaderGraphicState extends State<AgeAdaptiveHeaderGraphic>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3600),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: height,
+      height: widget.height,
       width: double.infinity,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: CustomPaint(
-          painter: _AgeGraphicPainter(ageGroup: ageGroup),
+        child: AnimatedBuilder(
+          animation: _animController,
+          builder: (context, _) {
+            return CustomPaint(
+              painter: _AgeGraphicPainter(
+                ageGroup: widget.ageGroup,
+                animValue: _animController.value,
+              ),
+            );
+          },
         ),
       ),
     );
@@ -39,9 +71,13 @@ class AgeAdaptiveHeaderGraphic extends StatelessWidget {
 }
 
 class _AgeGraphicPainter extends CustomPainter {
-  _AgeGraphicPainter({required this.ageGroup});
+  _AgeGraphicPainter({
+    required this.ageGroup,
+    required this.animValue,
+  });
 
   final AgeGroup ageGroup;
+  final double animValue;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -61,51 +97,86 @@ class _AgeGraphicPainter extends CustomPainter {
   }
 
   void _paintYouthConstellation(Canvas canvas, Size size, Rect rect) {
-    // Dynamic deep indigo to electric purple gradient
+    // Dynamic deep indigo to electric purple cyberpunk gradient
     final bgPaint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFF2E0854), Color(0xFF4834D4), Color(0xFF686DE0)],
+        colors: [Color(0xFF1F073D), Color(0xFF4834D4), Color(0xFF00CEC9)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
 
     final linePaint = Paint()
-      ..color = Colors.cyanAccent.withValues(alpha: 0.35)
-      ..strokeWidth = 1.4
+      ..color = Colors.cyanAccent.withValues(alpha: 0.4)
+      ..strokeWidth = 1.6
       ..style = PaintingStyle.stroke;
 
     final starPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
 
-    final glowPaint = Paint()
-      ..color = Colors.cyanAccent.withValues(alpha: 0.25)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    // Drifting background cyber particles
+    for (int i = 0; i < 9; i++) {
+      final px = (size.width * ((i * 0.12 + animValue * 0.15) % 1.0));
+      final py = (size.height * ((i * 0.23 + (1.0 - animValue) * 0.1) % 1.0));
+      final pRadius = 1.2 + (i % 3) * 0.8;
+      canvas.drawCircle(
+        Offset(px, py),
+        pRadius,
+        Paint()..color = Colors.cyanAccent.withValues(alpha: 0.35 + 0.25 * math.sin(animValue * math.pi * 2 + i)),
+      );
+    }
 
-    // Orbital node points
+    // Orbital node points with gentle undulating motion
     final points = [
-      Offset(size.width * 0.15, size.height * 0.3),
-      Offset(size.width * 0.35, size.height * 0.7),
-      Offset(size.width * 0.55, size.height * 0.25),
-      Offset(size.width * 0.75, size.height * 0.65),
-      Offset(size.width * 0.9, size.height * 0.35),
+      Offset(size.width * 0.12, size.height * (0.32 + 0.04 * math.sin(animValue * math.pi * 2))),
+      Offset(size.width * 0.32, size.height * (0.68 + 0.03 * math.cos(animValue * math.pi * 2))),
+      Offset(size.width * 0.52, size.height * (0.24 + 0.04 * math.sin(animValue * math.pi * 2 + 1.2))),
+      Offset(size.width * 0.74, size.height * (0.64 + 0.03 * math.cos(animValue * math.pi * 2 + 2.1))),
+      Offset(size.width * 0.92, size.height * (0.36 + 0.04 * math.sin(animValue * math.pi * 2 + 3.0))),
     ];
 
-    // Connect nodes
+    // Connect nodes with laser lines
     final path = Path()..moveTo(points[0].dx, points[0].dy);
     for (int i = 1; i < points.length; i++) {
       path.lineTo(points[i].dx, points[i].dy);
     }
     canvas.drawPath(path, linePaint);
 
+    // Animated travelling photon packet along the constellation path
+    final totalSegs = points.length - 1;
+    final progressSeg = (animValue * totalSegs);
+    final curIdx = progressSeg.floor().clamp(0, totalSegs - 1);
+    final segFraction = progressSeg - curIdx;
+    final photonX = points[curIdx].dx + (points[curIdx + 1].dx - points[curIdx].dx) * segFraction;
+    final photonY = points[curIdx].dy + (points[curIdx + 1].dy - points[curIdx].dy) * segFraction;
+
+    canvas.drawCircle(
+      Offset(photonX, photonY),
+      8,
+      Paint()
+        ..color = Colors.cyanAccent
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawCircle(
+      Offset(photonX, photonY),
+      3.5,
+      Paint()..color = Colors.white,
+    );
+
     // Draw glowing stars and orbital circles
     for (int i = 0; i < points.length; i++) {
       final p = points[i];
-      canvas.drawCircle(p, 10, glowPaint);
+      final pulse = 1.0 + 0.25 * math.sin(animValue * math.pi * 2 + i);
+      canvas.drawCircle(
+        p,
+        10 * pulse,
+        Paint()
+          ..color = Colors.cyanAccent.withValues(alpha: 0.22)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
       canvas.drawCircle(p, 4.5, starPaint);
-      // Secondary concentric ring
-      canvas.drawCircle(p, 12, linePaint);
+      canvas.drawCircle(p, 12 * pulse, linePaint);
     }
   }
 
@@ -113,83 +184,241 @@ class _AgeGraphicPainter extends CustomPainter {
     // Executive mindful navy to ocean teal gradient
     final bgPaint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF0F766E)],
+        colors: [Color(0xFF0A1128), Color(0xFF1E3A8A), Color(0xFF0F766E)],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
 
-    final arcPaint = Paint()
-      ..color = const Color(0xFF38BDF8).withValues(alpha: 0.25)
-      ..strokeWidth = 1.5
-      ..style = PaintingStyle.stroke;
-
     final center = Offset(size.width * 0.82, size.height * 0.5);
 
-    // Concentric harmonic arcs
+    // Concentric harmonic arcs with breathing pulsation
     for (double r = 20; r <= 120; r += 24) {
-      canvas.drawCircle(center, r, arcPaint);
+      final breathingR = r + 3.0 * math.sin(animValue * math.pi * 2 + r * 0.05);
+      final arcPaint = Paint()
+        ..color = const Color(0xFF38BDF8).withValues(alpha: 0.18 + 0.12 * math.cos(animValue * math.pi * 2))
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(center, breathingR, arcPaint);
     }
 
-    // Circadian flow sine curve
+    // Dynamic living Circadian flow sine curve
     final wavePath = Path();
     wavePath.moveTo(0, size.height * 0.6);
-    for (double x = 0; x <= size.width; x += 10) {
-      final y = size.height * 0.55 + math.sin(x * 0.02) * 18;
+    for (double x = 0; x <= size.width; x += 8) {
+      final y = size.height * 0.55 +
+          math.sin((x * 0.02) - (animValue * math.pi * 2)) * 18;
       wavePath.lineTo(x, y);
     }
     final wavePaint = Paint()
-      ..color = Colors.tealAccent.withValues(alpha: 0.45)
-      ..strokeWidth = 2.0
+      ..color = Colors.tealAccent.withValues(alpha: 0.55)
+      ..strokeWidth = 2.4
       ..style = PaintingStyle.stroke;
     canvas.drawPath(wavePath, wavePaint);
+
+    // Harmonic pulse dot traveling on the wave
+    final beaconX = (size.width * 0.45);
+    final beaconY = size.height * 0.55 +
+        math.sin((beaconX * 0.02) - (animValue * math.pi * 2)) * 18;
+    canvas.drawCircle(
+      Offset(beaconX, beaconY),
+      8,
+      Paint()
+        ..color = Colors.tealAccent
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+    canvas.drawCircle(
+      Offset(beaconX, beaconY),
+      3.5,
+      Paint()..color = Colors.white,
+    );
   }
 
   void _paintSeniorSacredLotus(Canvas canvas, Size size, Rect rect) {
     // Sacred golden saffron to warm sandalwood
     final bgPaint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFF78350F), Color(0xFFB45309), Color(0xFFD97706)],
+        colors: [Color(0xFF6B21A8), Color(0xFF92400E), Color(0xFFB45309), Color(0xFFD97706)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
 
     final lotusCenter = Offset(size.width * 0.85, size.height * 0.5);
+    final breathing = 1.0 + 0.08 * math.sin(animValue * math.pi * 2);
+
+    // Radiant animated aura rays rotating softly
+    final rotOffset = animValue * math.pi * 0.25;
     final petalPaint = Paint()
-      ..color = const Color(0xFFFEF3C7).withValues(alpha: 0.3)
+      ..color = const Color(0xFFFEF3C7).withValues(alpha: 0.35 + 0.15 * math.sin(animValue * math.pi * 2))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.8;
 
-    // Radiant aura rays
     for (int i = 0; i < 12; i++) {
-      final angle = (i * 30) * math.pi / 180;
-      final p1 = Offset(lotusCenter.dx + math.cos(angle) * 16, lotusCenter.dy + math.sin(angle) * 16);
-      final p2 = Offset(lotusCenter.dx + math.cos(angle) * 65, lotusCenter.dy + math.sin(angle) * 65);
+      final angle = (i * 30) * math.pi / 180 + rotOffset;
+      final p1 = Offset(
+        lotusCenter.dx + math.cos(angle) * (16 * breathing),
+        lotusCenter.dy + math.sin(angle) * (16 * breathing),
+      );
+      final p2 = Offset(
+        lotusCenter.dx + math.cos(angle) * (68 * breathing),
+        lotusCenter.dy + math.sin(angle) * (68 * breathing),
+      );
       canvas.drawLine(p1, p2, petalPaint);
     }
 
-    // Lotus petal curves
+    // Sacred Lotus petal curves with breathing bloom
     for (int i = 0; i < 8; i++) {
-      final angle = (i * 45) * math.pi / 180;
+      final angle = (i * 45) * math.pi / 180 + (rotOffset * 0.3);
       canvas.save();
       canvas.translate(lotusCenter.dx, lotusCenter.dy);
       canvas.rotate(angle);
-      final ovalRect = Rect.fromCenter(center: const Offset(26, 0), width: 34, height: 16);
+      final ovalRect = Rect.fromCenter(
+        center: Offset(26 * breathing, 0),
+        width: 36 * breathing,
+        height: 18 * breathing,
+      );
       canvas.drawOval(ovalRect, petalPaint);
       canvas.restore();
     }
 
+    // Glowing golden central sun core
     canvas.drawCircle(
       lotusCenter,
-      10,
+      16 * breathing,
+      Paint()
+        ..color = const Color(0xFFFDE68A).withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.drawCircle(
+      lotusCenter,
+      11 * breathing,
       Paint()..color = const Color(0xFFFFFBEB),
     );
   }
 
   @override
   bool shouldRepaint(covariant _AgeGraphicPainter oldDelegate) =>
-      oldDelegate.ageGroup != ageGroup;
+      oldDelegate.ageGroup != ageGroup || oldDelegate.animValue != animValue;
+}
+
+// Reusable sacred temple Diya oil lamp with animated flickering flame
+class _FlickeringDiyaWidget extends StatefulWidget {
+  const _FlickeringDiyaWidget({this.size = 28});
+  final double size;
+
+  @override
+  State<_FlickeringDiyaWidget> createState() => _FlickeringDiyaWidgetState();
+}
+
+class _FlickeringDiyaWidgetState extends State<_FlickeringDiyaWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 950),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return CustomPaint(
+          size: Size(widget.size, widget.size),
+          painter: _DiyaPainter(flicker: _controller.value),
+        );
+      },
+    );
+  }
+}
+
+class _DiyaPainter extends CustomPainter {
+  _DiyaPainter({required this.flicker});
+  final double flicker;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Brass Diya Lamp Bowl Base
+    final bowlPath = Path()
+      ..moveTo(w * 0.15, h * 0.65)
+      ..quadraticBezierTo(w * 0.5, h * 0.98, w * 0.85, h * 0.65)
+      ..quadraticBezierTo(w * 0.5, h * 0.75, w * 0.15, h * 0.65);
+
+    final brassPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFFFEF08A), Color(0xFFD97706), Color(0xFF78350F)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, h * 0.5, w, h * 0.5));
+
+    canvas.drawPath(bowlPath, brassPaint);
+
+    // Diya Stand
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(w * 0.5, h * 0.94), width: w * 0.35, height: h * 0.1),
+        const Radius.circular(2),
+      ),
+      brassPaint,
+    );
+
+    // Flame Flicker
+    final flameHeight = h * (0.45 + 0.10 * flicker);
+    final flameTilt = (flicker - 0.5) * (w * 0.08);
+
+    // Outer Aura Glow
+    canvas.drawCircle(
+      Offset(w * 0.5 + flameTilt * 0.5, h * 0.42),
+      w * (0.35 + 0.08 * flicker),
+      Paint()
+        ..color = const Color(0xFFF59E0B).withValues(alpha: 0.35 + 0.15 * flicker)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+
+    // Outer Golden-Red Flame
+    final flamePath = Path()
+      ..moveTo(w * 0.35, h * 0.65)
+      ..quadraticBezierTo(w * 0.25, h * 0.45, w * 0.5 + flameTilt, h * 0.65 - flameHeight)
+      ..quadraticBezierTo(w * 0.75, h * 0.45, w * 0.65, h * 0.65)
+      ..close();
+
+    final flamePaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFFFFFBEB), Color(0xFFFBBF24), Color(0xFFEA580C)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+
+    canvas.drawPath(flamePath, flamePaint);
+
+    // Bright White Hot Inner Core
+    final corePath = Path()
+      ..moveTo(w * 0.42, h * 0.63)
+      ..quadraticBezierTo(w * 0.38, h * 0.50, w * 0.5 + flameTilt * 0.6, h * 0.63 - flameHeight * 0.65)
+      ..quadraticBezierTo(w * 0.62, h * 0.50, w * 0.58, h * 0.63)
+      ..close();
+
+    canvas.drawPath(corePath, Paint()..color = Colors.white.withValues(alpha: 0.9));
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiyaPainter oldDelegate) =>
+      oldDelegate.flicker != flicker;
 }
 
 // =============================================================================
@@ -415,13 +644,7 @@ class CircadianWaveformChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          SizedBox(
-            height: 90,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: _CircadianWavePainter(),
-            ),
-          ),
+          const _CircadianWaveGraphWidget(),
           const SizedBox(height: 8),
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -437,63 +660,6 @@ class CircadianWaveformChart extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CircadianWavePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path();
-    path.moveTo(0, size.height * 0.7);
-
-    // Morning awakening -> peak focus at 10 AM -> dip -> evening recovery
-    path.cubicTo(
-      size.width * 0.15, size.height * 0.6,
-      size.width * 0.25, size.height * 0.15,
-      size.width * 0.35, size.height * 0.2, // Peak 10 AM
-    );
-    path.cubicTo(
-      size.width * 0.45, size.height * 0.25,
-      size.width * 0.55, size.height * 0.7,
-      size.width * 0.65, size.height * 0.65, // 2 PM lunch dip
-    );
-    path.cubicTo(
-      size.width * 0.75, size.height * 0.6,
-      size.width * 0.85, size.height * 0.45,
-      size.width, size.height * 0.85, // Night wind down
-    );
-
-    // Fill under curve
-    final fillPath = Path.from(path)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFF00B894).withValues(alpha: 0.25),
-          const Color(0xFF0984E3).withValues(alpha: 0.05),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Offset.zero & size);
-    canvas.drawPath(fillPath, fillPaint);
-
-    final linePaint = Paint()
-      ..color = const Color(0xFF00B894)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(path, linePaint);
-
-    // Current hour marker (at roughly 35% of the chart)
-    final markerX = size.width * 0.35;
-    final markerY = size.height * 0.2;
-    canvas.drawCircle(Offset(markerX, markerY), 5, Paint()..color = const Color(0xFF00B894));
-    canvas.drawCircle(Offset(markerX, markerY), 9, Paint()..color = const Color(0xFF00B894).withValues(alpha: 0.3));
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// Creative Graphic 3: Planetary Harmony 5-Axis Radar Chart
@@ -2662,7 +2828,7 @@ class HolisticCrossPillarBridge extends StatelessWidget {
 // 11. Youth Bespoke Cyber-Glow Hero & Focus Pods (<22)
 // =============================================================================
 
-class CyberGlowHeroWidget extends StatelessWidget {
+class CyberGlowHeroWidget extends StatefulWidget {
   const CyberGlowHeroWidget({
     super.key,
     required this.userName,
@@ -2677,6 +2843,29 @@ class CyberGlowHeroWidget extends StatelessWidget {
   final VoidCallback onOpenBreathing;
   final VoidCallback onOpenCareer;
   final VoidCallback onOpenDetox;
+
+  @override
+  State<CyberGlowHeroWidget> createState() => _CyberGlowHeroWidgetState();
+}
+
+class _CyberGlowHeroWidgetState extends State<CyberGlowHeroWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2696,138 +2885,156 @@ class CyberGlowHeroWidget extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Top Row: Level & Fire Streak
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.bolt_rounded, color: Color(0xFFFFEAA7), size: 18),
-                    SizedBox(width: 4),
-                    Text(
-                      '⚡ Level 4 Cosmic Explorer',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
+          children: [
+            // Animated Cyber Particle Backdrop
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _animController,
+                builder: (context, _) => CustomPaint(
+                  painter: _CyberParticleBackdropPainter(animValue: _animController.value),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF7675).withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFFF7675)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('🔥 7 Days Hot!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Greeting
-          Text(
-            'Ready to Level Up, $userName? 🚀',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 0.5,
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Mercury is firing up your prefrontal cortex today. Channel sharp focus into your highest-priority study block!',
-            style: TextStyle(
-              fontSize: 12.5,
-              color: Colors.white.withValues(alpha: 0.9),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Gamified XP Bar
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('MIND XP TO LEVEL 5', style: TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
-                  Text('420 / 500 XP (84%)', style: TextStyle(color: const Color(0xFF55EFC4), fontSize: 11, fontWeight: FontWeight.bold)),
+                  // Top Row: Level & Fire Streak
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.bolt_rounded, color: Color(0xFFFFEAA7), size: 18),
+                            SizedBox(width: 4),
+                            Text(
+                              '⚡ Level 4 Cosmic Explorer',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF7675).withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFFF7675)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('🔥 7 Days Hot!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Greeting
+                  Text(
+                    'Ready to Level Up, ${widget.userName}? 🚀',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Mercury is firing up your prefrontal cortex today. Channel sharp focus into your highest-priority study block!',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: Colors.white.withValues(alpha: 0.9),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Gamified XP Bar
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('MIND XP TO LEVEL 5', style: TextStyle(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.bold, letterSpacing: 1.0)),
+                          Text('420 / 500 XP (84%)', style: TextStyle(color: const Color(0xFF55EFC4), fontSize: 11, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: 0.84,
+                          minHeight: 10,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          valueColor: const AlwaysStoppedAnimation(Color(0xFF00CEC9)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // 4 Quick Action Pods
+                  Row(
+                    children: [
+                      _buildPod(
+                        title: '25m Focus',
+                        sub: 'Pomodoro',
+                        icon: Icons.timer_rounded,
+                        color: const Color(0xFFFF7675),
+                        onTap: widget.onOpenFocus,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPod(
+                        title: 'Exam Calm',
+                        sub: 'Breathe',
+                        icon: Icons.air_rounded,
+                        color: const Color(0xFF74B9FF),
+                        onTap: widget.onOpenBreathing,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPod(
+                        title: 'Talents',
+                        sub: 'Careers',
+                        icon: Icons.rocket_launch_rounded,
+                        color: const Color(0xFFA29BFE),
+                        onTap: widget.onOpenCareer,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildPod(
+                        title: 'Dopamine',
+                        sub: 'Detox',
+                        icon: Icons.phonelink_erase_rounded,
+                        color: const Color(0xFF55EFC4),
+                        onTap: widget.onOpenDetox,
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: 0.84,
-                  minHeight: 10,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  valueColor: const AlwaysStoppedAnimation(Color(0xFF00CEC9)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // 4 Quick Action Pods
-          Row(
-            children: [
-              _buildPod(
-                title: '25m Focus',
-                sub: 'Pomodoro',
-                icon: Icons.timer_rounded,
-                color: const Color(0xFFFF7675),
-                onTap: onOpenFocus,
-              ),
-              const SizedBox(width: 8),
-              _buildPod(
-                title: 'Exam Calm',
-                sub: 'Breathe',
-                icon: Icons.air_rounded,
-                color: const Color(0xFF74B9FF),
-                onTap: onOpenBreathing,
-              ),
-              const SizedBox(width: 8),
-              _buildPod(
-                title: 'Talents',
-                sub: 'Careers',
-                icon: Icons.rocket_launch_rounded,
-                color: const Color(0xFFA29BFE),
-                onTap: onOpenCareer,
-              ),
-              const SizedBox(width: 8),
-              _buildPod(
-                title: 'Dopamine',
-                sub: 'Detox',
-                icon: Icons.phonelink_erase_rounded,
-                color: const Color(0xFF55EFC4),
-                onTap: onOpenDetox,
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2877,6 +3084,63 @@ class CyberGlowHeroWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CyberParticleBackdropPainter extends CustomPainter {
+  _CyberParticleBackdropPainter({required this.animValue});
+  final double animValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Glowing drifting digital particles
+    final particlePaint = Paint()..style = PaintingStyle.fill;
+    const particleDefs = [
+      Offset(0.12, 0.25),
+      Offset(0.35, 0.15),
+      Offset(0.78, 0.20),
+      Offset(0.90, 0.45),
+      Offset(0.20, 0.70),
+      Offset(0.65, 0.80),
+      Offset(0.85, 0.85),
+      Offset(0.48, 0.40),
+    ];
+
+    for (int i = 0; i < particleDefs.length; i++) {
+      final base = particleDefs[i];
+      final phase = (animValue + (i * 0.125)) % 1.0;
+      final dy = math.sin(phase * math.pi * 2) * 8.0;
+      final dx = math.cos(phase * math.pi * 2) * 5.0;
+      final pos = Offset((base.dx * w) + dx, (base.dy * h) + dy);
+
+      final alpha = (0.2 + 0.3 * math.sin(phase * math.pi)).clamp(0.1, 0.5);
+      final color = (i % 2 == 0)
+          ? const Color(0xFF00CEC9).withValues(alpha: alpha)
+          : const Color(0xFFFF7675).withValues(alpha: alpha);
+
+      particlePaint.color = color;
+      canvas.drawCircle(pos, 2.5 + (i % 3), particlePaint);
+    }
+
+    // High tech angled grid lines
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.04)
+      ..strokeWidth = 1.0;
+
+    for (double x = -h; x < w + h; x += 40) {
+      canvas.drawLine(
+        Offset(x + (animValue * 40), 0),
+        Offset(x + (animValue * 40) + h, h),
+        linePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CyberParticleBackdropPainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
 }
 
 // =============================================================================
@@ -3582,15 +3846,7 @@ class _SacredVedicSanctuaryCardState extends State<SacredVedicSanctuaryCard>
               Expanded(
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDE68A),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFD97706), width: 1.5),
-                      ),
-                      child: const Icon(Icons.spa_rounded, color: Color(0xFFB45309), size: 24),
-                    ),
+                    const _FlickeringDiyaWidget(size: 30),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -4379,13 +4635,21 @@ class SacredJapaMalaCounterWidget extends StatefulWidget {
 }
 
 class _SacredJapaMalaCounterWidgetState
-    extends State<SacredJapaMalaCounterWidget> {
+    extends State<SacredJapaMalaCounterWidget>
+    with TickerProviderStateMixin {
   int _count = 0;
   int _completedMalas = 0;
   static const int _target = 108;
   int _selectedMantraIdx = 0;
   bool _isPlayingVoice = false;
   String _malaTranslationChoice = 'auto'; // 'auto', 'en', 'te', 'tanglish', 'ml', 'manglish'
+
+  late final AnimationController _auraController;
+  late final AnimationController _rotationController;
+  late final AnimationController _rippleController;
+  late final AnimationController _bellController;
+  double _currentRotation = 0.0;
+  double _targetRotation = 0.0;
 
   static const List<Map<String, String>> _mantras = [
     {
@@ -4449,6 +4713,26 @@ class _SacredJapaMalaCounterWidgetState
   @override
   void initState() {
     super.initState();
+    _auraController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    );
+
+    _rippleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    );
+
+    _bellController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
     AppLanguageService.instance.addListener(_handleLangChange);
     TtsService.instance.addListener(_handleTtsChange);
   }
@@ -4472,11 +4756,21 @@ class _SacredJapaMalaCounterWidgetState
   void dispose() {
     AppLanguageService.instance.removeListener(_handleLangChange);
     TtsService.instance.removeListener(_handleTtsChange);
+    _auraController.dispose();
+    _rotationController.dispose();
+    _rippleController.dispose();
+    _bellController.dispose();
     super.dispose();
   }
 
   void _increment() {
     TtsService.instance.playTempleBell();
+    _bellController.forward(from: 0.0);
+    _rippleController.forward(from: 0.0);
+    _currentRotation = _targetRotation;
+    _targetRotation += (2 * math.pi) / 27; // Rotate 1 prayer bead step
+    _rotationController.forward(from: 0.0);
+
     setState(() {
       if (_count < _target) {
         _count++;
@@ -4521,6 +4815,8 @@ class _SacredJapaMalaCounterWidgetState
   void _reset() {
     setState(() {
       _count = 0;
+      _currentRotation = 0.0;
+      _targetRotation = 0.0;
     });
   }
 
@@ -4715,15 +5011,7 @@ class _SacredJapaMalaCounterWidgetState
               Expanded(
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFDE68A),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFD97706)),
-                      ),
-                      child: const Icon(Icons.circle_outlined, color: Color(0xFFB45309), size: 20),
-                    ),
+                    const _FlickeringDiyaWidget(size: 28),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -4967,82 +5255,124 @@ class _SacredJapaMalaCounterWidgetState
           ),
           const SizedBox(height: 18),
 
-          // Central Tap Rosary Bead Disc with Brass Bell Sound
+          // Central Interactive 3D Rudraksha Bead Ring with Tactile Tap Rotation & Soundwave Aura
           Center(
             child: GestureDetector(
               onTap: _increment,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 160,
-                    height: 160,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 12,
-                      backgroundColor: const Color(0xFFFDE68A),
-                      valueColor: const AlwaysStoppedAnimation(Color(0xFFB45309)),
-                    ),
-                  ),
-                  Container(
-                    width: 130,
-                    height: 130,
-                    decoration: BoxDecoration(
-                      gradient: const RadialGradient(
-                        colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
+              child: SizedBox(
+                width: 250,
+                height: 250,
+                child: AnimatedBuilder(
+                  animation: Listenable.merge([
+                    _auraController,
+                    _rotationController,
+                    _rippleController,
+                    _bellController,
+                  ]),
+                  builder: (context, _) {
+                    final animatedAngle = _currentRotation +
+                        (_targetRotation - _currentRotation) *
+                            Curves.easeOutBack.transform(_rotationController.value);
+
+                    return CustomPaint(
+                      painter: _SacredMalaBeadsPainter(
+                        progress: progress,
+                        count: _count,
+                        rotationAngle: animatedAngle,
+                        auraValue: _auraController.value,
+                        rippleValue: _rippleController.value,
                       ),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFD97706), width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFB45309).withValues(alpha: 0.25),
-                          blurRadius: 14,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('📿', style: TextStyle(fontSize: 20)),
-                        Text(
-                          '$_count',
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF78350F),
-                            height: 1.1,
-                          ),
-                        ),
-                        Text(
-                          beadsCountLabel,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF92400E),
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.touch_app_rounded, size: 12, color: Color(0xFFB45309)),
-                            const SizedBox(width: 2),
-                            Text(
-                              bellTapLabel,
-                              style: const TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xFFB45309),
-                                letterSpacing: 0.8,
-                              ),
+                      child: Center(
+                        child: Container(
+                          width: 136,
+                          height: 136,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const RadialGradient(
+                              colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)],
                             ),
-                          ],
+                            border: Border.all(color: const Color(0xFFD97706), width: 2.2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFB45309).withValues(alpha: 0.28),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Faint sacred Om watermark
+                              Opacity(
+                                opacity: 0.12,
+                                child: const Text(
+                                  'ॐ',
+                                  style: TextStyle(
+                                    fontSize: 84,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFB45309),
+                                  ),
+                                ),
+                              ),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Animated swinging bell icon
+                                  Transform.rotate(
+                                    angle: math.sin(_bellController.value * math.pi * 3) * 0.25,
+                                    child: const Text('🔔', style: TextStyle(fontSize: 22)),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  AnimatedScale(
+                                    duration: const Duration(milliseconds: 140),
+                                    scale: _rippleController.isAnimating ? 1.15 : 1.0,
+                                    curve: Curves.easeOutBack,
+                                    child: Text(
+                                      '$_count',
+                                      style: const TextStyle(
+                                        fontSize: 34,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFF78350F),
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    beadsCountLabel,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF92400E),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFEF3C7),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: const Color(0xFFFCD34D)),
+                                    ),
+                                    child: Text(
+                                      bellTapLabel,
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFFB45309),
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -5063,6 +5393,255 @@ class _SacredJapaMalaCounterWidgetState
       ),
     );
   }
+}
+
+class _SacredMalaBeadsPainter extends CustomPainter {
+  _SacredMalaBeadsPainter({
+    required this.progress,
+    required this.count,
+    required this.rotationAngle,
+    required this.auraValue,
+    required this.rippleValue,
+  });
+
+  final double progress;
+  final int count;
+  final double rotationAngle;
+  final double auraValue;
+  final double rippleValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final R = size.width * 0.38; // Radius of beads loop (~95px)
+    const rBead = 8.5; // Radius of each bead
+
+    // 1. Divine Sacred Golden Aura Rays behind the Rosary
+    _paintSacredAura(canvas, center, size.width * 0.48);
+
+    // 2. Tap Ripple Shockwave (Expands outward when tapped)
+    if (rippleValue > 0.0 && rippleValue < 1.0) {
+      final rippleRadius = 68.0 + (55.0 * rippleValue);
+      final rippleAlpha = ((1.0 - rippleValue) * 0.55).clamp(0.0, 1.0);
+      final ripplePaint = Paint()
+        ..color = const Color(0xFFF59E0B).withValues(alpha: rippleAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0 - (1.5 * rippleValue);
+      canvas.drawCircle(center, rippleRadius, ripplePaint);
+    }
+
+    // 3. Braided Golden Silk Mala Thread Circle
+    final threadPaint = Paint()
+      ..color = const Color(0xFFD97706).withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.2;
+    canvas.drawCircle(center, R, threadPaint);
+
+    // 4. Paint 27 Realistic 3D Rudraksha Prayer Beads
+    final completedBeadsInCycle = count % 27;
+    final isFullCycleCompleted = count > 0 && completedBeadsInCycle == 0;
+
+    for (int i = 0; i < 27; i++) {
+      final theta = (i * 2 * math.pi / 27) - (math.pi / 2) + rotationAngle;
+      final bx = center.dx + R * math.cos(theta);
+      final by = center.dy + R * math.sin(theta);
+      final beadCenter = Offset(bx, by);
+
+      final isCompleted = isFullCycleCompleted || i < completedBeadsInCycle;
+      final isActive = i == completedBeadsInCycle && !isFullCycleCompleted;
+
+      // Drop shadow for spherical depth
+      canvas.drawCircle(
+        Offset(bx, by + 1.8),
+        rBead,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.22)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5),
+      );
+
+      // Spherical 3D gradient for Rudraksha texture
+      final beadShader = RadialGradient(
+        center: const Alignment(-0.35, -0.35),
+        radius: 0.9,
+        colors: isCompleted
+            ? [
+                const Color(0xFFFFFBEB),
+                const Color(0xFFFDE68A),
+                const Color(0xFFF59E0B),
+                const Color(0xFFB45309),
+              ]
+            : [
+                const Color(0xFFE08B3E),
+                const Color(0xFF9A3412),
+                const Color(0xFF7C2D12),
+                const Color(0xFF451A03),
+              ],
+        stops: const [0.0, 0.35, 0.75, 1.0],
+      ).createShader(Rect.fromCircle(center: beadCenter, radius: rBead));
+
+      canvas.drawCircle(beadCenter, rBead, Paint()..shader = beadShader);
+
+      // Gold Filigree Bead Caps at both poles
+      final capPaint = Paint()
+        ..color = const Color(0xFFFEF08A)
+        ..style = PaintingStyle.fill;
+      final capDist = rBead * 0.92;
+      canvas.drawCircle(
+        Offset(bx + capDist * math.cos(theta + math.pi / 2), by + capDist * math.sin(theta + math.pi / 2)),
+        1.8,
+        capPaint,
+      );
+      canvas.drawCircle(
+        Offset(bx - capDist * math.cos(theta + math.pi / 2), by - capDist * math.sin(theta + math.pi / 2)),
+        1.8,
+        capPaint,
+      );
+
+      // Specular highlight dot for shiny natural wood sheen
+      canvas.drawCircle(
+        Offset(bx - rBead * 0.32, by - rBead * 0.32),
+        1.8,
+        Paint()..color = Colors.white.withValues(alpha: 0.75),
+      );
+
+      // Active bead halo beacon ring
+      if (isActive) {
+        final beaconPulse = 1.0 + 0.3 * auraValue;
+        canvas.drawCircle(
+          beadCenter,
+          (rBead + 3.0) * beaconPulse,
+          Paint()
+            ..color = const Color(0xFFF59E0B).withValues(alpha: 0.45)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2.0
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        );
+      }
+    }
+
+    // 5. Meru / Guru Bead (కల్పవృక్ష గురు మణి) at Apex
+    _paintGuruBeadAndTassel(canvas, center, R, rotationAngle);
+  }
+
+  void _paintSacredAura(Canvas canvas, Offset center, double maxRadius) {
+    const auraRays = 16;
+    final rayPaint = Paint()
+      ..color = const Color(0xFFFDE68A).withValues(alpha: 0.20 + 0.15 * auraValue)
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke;
+
+    final rayRot = auraValue * math.pi * 0.12;
+
+    for (int i = 0; i < auraRays; i++) {
+      final angle = (i * 2 * math.pi / auraRays) + rayRot;
+      final innerP = Offset(center.dx + 70 * math.cos(angle), center.dy + 70 * math.sin(angle));
+      final outerP = Offset(center.dx + (maxRadius + 6 * auraValue) * math.cos(angle), center.dy + (maxRadius + 6 * auraValue) * math.sin(angle));
+      canvas.drawLine(innerP, outerP, rayPaint);
+    }
+
+    // Outer golden petal tips
+    final petalPaint = Paint()
+      ..color = const Color(0xFFFEF3C7).withValues(alpha: 0.35 + 0.15 * auraValue)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+
+    for (int i = 0; i < auraRays; i++) {
+      final angle = (i * 2 * math.pi / auraRays) + rayRot;
+      final midR = maxRadius - 4;
+      final pt = Offset(center.dx + midR * math.cos(angle), center.dy + midR * math.sin(angle));
+      canvas.drawCircle(pt, 3.5, petalPaint);
+    }
+  }
+
+  void _paintGuruBeadAndTassel(Canvas canvas, Offset center, double R, double rot) {
+    // Meru bead is at top angle (-pi/2)
+    final guruTheta = -math.pi / 2 + rot;
+    final gx = center.dx + R * math.cos(guruTheta);
+    final gy = center.dy + R * math.sin(guruTheta);
+    final guruCenter = Offset(gx, gy);
+    const rGuru = 12.0;
+
+    // Shadow
+    canvas.drawCircle(
+      Offset(gx, gy + 2.5),
+      rGuru,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.3)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.5),
+    );
+
+    // Guru Bead 3D Amber Sphere
+    final guruShader = RadialGradient(
+      center: const Alignment(-0.35, -0.35),
+      radius: 0.85,
+      colors: const [
+        Color(0xFFFFFBEB),
+        Color(0xFFFDE68A),
+        Color(0xFFD97706),
+        Color(0xFF78350F),
+      ],
+      stops: const [0.0, 0.35, 0.75, 1.0],
+    ).createShader(Rect.fromCircle(center: guruCenter, radius: rGuru));
+
+    canvas.drawCircle(guruCenter, rGuru, Paint()..shader = guruShader);
+
+    // Specular dot
+    canvas.drawCircle(
+      Offset(gx - 4, gy - 4),
+      2.5,
+      Paint()..color = Colors.white.withValues(alpha: 0.85),
+    );
+
+    // Golden Stupa / Crown on top of Guru Bead
+    final crownPath = Path()
+      ..moveTo(gx - 7, gy - rGuru)
+      ..lineTo(gx, gy - rGuru - 8)
+      ..lineTo(gx + 7, gy - rGuru)
+      ..close();
+    canvas.drawPath(
+      crownPath,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFFFEF08A), Color(0xFFD97706), Color(0xFFB45309)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromLTWH(gx - 7, gy - rGuru - 8, 14, 8)),
+    );
+
+    // Hanging Sacred Silk Saffron Tassel
+    final tasselSway = math.sin(auraValue * math.pi * 2) * 2.5;
+    final tasselStartY = gy + rGuru;
+    final tasselEndY = tasselStartY + 16;
+
+    // Gold collar binding
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset(gx, tasselStartY + 2), width: 8, height: 4),
+        const Radius.circular(2),
+      ),
+      Paint()..color = const Color(0xFFF59E0B),
+    );
+
+    // Flowing silk fringe
+    final tasselPaint = Paint()
+      ..color = const Color(0xFFEA580C)
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke;
+
+    for (int t = -4; t <= 4; t += 2) {
+      final p1 = Offset(gx + t * 0.6, tasselStartY + 4);
+      final p2 = Offset(gx + t * 1.8 + tasselSway, tasselEndY);
+      canvas.drawLine(p1, p2, tasselPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SacredMalaBeadsPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.count != count ||
+      oldDelegate.rotationAngle != rotationAngle ||
+      oldDelegate.auraValue != auraValue ||
+      oldDelegate.rippleValue != rippleValue;
 }
 
 class AyurvedicTridoshaWheel extends StatelessWidget {
@@ -5226,6 +5805,10 @@ class AyurvedicTridoshaWheel extends StatelessWidget {
               ),
               const SizedBox(height: 14),
 
+              // Interactive Animated Tridosha Harmony Mandala Wheel
+              const _TridoshaHarmonyMandalaWidget(),
+              const SizedBox(height: 14),
+
               // 3 Dosha Bars
               _buildDoshaRow(
                 dosha: vataDosha,
@@ -5333,6 +5916,153 @@ class AyurvedicTridoshaWheel extends StatelessWidget {
       ),
     );
   }
+}
+
+class _TridoshaHarmonyMandalaWidget extends StatefulWidget {
+  const _TridoshaHarmonyMandalaWidget();
+
+  @override
+  State<_TridoshaHarmonyMandalaWidget> createState() =>
+      _TridoshaHarmonyMandalaWidgetState();
+}
+
+class _TridoshaHarmonyMandalaWidgetState
+    extends State<_TridoshaHarmonyMandalaWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return CustomPaint(
+          size: const Size(double.infinity, 124),
+          painter: _TridoshaMandalaPainter(animValue: _controller.value),
+        );
+      },
+    );
+  }
+}
+
+class _TridoshaMandalaPainter extends CustomPainter {
+  _TridoshaMandalaPainter({required this.animValue});
+  final double animValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.height * 0.42;
+
+    // 3 Tri-Dosha Lobes at 120 deg apart
+    final angles = [
+      -math.pi / 2, // Vata (Top)
+      -math.pi / 2 + 2 * math.pi / 3, // Pitta (Bottom Right)
+      -math.pi / 2 + 4 * math.pi / 3, // Kapha (Bottom Left)
+    ];
+
+    final colors = [
+      const Color(0xFF3B82F6), // Vata blue
+      const Color(0xFFF59E0B), // Pitta amber
+      const Color(0xFF10B981), // Kapha emerald
+    ];
+
+    final labels = ['VATA 💨', 'PITTA 🔥', 'KAPHA 🌱'];
+
+    // Outer connecting harmony ring
+    final ringPaint = Paint()
+      ..color = const Color(0xFFD97706).withValues(alpha: 0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, radius, ringPaint);
+
+    // Dynamic rotation flow
+    final rot = animValue * math.pi * 2;
+
+    // Draw 3 flowing energy petals
+    for (int i = 0; i < 3; i++) {
+      final a = angles[i] + (rot * 0.08);
+      final px = center.dx + radius * 0.75 * math.cos(a);
+      final py = center.dy + radius * 0.75 * math.sin(a);
+      final lobeCenter = Offset(px, py);
+
+      // Energy lobe glow
+      canvas.drawCircle(
+        lobeCenter,
+        22 + 3 * math.sin(animValue * math.pi * 2 + i * 2),
+        Paint()
+          ..color = colors[i].withValues(alpha: 0.20)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+      );
+
+      // Inner lobe circle
+      canvas.drawCircle(
+        lobeCenter,
+        18,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [colors[i].withValues(alpha: 0.5), colors[i]],
+          ).createShader(Rect.fromCircle(center: lobeCenter, radius: 18)),
+      );
+
+      // Text label
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: labels[i],
+          style: const TextStyle(
+            fontSize: 8.5,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(
+        canvas,
+        Offset(lobeCenter.dx - textPainter.width / 2, lobeCenter.dy - textPainter.height / 2),
+      );
+    }
+
+    // Center Golden Equilibrium Jewel
+    final centerPulse = 1.0 + 0.15 * math.sin(animValue * math.pi * 2);
+    canvas.drawCircle(
+      center,
+      12 * centerPulse,
+      Paint()
+        ..color = const Color(0xFFFDE68A).withValues(alpha: 0.4)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawCircle(
+      center,
+      7,
+      Paint()..color = const Color(0xFFD97706),
+    );
+    canvas.drawCircle(
+      center,
+      3,
+      Paint()..color = Colors.white,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TridoshaMandalaPainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
 }
 
 // =============================================================================
@@ -5579,6 +6309,10 @@ class ExecutiveCircadianFlowCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // Live Animated Circadian Energy Wave Canvas
+          const _CircadianWaveGraphWidget(),
+          const SizedBox(height: 16),
+
           // 4 Workday Segments
           _buildSegmentTile(
             time: '06:00 AM – 09:00 AM',
@@ -5674,6 +6408,165 @@ class ExecutiveCircadianFlowCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CircadianWaveGraphWidget extends StatefulWidget {
+  const _CircadianWaveGraphWidget();
+
+  @override
+  State<_CircadianWaveGraphWidget> createState() =>
+      _CircadianWaveGraphWidgetState();
+}
+
+class _CircadianWaveGraphWidgetState extends State<_CircadianWaveGraphWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return CustomPaint(
+          size: const Size(double.infinity, 90),
+          painter: _CircadianWavePainter(animValue: _controller.value),
+        );
+      },
+    );
+  }
+}
+
+class _CircadianWavePainter extends CustomPainter {
+  _CircadianWavePainter({required this.animValue});
+  final double animValue;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Timeline base grid line
+    final baseLinePaint = Paint()
+      ..color = const Color(0xFFE2E8F0)
+      ..strokeWidth = 1.0;
+    canvas.drawLine(Offset(0, h * 0.78), Offset(w, h * 0.78), baseLinePaint);
+
+    // Shaded Peak Window (from x = w * 0.25 to x = w * 0.55)
+    final peakRect = Rect.fromLTRB(w * 0.25, 0, w * 0.55, h * 0.78);
+    final peakPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0xFF2563EB).withValues(alpha: 0.16),
+          const Color(0xFF2563EB).withValues(alpha: 0.02),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(peakRect);
+    canvas.drawRRect(RRect.fromRectAndRadius(peakRect, const Radius.circular(8)), peakPaint);
+
+    // Continuous Circadian Energy Sine Wave
+    final wavePath = Path();
+    final fillPath = Path();
+    fillPath.moveTo(0, h * 0.78);
+
+    for (double x = 0; x <= w; x += 6) {
+      final normX = x / w;
+      // Multi-frequency curve representing 24h biological alertness
+      final biologicalBase = math.sin(normX * math.pi) * 30.0;
+      final waveDrift = math.sin((normX * math.pi * 4) - (animValue * math.pi * 2)) * 4.0;
+      final y = (h * 0.70) - biologicalBase - waveDrift;
+
+      if (x == 0) {
+        wavePath.moveTo(x, y);
+      } else {
+        wavePath.lineTo(x, y);
+      }
+      fillPath.lineTo(x, y);
+    }
+    fillPath.lineTo(w, h * 0.78);
+    fillPath.close();
+
+    // Wave Fill
+    canvas.drawPath(
+      fillPath,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            const Color(0xFF38BDF8).withValues(alpha: 0.18),
+            const Color(0xFF1E3A8A).withValues(alpha: 0.02),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // Wave Stroke
+    canvas.drawPath(
+      wavePath,
+      Paint()
+        ..color = const Color(0xFF2563EB)
+        ..strokeWidth = 2.4
+        ..style = PaintingStyle.stroke,
+    );
+
+    // Animated Pulsing Beacon on Current Hour (Peak Zone)
+    final beaconX = w * 0.38;
+    final beaconNormX = beaconX / w;
+    final beaconY = (h * 0.70) -
+        (math.sin(beaconNormX * math.pi) * 30.0) -
+        math.sin((beaconNormX * math.pi * 4) - (animValue * math.pi * 2)) * 4.0;
+
+    canvas.drawCircle(
+      Offset(beaconX, beaconY),
+      8 + 4 * math.sin(animValue * math.pi * 2),
+      Paint()
+        ..color = const Color(0xFF2563EB).withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+    canvas.drawCircle(
+      Offset(beaconX, beaconY),
+      4.5,
+      Paint()..color = const Color(0xFF2563EB),
+    );
+    canvas.drawCircle(
+      Offset(beaconX, beaconY),
+      2.0,
+      Paint()..color = Colors.white,
+    );
+
+    // Timeline Labels
+    const labels = ['06:00', '12:00', '18:00', '24:00'];
+    for (int i = 0; i < 4; i++) {
+      final lx = (w * 0.05) + (i * (w * 0.28));
+      final tp = TextPainter(
+        text: TextSpan(
+          text: labels[i],
+          style: const TextStyle(fontSize: 9, color: Color(0xFF94A3B8), fontWeight: FontWeight.bold),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(lx, h * 0.81));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CircadianWavePainter oldDelegate) =>
+      oldDelegate.animValue != animValue;
 }
 
 

@@ -237,14 +237,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 12),
                   // Age Cohort Mode Switcher (Youth / Adult / Senior instant transformation)
                   const AgeCohortSelectorBar(),
-                  const SizedBox(height: 16),
-                  // Render the completely bespoke UI/UX dashboard for this age cohort:
-                  if (ageGroup == AgeGroup.youth)
-                    _buildYouthDashboard(context)
-                  else if (ageGroup == AgeGroup.adult)
-                    _buildAdultDashboard(context)
-                  else
-                    _buildSeniorDashboard(context),
+                  const SizedBox(height: 14),
+                  // Dynamic Living Cohort Canvas Banner (Adapts with animated graphics per age)
+                  _buildAgeAdaptiveCard(context),
+                  const SizedBox(height: 18),
+                  // Render the completely bespoke UI/UX dashboard for this age cohort with smooth AnimatedSwitcher:
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 450),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.0, 0.04),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: ScaleTransition(
+                            scale: Tween<double>(begin: 0.97, end: 1.0).animate(animation),
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey(ageGroup),
+                      child: switch (ageGroup) {
+                        AgeGroup.youth => _buildYouthDashboard(context),
+                        AgeGroup.adult => _buildAdultDashboard(context),
+                        AgeGroup.senior => _buildSeniorDashboard(context),
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -371,6 +396,79 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAgeAdaptiveCard(BuildContext context) {
     final ageService = AgeProfileService.instance;
     final activeTheme = ageService.activeTheme;
+    final currentLang = AppLanguageService.instance.currentLanguage;
+
+    final themeDisplayName = switch (ageService.ageGroup) {
+      AgeGroup.youth => switch (currentLang) {
+          AppLanguage.telugu => '⚡ యువత & విద్యార్థి (< 22)',
+          AppLanguage.tanglish => '⚡ Youth & Student (< 22)',
+          AppLanguage.malayalam => '⚡ യുവാക്കൾ & വിദ്യാർത്ഥി (< 22)',
+          AppLanguage.manglish => '⚡ Youth & Student (< 22)',
+          AppLanguage.english => '⚡ Youth & Explorer (< 22)',
+        },
+      AgeGroup.adult => switch (currentLang) {
+          AppLanguage.telugu => '💼 ఎగ్జిక్యూటివ్ ప్రవాహం (22 - 45)',
+          AppLanguage.tanglish => '💼 Executive Flow (22 - 45)',
+          AppLanguage.malayalam => '💼 എക്സിക്യൂട്ടീവ് ഫ്ലോ (22 - 45)',
+          AppLanguage.manglish => '💼 Executive Flow (22 - 45)',
+          AppLanguage.english => '💼 Executive Harmony (22 - 45)',
+        },
+      AgeGroup.senior => switch (currentLang) {
+          AppLanguage.telugu => '🌸 వేద శాంతి & సౌభాగ్యం (45+)',
+          AppLanguage.tanglish => '🌸 Veda Shanti & Soubhagyam (45+)',
+          AppLanguage.malayalam => '🌸 വേദ ശാന്തിയും സൗഭാഗ്യവും (45+)',
+          AppLanguage.manglish => '🌸 Veda Shanthiyum Soubhagyavum (45+)',
+          AppLanguage.english => '🌸 Grace & Vedic Serenity (45+)',
+        },
+    };
+
+    final themeTagline = switch (ageService.ageGroup) {
+      AgeGroup.youth => switch (currentLang) {
+          AppLanguage.telugu => 'సైబర్‌-గ్లో ఆరా, XP క్వెస్ట్‌లు & ఫోకస్ పాడ్స్ 🚀',
+          AppLanguage.tanglish => 'Cyber-Glow Aura, XP Quests & Focus Pods 🚀',
+          AppLanguage.malayalam => 'സൈബർ ഗ്ലോ പ്രഭാവലയം, XP ക്വസ്റ്റുകൾ & ഫോക്കസ് പോഡുകൾ 🚀',
+          AppLanguage.manglish => 'Cyber-Glow Aura, XP Quests & Focus Pods 🚀',
+          AppLanguage.english => 'Cyber-Glow Aura, Mind Quests & Focus Pods 🚀',
+        },
+      AgeGroup.adult => switch (currentLang) {
+          AppLanguage.telugu => 'సర్కాడియన్ వేవ్ రిథమ్ & ఎగ్జిక్యూటివ్ సమతుల్యత ⚖️',
+          AppLanguage.tanglish => 'Circadian Wave Rhythm & Executive Balance ⚖️',
+          AppLanguage.malayalam => 'സർക്കാഡിയൻ വേവ് റിഥം & എക്സിക്യൂട്ടീവ് സന്തുലിതാവസ്ഥ ⚖️',
+          AppLanguage.manglish => 'Circadian Wave Rhythm & Executive Balance ⚖️',
+          AppLanguage.english => 'Circadian Wave Dynamics & Peak Productivity Flow ⚖️',
+        },
+      AgeGroup.senior => switch (currentLang) {
+          AppLanguage.telugu => '108 రుద్రాక్ష జపమాల, వేద శ్లోకాలు & ఆయుర్వేద చక్రం 📿',
+          AppLanguage.tanglish => '108 Rudraksha Japamala, Veda Slokas & Ayurveda Chakram 📿',
+          AppLanguage.malayalam => '108 രുദ്രാക്ഷ ജപമാല, വേദ ശ്ലോകങ്ങൾ & ആയുർവേദ ചക്രം 📿',
+          AppLanguage.manglish => '108 Rudraksha Japamala, Veda Slokas & Ayurveda Chakram 📿',
+          AppLanguage.english => '108 Rudraksha Japa Mala, Sacred Slokas & Ayurvedic Wheel 📿',
+        },
+    };
+
+    final themeStyleDesc = switch (ageService.ageGroup) {
+      AgeGroup.youth => switch (currentLang) {
+          AppLanguage.telugu => 'కన్స్టెల్లేషన్ లేజర్ కణాలు & నియోన్ సైబర్ పల్స్',
+          AppLanguage.tanglish => 'Constellation laser particles & neon cyber pulse',
+          AppLanguage.malayalam => 'കോൺസ്റ്റലേഷൻ ലേസർ കണങ്ങളും നിയോൺ സൈബർ പൾസും',
+          AppLanguage.manglish => 'Constellation laser particles & neon cyber pulse',
+          AppLanguage.english => 'Constellation laser particles & neon cyber pulse',
+        },
+      AgeGroup.adult => switch (currentLang) {
+          AppLanguage.telugu => 'హార్మోనిక్ సర్కాడియన్ వేవ్ & ఎగ్జిక్యూటివ్ రిథమ్',
+          AppLanguage.tanglish => 'Harmonic circadian wave & executive rhythm',
+          AppLanguage.malayalam => 'ഹാർമോണിക് സർക്കാഡിയൻ വേവും എക്സിക്യൂട്ടീവ് റിഥവും',
+          AppLanguage.manglish => 'Harmonic circadian wave & executive rhythm',
+          AppLanguage.english => 'Harmonic circadian wave & biometric executive rhythm',
+        },
+      AgeGroup.senior => switch (currentLang) {
+          AppLanguage.telugu => 'వికసించే బంగారు పద్మ ఆరా & వేద గంట మ్రోత',
+          AppLanguage.tanglish => 'Vikasinchay bangaru padma aura & veda ganta mrotha',
+          AppLanguage.malayalam => 'വിരിയുന്ന സുവർണ്ണ താമര പ്രഭാവലയവും വേദ മണിനാദവും',
+          AppLanguage.manglish => 'Viriyunna swarna thaamara auroyum veda maninadavum',
+          AppLanguage.english => 'Blooming golden sacred lotus aura & temple bell chime',
+        },
+    };
 
     return Stack(
       children: [
@@ -397,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(activeTheme.iconData, size: 14, color: Colors.white),
                           const SizedBox(width: 6),
                           Text(
-                            activeTheme.displayName,
+                            themeDisplayName,
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ],
@@ -431,7 +529,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      activeTheme.tagline,
+                      themeTagline,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -440,10 +538,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Creative Style: ${activeTheme.graphicStyleDescription}',
+                      'Artistic Aura: $themeStyleDesc',
                       style: TextStyle(
                         fontSize: 10.5,
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
