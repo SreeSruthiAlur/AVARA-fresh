@@ -131,22 +131,31 @@ class _SurveyModalState extends State<SurveyModal> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.self_improvement_rounded, color: AppColors.blue, size: 22),
-                    const SizedBox(width: 8),
-                    Text(
-                      'AVARA Self-Help Survey (${_currentStep + 1}/5)',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blue,
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Icon(Icons.self_improvement_rounded, color: AppColors.blue, size: 20),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'AVARA Self-Help Survey (${_currentStep + 1}/5)',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.blue,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 TextButton(
                   onPressed: _finishSurvey,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
                   child: Text(
                     switch (_selectedLanguage) {
                       AppLanguage.telugu => 'దాటవేయి',

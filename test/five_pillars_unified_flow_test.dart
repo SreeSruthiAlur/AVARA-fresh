@@ -1,6 +1,7 @@
 import 'package:avara_astrology_trial/services/age_profile_service.dart';
 import 'package:avara_astrology_trial/services/app_language_service.dart';
 import 'package:avara_astrology_trial/widgets/creative_graphics.dart';
+import 'package:avara_astrology_trial/widgets/survey_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -128,6 +129,55 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
         expect(find.text('Test Child'), findsOneWidget);
       }
+    });
+
+    testWidgets('SurveyModal renders all 5 steps on compact and desktop viewports without any overflow', (tester) async {
+      for (final size in [const Size(360, 640), const Size(768, 1024), const Size(1280, 800)]) {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1.0;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SurveyModal(
+                key: ValueKey(size.toString()),
+                onCompleted: () {},
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Step 0: Language selection
+        expect(find.text('AVARA Self-Help Survey (1/5)'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        // Advance to step 1
+        await tester.tap(find.text('Continue'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('AVARA Self-Help Survey (2/5)'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        // Advance to step 2
+        await tester.tap(find.text('Continue'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('AVARA Self-Help Survey (3/5)'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        // Advance to step 3
+        await tester.tap(find.text('Continue'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('AVARA Self-Help Survey (4/5)'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        // Advance to step 4
+        await tester.tap(find.text('Continue'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('AVARA Self-Help Survey (5/5)'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
     });
   });
 }
