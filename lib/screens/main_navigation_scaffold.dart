@@ -229,26 +229,27 @@ class _MainNavigationScaffoldState extends State<MainNavigationScaffold> {
         final ageTheme = AgeProfileService.instance.activeTheme;
         final isSenior = ageTheme.group == AgeGroup.senior;
 
+        final stateKey = '${currentLang.code}_${ageTheme.group.name}';
         final screens = [
           HomeScreen(
-            key: ValueKey('home_${currentLang.code}'),
+            key: ValueKey('home_$stateKey'),
             userName: widget.userName,
           ),
           AstrologyHubScreen(
-            key: ValueKey('astro_${currentLang.code}'),
+            key: ValueKey('astro_$stateKey'),
             apiKey: widget.apiKey,
           ),
           FinanceScreen(
-            key: ValueKey('finance_${currentLang.code}'),
+            key: ValueKey('finance_$stateKey'),
           ),
           HealthScreen(
-            key: ValueKey('health_${currentLang.code}'),
+            key: ValueKey('health_$stateKey'),
           ),
           HabitsScreen(
-            key: ValueKey('habits_${currentLang.code}'),
+            key: ValueKey('habits_$stateKey'),
           ),
           InsightsScreen(
-            key: ValueKey('insights_${currentLang.code}'),
+            key: ValueKey('insights_$stateKey'),
           ),
         ];
 

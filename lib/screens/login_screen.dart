@@ -149,59 +149,79 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        actions: [
-          // Quick Language Switcher Button
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: ActionChip(
-              avatar: const Icon(Icons.language_rounded, size: 16, color: AppColors.blue),
-              label: Text(
-                AppLanguageService.instance.currentLanguage.shortLabel,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        AppLanguageService.instance,
+        AgeProfileService.instance,
+      ]),
+      builder: (context, _) {
+        final ageService = AgeProfileService.instance;
+        final ageGroup = ageService.ageGroup;
+        final ageTheme = ageService.activeTheme;
+        final tr = AppLanguageService.instance.tr;
+
+        final bgColor = switch (ageGroup) {
+          AgeGroup.youth => const Color(0xFFFAF9FF),
+          AgeGroup.adult => const Color(0xFFF8FAFC),
+          AgeGroup.senior => const Color(0xFFFFFDF5),
+        };
+
+        return Scaffold(
+          backgroundColor: bgColor,
+          appBar: AppBar(
+            backgroundColor: bgColor,
+            elevation: 0,
+            actions: [
+              // Quick Language Switcher Button
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: ActionChip(
+                  avatar: const Icon(Icons.language_rounded, size: 16, color: AppColors.blue),
+                  label: Text(
+                    AppLanguageService.instance.currentLanguage.shortLabel,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                  backgroundColor: AppColors.lightBlue,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  onPressed: () => LanguageSelectorSheet.show(context),
+                ),
               ),
-              backgroundColor: AppColors.lightBlue,
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              onPressed: () => LanguageSelectorSheet.show(context),
+            ],
+          ),
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeader(context),
+                      const SizedBox(height: 20),
+                      _buildAgeQuickEntry(context),
+                      const SizedBox(height: 24),
+                      _buildForm(context),
+                      const SizedBox(height: 20),
+                      _buildLoginButton(context),
+                      const SizedBox(height: 12),
+                      _buildGuestButton(context),
+                      const SizedBox(height: 20),
+                      _buildRegisterLink(context),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 20),
-                  _buildAgeQuickEntry(context),
-                  const SizedBox(height: 24),
-                  _buildForm(context),
-                  const SizedBox(height: 20),
-                  _buildLoginButton(context),
-                  const SizedBox(height: 12),
-                  _buildGuestButton(context),
-                  const SizedBox(height: 20),
-                  _buildRegisterLink(context),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _buildHeader(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -243,14 +263,14 @@ class _LoginScreenState extends State<LoginScreen> {
             color: const Color(0xFF6C5CE7).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome, size: 14, color: Color(0xFF6C5CE7)),
-              SizedBox(width: 5),
+              const Icon(Icons.auto_awesome, size: 14, color: Color(0xFF6C5CE7)),
+              const SizedBox(width: 5),
               Text(
-                'Vedic Wisdom & Modern Self-Help',
-                style: TextStyle(
+                tr('vedic_wisdom_tag'),
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF6C5CE7),
@@ -266,17 +286,19 @@ class _LoginScreenState extends State<LoginScreen> {
             color: const Color(0xFF00B894).withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.hub_rounded, size: 14, color: Color(0xFF00B894)),
-              SizedBox(width: 5),
-              Text(
-                '5 Pillars Connected: Astrology • Health • Habits • Finance • Insights',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF00B894),
+              const Icon(Icons.hub_rounded, size: 14, color: Color(0xFF00B894)),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  tr('five_pillars_connected'),
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF00B894),
+                  ),
                 ),
               ),
             ],
@@ -284,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Welcome to AVARA',
+          tr('welcome_title'),
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.deepNavy,
@@ -292,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          'Your daily guide for mindfulness, habits & inner growth',
+          tr('welcome_subtitle'),
           style: Theme.of(context)
               .textTheme
               .bodyMedium
@@ -303,6 +325,31 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildAgeQuickEntry(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+    final lang = AppLanguageService.instance.currentLanguage;
+
+    final youthLabel = switch (lang) {
+      AppLanguage.telugu => '⚡ యువత\n(<22)',
+      AppLanguage.tanglish => '⚡ Youth\n(<22)',
+      AppLanguage.malayalam => '⚡ യുവാക്കൾ\n(<22)',
+      AppLanguage.manglish => '⚡ Youth\n(<22)',
+      AppLanguage.english => '⚡ Youth\n(<22)',
+    };
+    final adultLabel = switch (lang) {
+      AppLanguage.telugu => '💼 పెద్దలు\n(22-45)',
+      AppLanguage.tanglish => '💼 Adult\n(22-45)',
+      AppLanguage.malayalam => '💼 മുതിർന്നവർ\n(22-45)',
+      AppLanguage.manglish => '💼 Adult\n(22-45)',
+      AppLanguage.english => '💼 Adult\n(22-45)',
+    };
+    final seniorLabel = switch (lang) {
+      AppLanguage.telugu => '🌸 సీనియర్స్\n(45+)',
+      AppLanguage.tanglish => '🌸 Senior\n(45+)',
+      AppLanguage.malayalam => '🌸 മുതിർന്നവർ\n(45+)',
+      AppLanguage.manglish => '🌸 Senior\n(45+)',
+      AppLanguage.english => '🌸 Senior\n(45+)',
+    };
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -320,13 +367,13 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.palette_rounded, color: Color(0xFF6C5CE7), size: 18),
-              SizedBox(width: 8),
+              const Icon(Icons.palette_rounded, color: Color(0xFF6C5CE7), size: 18),
+              const SizedBox(width: 8),
               Text(
-                'Explore AVARA by Age Cohort',
-                style: TextStyle(
+                tr('explore_by_age'),
+                style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
                   color: AppColors.deepNavy,
@@ -335,16 +382,16 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
-            '1-Tap to experience dynamic age-adaptive graphics & themes:',
-            style: TextStyle(fontSize: 11, color: AppColors.secondaryText),
+          Text(
+            tr('age_cohort_hint'),
+            style: const TextStyle(fontSize: 11, color: AppColors.secondaryText),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               _buildAgeChip(
                 context,
-                title: '⚡ Youth\n(<22)',
+                title: youthLabel,
                 group: AgeGroup.youth,
                 color: const Color(0xFF6C5CE7),
                 icon: Icons.bolt_rounded,
@@ -352,7 +399,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 8),
               _buildAgeChip(
                 context,
-                title: '💼 Adult\n(22-45)',
+                title: adultLabel,
                 group: AgeGroup.adult,
                 color: const Color(0xFF1E3A8A),
                 icon: Icons.self_improvement_rounded,
@@ -360,7 +407,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(width: 8),
               _buildAgeChip(
                 context,
-                title: '🌸 Senior\n(45+)',
+                title: seniorLabel,
                 group: AgeGroup.senior,
                 color: const Color(0xFFB45309),
                 icon: Icons.spa_rounded,
@@ -420,6 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildForm(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
     return Form(
       key: _formKey,
       child: Column(
@@ -430,10 +478,10 @@ class _LoginScreenState extends State<LoginScreen> {
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autocorrect: false,
-            decoration: const InputDecoration(
-              labelText: 'Email',
+            decoration: InputDecoration(
+              labelText: tr('login_email'),
               hintText: 'you@example.com',
-              prefixIcon: Icon(Icons.email_outlined, color: AppColors.secondaryText),
+              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.secondaryText),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Email is required';
@@ -450,8 +498,8 @@ class _LoginScreenState extends State<LoginScreen> {
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _submit(),
             decoration: InputDecoration(
-              labelText: 'Password',
-              hintText: 'Your password',
+              labelText: tr('login_password'),
+              hintText: '••••••••',
               prefixIcon: const Icon(Icons.lock_outline, color: AppColors.secondaryText),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -477,6 +525,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginButton(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
     return SizedBox(
       height: AppTheme.buttonHeight,
       child: ElevatedButton(
@@ -490,34 +539,44 @@ class _LoginScreenState extends State<LoginScreen> {
                   strokeWidth: 2.5,
                 ),
               )
-            : const Text('Login'),
+            : Text(tr('login_btn')),
       ),
     );
   }
 
   Widget _buildGuestButton(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+    final lang = AppLanguageService.instance.currentLanguage;
+    final guestSub = switch (lang) {
+      AppLanguage.telugu => 'అతిథిగా ప్రవేశించండి (నో టైపింగ్)',
+      AppLanguage.tanglish => 'Guest ga proceed avvandi (No typing)',
+      AppLanguage.malayalam => 'അതിഥിയായി തുടരുക (ടൈപ്പിംഗ് ഇല്ലാതെ)',
+      AppLanguage.manglish => 'Guest aayi continue cheyyoo',
+      AppLanguage.english => 'Instant access with customized experience',
+    };
+
     return SizedBox(
       height: 52,
       child: ElevatedButton.icon(
         onPressed: _continueAsGuest,
-        icon: const Icon(Icons.record_voice_over_rounded, color: Colors.white, size: 22),
-        label: const Column(
+        icon: const Icon(Icons.bolt_rounded, color: Colors.white, size: 22),
+        label: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Continue without typing (Guest)',
-              style: TextStyle(
+              tr('login_guest_btn'),
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontSize: 13.5,
               ),
             ),
             Text(
-              'అతిథిగా ప్రవేశించండి (నో టైపింగ్)',
-              style: TextStyle(
+              guestSub,
+              style: const TextStyle(
                 color: Colors.white70,
-                fontSize: 11,
+                fontSize: 10.5,
               ),
             ),
           ],
@@ -533,29 +592,20 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildRegisterLink(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          "Don't have an account?",
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppColors.secondaryText),
+    final tr = AppLanguageService.instance.tr;
+    return Center(
+      child: TextButton(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const RegisterScreen()),
         ),
-        TextButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const RegisterScreen()),
-          ),
-          child: const Text(
-            'Sign up',
-            style: TextStyle(
-              color: AppColors.blue,
-              fontWeight: FontWeight.w700,
-            ),
+        child: Text(
+          tr('login_no_account'),
+          style: const TextStyle(
+            color: AppColors.blue,
+            fontWeight: FontWeight.w700,
           ),
         ),
-      ],
+      ),
     );
   }
 }

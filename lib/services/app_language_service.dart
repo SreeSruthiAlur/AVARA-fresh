@@ -288,6 +288,23 @@ class AppLanguageService extends ChangeNotifier {
       'profile_my_data': 'My Data',
       'profile_help': 'Help & Support',
       'profile_privacy': 'Privacy & Security',
+
+      // Login & Common UI
+      'welcome_title': 'Welcome to AVARA',
+      'welcome_subtitle': 'Your daily guide for mindfulness, habits & inner growth',
+      'login_email': 'Email',
+      'login_password': 'Password',
+      'login_btn': 'Sign in to AVARA',
+      'login_guest_btn': 'Continue without typing (Guest)',
+      'login_no_account': "Don't have an account? Sign up",
+      'explore_by_age': 'Explore AVARA by Age Cohort',
+      'age_cohort_hint': '1-Tap to experience dynamic age-adaptive graphics & themes:',
+      'five_pillars_connected': '5 Pillars Connected: Astrology • Health • Habits • Finance • Insights',
+      'vedic_wisdom_tag': 'Vedic Wisdom & Modern Self-Help',
+      'five_pillars_title': 'Unified Life Ecosystem',
+      'five_pillars_subtitle': 'All 5 pillars connected as one continuous life flow',
+      'flow_next_btn': 'Follow Flow to Next Pillar ➔',
+      'daily_growth_report': 'Daily Holistic Growth Report',
     },
 
     // =========================================================================
@@ -431,6 +448,23 @@ class AppLanguageService extends ChangeNotifier {
       'profile_my_data': 'నా సమాచారం',
       'profile_help': 'సహాయం & మద్దతు',
       'profile_privacy': 'గోప్యత & భద్రత',
+
+      // Login & Common UI
+      'welcome_title': 'అవారాకి స్వాగతం',
+      'welcome_subtitle': 'దైనందిన ఆధ్యాత్మిక శాంతి, మంచి అలవాట్లు & వ్యక్తిత్వ వికాస మార్గదర్శి',
+      'login_email': 'ఈమెయిల్',
+      'login_password': 'పాస్‌వర్డ్',
+      'login_btn': 'అవారాలోకి ప్రవేశించండి',
+      'login_guest_btn': 'అతిథిగా ప్రవేశించండి (నో టైపింగ్)',
+      'login_no_account': 'ఖాతా లేదా? ఇప్పుడే నమోదు చేసుకోండి',
+      'explore_by_age': 'వయోవర్గాల వారీగా అవారాను అన్వేషించండి',
+      'age_cohort_hint': '1-ట్యాప్‌తో వయస్సు ఆధారిత గ్రాఫిక్స్ & థీమ్‌లను అనుభవించండి:',
+      'five_pillars_connected': '5 స్తంభాల అనుసంధానం: జ్యోతిషం • ఆరోగ్యం • అలవాట్లు • ఆర్థికం • విశ్లేషణ',
+      'vedic_wisdom_tag': 'వేద విజ్ఞానం & ఆధునిక స్వీయ సహాయం',
+      'five_pillars_title': 'జీవన సమగ్ర ప్రవాహం',
+      'five_pillars_subtitle': '5 విభాగాలు అనుసంధానమై నిరంతరం ప్రవహిస్తాయి',
+      'flow_next_btn': 'తదుపరి స్తంభానికి వెళ్ళండి ➔',
+      'daily_growth_report': 'దైనందిన సంపూర్ణ వృద్ధి నివేదిక',
     },
 
     // =========================================================================
@@ -574,6 +608,23 @@ class AppLanguageService extends ChangeNotifier {
       'profile_my_data': 'Naa Data',
       'profile_help': 'Help & Support',
       'profile_privacy': 'Privacy & Security',
+
+      // Login & Common UI
+      'welcome_title': 'AVARA ki Swagatham',
+      'welcome_subtitle': 'Dainandina manasika shanthi, manchi alavatlu & inner growth guide',
+      'login_email': 'Email',
+      'login_password': 'Password',
+      'login_btn': 'AVARA loki Sign In avvandi',
+      'login_guest_btn': 'Guest ga Continue avvandi (No typing)',
+      'login_no_account': 'Account leda? Sign up avvandi',
+      'explore_by_age': 'Age cohort batti AVARA ni explore cheyandi',
+      'age_cohort_hint': '1-Tap tho age-adaptive graphics & themes chudandi:',
+      'five_pillars_connected': '5 Pillars Connected: Astrology • Health • Habits • Finance • Insights',
+      'vedic_wisdom_tag': 'Vedic Vignanam & Modern Self-Help',
+      'five_pillars_title': 'Unified Life Ecosystem',
+      'five_pillars_subtitle': '5 pillars connected as one seamless life flow',
+      'flow_next_btn': 'Next Pillar ki Vellandi ➔',
+      'daily_growth_report': 'Daily Holistic Growth Report',
     },
 
     // =========================================================================
@@ -719,6 +770,23 @@ class AppLanguageService extends ChangeNotifier {
       'profile_my_data': 'എന്റെ വിവരങ്ങൾ',
       'profile_help': 'സഹായവും പിന്തുണയും',
       'profile_privacy': 'സ്വകാര്യതയും സുരക്ഷയും',
+
+      // Login & Common UI
+      'welcome_title': 'അവാരയിലേക്ക് സ്വാഗതം',
+      'welcome_subtitle': 'ധ്യാനത്തിനും നല്ല ശീലങ്ങൾക്കും ആന്തരിക വളർച്ചയ്ക്കുമുള്ള നിങ്ങളുടെ ദൈനംദിന വഴികാട്ടി',
+      'login_email': 'ഇമെയിൽ',
+      'login_password': 'പാസ്‌വേഡ്',
+      'login_btn': 'അവാരയിൽ പ്രവേശിക്കുക',
+      'login_guest_btn': 'അതിഥിയായി തുടരുക (ടൈപ്പിംഗ് ഇല്ലാതെ)',
+      'login_no_account': 'അക്കൗണ്ട് ഇല്ലേ? സൈൻ അപ്പ് ചെയ്യുക',
+      'explore_by_age': 'പ്രായത്തിനനുസരിച്ച് അവാര അനുഭവിക്കൂ',
+      'age_cohort_hint': 'ഒറ്റ ടാപ്പിൽ പ്രായത്തിനനുസരിച്ചുള്ള ഗ്രാഫിക്സും തീമുകളും ആസ്വദിക്കൂ:',
+      'five_pillars_connected': '5 തൂണുകളുടെ സമന്വയം: ജ്യോതിഷം • ആരോഗ്യം • ശീലങ്ങൾ • സാമ്പത്തികം • ഉൾക്കാഴ്ച',
+      'vedic_wisdom_tag': 'വേദ ജ്ഞാനവും ആധുനിക സ്വയംസഹായവും',
+      'five_pillars_title': 'സമഗ്ര ജീവിത പ്രവാഹം',
+      'five_pillars_subtitle': '5 ഘടകങ്ങളും പരസ്പരം ബന്ധിതമായ ഒരു പ്രവാഹം',
+      'flow_next_btn': 'അടുത്ത ഘട്ടത്തിലേക്ക് നീങ്ങുക ➔',
+      'daily_growth_report': 'ദൈനംദിന സമഗ്ര വളർച്ചാ റിപ്പോർട്ട്',
     },
 
     // =========================================================================
@@ -864,6 +932,23 @@ class AppLanguageService extends ChangeNotifier {
       'profile_my_data': 'Ente Data',
       'profile_help': 'Help & Support',
       'profile_privacy': 'Privacy & Security',
+
+      // Login & Common UI
+      'welcome_title': 'AVARA-yilekku Swagatham',
+      'welcome_subtitle': 'Dhyanathinum nalla sheelhangalkkum aantharika valarchaykkumulla vazhikaatti',
+      'login_email': 'Email',
+      'login_password': 'Password',
+      'login_btn': 'AVARA-yil Sign In cheyyoo',
+      'login_guest_btn': 'Guest aayi continue cheyyoo (No typing)',
+      'login_no_account': 'Account ille? Sign up cheyyoo',
+      'explore_by_age': 'Age group anusarichu AVARA experience cheyyoo',
+      'age_cohort_hint': '1-Tap-il age-adaptive graphics & themes anubhavikkoo:',
+      'five_pillars_connected': '5 Pillars Connected: Jyothisham • Aarogyam • Sheelangal • Sambathikam • Insights',
+      'vedic_wisdom_tag': 'Vedic Jnanam & Modern Self-Help',
+      'five_pillars_title': 'Unified Life Ecosystem',
+      'five_pillars_subtitle': '5 pillars connected as one seamless life flow',
+      'flow_next_btn': 'Next Pillar-ilekku Pokuka ➔',
+      'daily_growth_report': 'Daily Holistic Growth Report',
     },
   };
 }

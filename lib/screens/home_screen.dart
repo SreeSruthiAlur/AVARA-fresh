@@ -226,50 +226,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           backgroundColor: bgColor,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGreeting(context),
-                  const SizedBox(height: 12),
-                  // Age Cohort Mode Switcher (Youth / Adult / Senior instant transformation)
-                  const AgeCohortSelectorBar(),
-                  const SizedBox(height: 14),
-                  // Dynamic Living Cohort Canvas Banner (Adapts with animated graphics per age)
-                  _buildAgeAdaptiveCard(context),
-                  const SizedBox(height: 18),
-                  // Render the completely bespoke UI/UX dashboard for this age cohort with smooth AnimatedSwitcher:
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 450),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.04),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: ScaleTransition(
-                            scale: Tween<double>(begin: 0.97, end: 1.0).animate(animation),
-                            child: child,
+          body: AgeCohortAmbientBackground(
+            ageGroup: ageGroup,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildGreeting(context),
+                    const SizedBox(height: 12),
+                    // Age Cohort Mode Switcher (Youth / Adult / Senior instant transformation)
+                    const AgeCohortSelectorBar(),
+                    const SizedBox(height: 14),
+                    // Dynamic Living Cohort Canvas Banner (Adapts with animated graphics per age)
+                    _buildAgeAdaptiveCard(context),
+                    const SizedBox(height: 18),
+                    // Prominent Unified 5-Pillars Connected Flow River (Continuous Life Loop)
+                    UnifiedFivePillarsLifeRiver(onOpenPillar: _navigateToPillar),
+                    const SizedBox(height: 18),
+                    // Render the completely bespoke UI/UX dashboard for this age cohort with smooth AnimatedSwitcher:
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, 0.04),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: ScaleTransition(
+                              scale: Tween<double>(begin: 0.97, end: 1.0).animate(animation),
+                              child: child,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: KeyedSubtree(
-                      key: ValueKey(ageGroup),
-                      child: switch (ageGroup) {
-                        AgeGroup.youth => _buildYouthDashboard(context),
-                        AgeGroup.adult => _buildAdultDashboard(context),
-                        AgeGroup.senior => _buildSeniorDashboard(context),
+                        );
                       },
+                      child: KeyedSubtree(
+                        key: ValueKey(ageGroup),
+                        child: switch (ageGroup) {
+                          AgeGroup.youth => _buildYouthDashboard(context),
+                          AgeGroup.adult => _buildAdultDashboard(context),
+                          AgeGroup.senior => _buildSeniorDashboard(context),
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -679,24 +685,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDailyReportsSection(BuildContext context) {
+    final tr = AppLanguageService.instance.tr;
+    final lang = AppLanguageService.instance.currentLanguage;
+    final factsLabel = switch (lang) {
+      AppLanguage.telugu => '💡 వాస్తవాలు',
+      AppLanguage.malayalam => '💡 വസ്തുതകൾ',
+      _ => '💡 Facts',
+    };
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Daily Holistic Growth Report',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.deepNavy,
+            Expanded(
+              child: Text(
+                tr('daily_growth_report'),
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.deepNavy,
+                ),
               ),
             ),
             TextButton.icon(
               onPressed: () => FactPopup.show(context),
               icon: const Icon(Icons.lightbulb_rounded, size: 16, color: AppColors.blue),
-              label: const Text('💡 Facts', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              label: Text(factsLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

@@ -34,21 +34,81 @@ class _SurveyModalState extends State<SurveyModal> {
   String _selectedChallenge = 'Inconsistent Routine & Procrastination';
   String _selectedStyle = 'Practical & Action-Oriented Steps';
 
-  List<String> get _stepTitles => [
-    'Choose Your Preferred Language',
-    'Welcome! What is your age group?',
-    'What is your main focus right now?',
-    'What daily challenge do you want to conquer?',
-    'How should AVARA guide you?',
-  ];
+  List<String> get _stepTitles => switch (_selectedLanguage) {
+    AppLanguage.telugu => [
+      'మీ ప్రాధాన్యత భాషను ఎంచుకోండి',
+      'స్వాగతం! మీ వయోవర్గం ఏమిటి?',
+      'ఇప్పుడు మీ ప్రధాన లక్ష్యం ఏమిటి?',
+      'మీరు అధిగమించాలనుకుంటున్న సవాలు ఏమిటి?',
+      'AVARA మీకు ఎలా మార్గదర్శనం చేయాలి?',
+    ],
+    AppLanguage.malayalam => [
+      'നിങ്ങൾക്ക് ഇഷ്ടമുള്ള ഭാഷ തിരഞ്ഞെടുക്കുക',
+      'സ്വാഗതം! നിങ്ങളുടെ പ്രായവിഭാഗം ഏതാണ്?',
+      'ഇപ്പോൾ നിങ്ങളുടെ പ്രധാന ശ്രദ്ധ എന്തിലാണ്?',
+      'നിങ്ങൾ തരണം ചെയ്യാൻ ആഗ്രഹിക്കുന്ന വെല്ലുവിളി എന്താണ്?',
+      'അവാര നിങ്ങളെ എങ്ങനെ നയിക്കണം?',
+    ],
+    AppLanguage.tanglish => [
+      'Choose Your Preferred Language',
+      'Welcome! What is your age group?',
+      'What is your main focus right now?',
+      'What daily challenge do you want to conquer?',
+      'How should AVARA guide you?',
+    ],
+    AppLanguage.manglish => [
+      'Choose Your Preferred Language',
+      'Welcome! What is your age group?',
+      'What is your main focus right now?',
+      'What daily challenge do you want to conquer?',
+      'How should AVARA guide you?',
+    ],
+    AppLanguage.english => [
+      'Choose Your Preferred Language',
+      'Welcome! What is your age group?',
+      'What is your main focus right now?',
+      'What daily challenge do you want to conquer?',
+      'How should AVARA guide you?',
+    ],
+  };
 
-  List<String> get _stepSubtitles => [
-    'Select whether you prefer English, Telugu, or Tanglish for translations and interface.',
-    'Helps us tune graphics, readability, and content specifically for your generation.',
-    'Select the life area where you seek the greatest clarity and progress today.',
-    'AVARA will design micro-habit steps to transform this into your superpower.',
-    'Choose the coaching tone that feels most natural and uplifting to you.',
-  ];
+  List<String> get _stepSubtitles => switch (_selectedLanguage) {
+    AppLanguage.telugu => [
+      'ఇంటర్‌ఫేస్ మరియు అర్థ వివరణల కోసం మీ ప్రాధాన్యత భాషను ఎంచుకోండి.',
+      'మీ తరానికి అనుగుణంగా గ్రాఫిక్స్, ఫాంట్ సైజు మరియు కంటెంట్‌ను సర్దుబాటు చేస్తుంది.',
+      'ఈ రోజు మీరు అత్యధిక స్పష్టత కోరుకునే జీవిత రంగాన్ని ఎంచుకోండి.',
+      'దీన్ని మీ సూపర్ పవర్‌గా మార్చడానికి AVARA మైక్రో-హ్యాబిట్లను రూపొందిస్తుంది.',
+      'మీకు అత్యంత సహజంగా మరియు స్ఫూర్తిదాయకంగా అనిపించే మార్గదర్శక శైలిని ఎంచుకోండి.',
+    ],
+    AppLanguage.malayalam => [
+      'ഇന്റർഫേസിനും വിശദീകരണങ്ങൾക്കുമായി നിങ്ങളുടെ ഭാഷ തിരഞ്ഞെടുക്കുക.',
+      'നിങ്ങളുടെ തലമുറയ്ക്കനുസൃതമായി ഗ്രാഫിക്സും ഉള്ളടക്കവും ക്രമീകരിക്കാൻ സഹായിക്കുന്നു.',
+      'ഇന്ന് നിങ്ങൾക്ക് ഏറ്റവും കൂടുതൽ മുന്നേറ്റം ആവശ്യമുള്ള ജീവിത മേഖല തിരഞ്ഞെടുക്കുക.',
+      'ഇതിനെ നിങ്ങളുടെ കരുത്താക്കി മാറ്റാൻ അവാര സൂക്ഷ്മ ശീലങ്ങൾ രൂപകൽപ്പന ചെയ്യും.',
+      'നിങ്ങൾക്ക് ഏറ്റവും പ്രചോദനാത്മകമായി തോന്നുന്ന ശൈലി തിരഞ്ഞെടുക്കുക.',
+    ],
+    AppLanguage.tanglish => [
+      'Select whether you prefer English, Telugu, or Tanglish for translations and interface.',
+      'Helps us tune graphics, readability, and content specifically for your generation.',
+      'Select the life area where you seek the greatest clarity and progress today.',
+      'AVARA will design micro-habit steps to transform this into your superpower.',
+      'Choose the coaching tone that feels most natural and uplifting to you.',
+    ],
+    AppLanguage.manglish => [
+      'Select whether you prefer English, Malayalam, or Manglish for translations and interface.',
+      'Helps us tune graphics, readability, and content specifically for your generation.',
+      'Select the life area where you seek the greatest clarity and progress today.',
+      'AVARA will design micro-habit steps to transform this into your superpower.',
+      'Choose the coaching tone that feels most natural and uplifting to you.',
+    ],
+    AppLanguage.english => [
+      'Select whether you prefer English, Telugu, or Tanglish for translations and interface.',
+      'Helps us tune graphics, readability, and content specifically for your generation.',
+      'Select the life area where you seek the greatest clarity and progress today.',
+      'AVARA will design micro-habit steps to transform this into your superpower.',
+      'Choose the coaching tone that feels most natural and uplifting to you.',
+    ],
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +147,14 @@ class _SurveyModalState extends State<SurveyModal> {
                 ),
                 TextButton(
                   onPressed: _finishSurvey,
-                  child: const Text('Skip', style: TextStyle(color: AppColors.secondaryText, fontSize: 12)),
+                  child: Text(
+                    switch (_selectedLanguage) {
+                      AppLanguage.telugu => 'దాటవేయి',
+                      AppLanguage.malayalam => 'ഒഴിവാക്കുക',
+                      _ => 'Skip',
+                    },
+                    style: const TextStyle(color: AppColors.secondaryText, fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -144,7 +211,14 @@ class _SurveyModalState extends State<SurveyModal> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
-                    child: const Text('Back', style: TextStyle(color: AppColors.deepNavy)),
+                    child: Text(
+                      switch (_selectedLanguage) {
+                        AppLanguage.telugu => 'వెనుకకు',
+                        AppLanguage.malayalam => 'പുറകോട്ട്',
+                        _ => 'Back',
+                      },
+                      style: const TextStyle(color: AppColors.deepNavy),
+                    ),
                   ),
                   const SizedBox(width: 12),
                 ],
@@ -164,7 +238,17 @@ class _SurveyModalState extends State<SurveyModal> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
-                      _currentStep == 4 ? 'Personalize My AVARA' : 'Continue',
+                      _currentStep == 4
+                          ? switch (_selectedLanguage) {
+                              AppLanguage.telugu => 'నా AVARA ని రూపొందించండి',
+                              AppLanguage.malayalam => 'എന്റെ അവാര വ്യക്തിഗതമാക്കുക',
+                              _ => 'Personalize My AVARA',
+                            }
+                          : switch (_selectedLanguage) {
+                              AppLanguage.telugu => 'కొనసాగించండి',
+                              AppLanguage.malayalam => 'തുടരുക',
+                              _ => 'Continue',
+                            },
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
